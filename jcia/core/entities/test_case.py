@@ -41,7 +41,10 @@ class TestCase:
         metadata: 额外元数据
     """
 
+    __test__ = False  # 避免被 pytest 收集
+
     class_name: str
+
     method_name: str
     test_type: TestType = TestType.UNIT
     priority: TestPriority = TestPriority.MEDIUM

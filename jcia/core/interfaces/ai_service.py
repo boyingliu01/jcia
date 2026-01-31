@@ -34,7 +34,10 @@ class TestGenerationRequest:
         requirements: 生成要求
     """
 
+    __test__ = False  # 避免被 pytest 收集
+
     target_classes: list[str]
+
     code_snippets: dict[str, str]
     context: dict[str, Any]
     requirements: str | None = None
