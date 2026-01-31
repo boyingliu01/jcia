@@ -13,6 +13,8 @@
 | 命令 | 说明 | 快捷键 |
 |--------|------|---------|
 | `/check` | 工程纪律完整检查 (6项全部执行) | `Ctrl+Shift+A` |
+| `/check-fast` | 快速检查 (ruff+pyright+pytest unit) | - |
+| `/check-full` | 全量检查 (pre-commit 等效) | - |
 | `/lint` | 代码规范检查 (Ruff) | `Ctrl+Shift+C` `Ctrl+Shift+L` |
 | `/format` | 代码格式化 (Ruff) | `Ctrl+Shift+C` `Ctrl+Shift+F` |
 | `/typecheck` | 类型检查 (Pyright) | `Ctrl+Shift+C` `Ctrl+Shift+T` |
@@ -21,11 +23,14 @@
 | `/test-cov` | 带覆盖率的测试 | - |
 | `/all` | 运行所有检查 (lint+format+typecheck+security+test) | - |
 | `/clean` | 清理构建产物 | - |
+| `/review` | 代码走查 (diff 摘要) | - |
 | `/commit` | Git 提交代码 (交互式) | - |
+| `/commit-lite` | Git 提交代码 (不跑全量检查) | - |
 | `/commit-auto` | Git 提交代码 (自动消息) | - |
 | `/save` | Git 快速保存 | - |
 | `/status` | Git 状态 | - |
 | `/log` | Git 日志 | - |
+
 
 
 ## 🔧 使用方式
@@ -46,9 +51,14 @@ PS E:\Study\LLM\Java代码变更影响分析> /check
 2. 输入 "Tasks: Run Task"
 3. 选择任务：
    - `/check - 工程纪律完整检查`
+   - `/check-fast - 快速检查 (lint+type+unit)`
+   - `/check-full - 全量检查 (pre-commit 等效)`
+   - `/review - 代码走查 (diff 摘要)`
+   - `/commit-lite - 仅提交 (不跑全量检查)`
    - `/lint - 代码规范检查 (Ruff)`
    - `/format - 代码格式化 (Ruff)`
    - 等等...
+
 
 ### 方式3: 快捷键
 
