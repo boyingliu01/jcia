@@ -33,14 +33,16 @@ def sample_java_project(temp_dir: Path) -> Path:
     """创建示例Java项目结构."""
     # 创建Maven项目结构
     pom = temp_dir / "pom.xml"
-    pom.write_text("""<?xml version="1.0" encoding="UTF-8"?>
+    pom.write_text(
+        """<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.example</groupId>
     <artifactId>test-project</artifactId>
     <version>1.0.0</version>
 </project>
-""")
+"""
+    )
 
     # 创建源代码目录
     src_main = temp_dir / "src" / "main" / "java" / "com" / "example"

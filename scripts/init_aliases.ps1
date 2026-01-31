@@ -23,6 +23,10 @@ Write-Host "  /test      - 运行单元测试 (Pytest)" -ForegroundColor Green
 Write-Host "  /test-cov  - 带覆盖率的测试" -ForegroundColor Green
 Write-Host "  /all       - 运行所有检查" -ForegroundColor Green
 Write-Host "  /clean     - 清理构建产物" -ForegroundColor Green
+Write-Host "  /commit    - Git 提交代码 (交互式)" -ForegroundColor Green
+Write-Host "  /commit-auto - Git 提交代码 (自动消息)" -ForegroundColor Green
+Write-Host "  /status    - Git 状态" -ForegroundColor Green
+Write-Host "  /log       - Git 日志" -ForegroundColor Green
 Write-Host ""
 Write-Host "快捷键:" -ForegroundColor Yellow
 Write-Host "  Ctrl+Shift+A - 运行工程纪律完整检查" -ForegroundColor Cyan
@@ -77,9 +81,35 @@ function Invoke-Check {
             Get-ChildItem -Recurse -File -Filter *.pyc | Remove-Item -Force -ErrorAction SilentlyContinue
             Write-Host "✓ 清理完成" -ForegroundColor Green
         }
+        "commit" {
+            Write-Host "📝 Git 提交代码..." -ForegroundColor Cyan
+            $message = Read-Host -Prompt '输入提交信息: '
+            if ($message) {
+                git add .
+                git commit -m $message
+                Write-Host "✓ 提交成功" -ForegroundColor Green
+            } else {
+                Write-Host "✗ 提交取消" -ForegroundColor Yellow
+            }
+        }
+        "commit-auto" {
+            Write-Host "📝 Git 自动提交..." -ForegroundColor Cyan
+            $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm'
+            git add .
+            git commit -m "chore: auto commit at $timestamp"
+            Write-Host "✓ 自动提交完成" -ForegroundColor Green
+        }
+        "status" {
+            Write-Host "📊 Git 状态..." -ForegroundColor Cyan
+            git status
+        }
+        "log" {
+            Write-Host "📋 Git 日志 (最近10条)..." -ForegroundColor Cyan
+            git log --oneline -10
+        }
         default {
             Write-Host "❌ 未知命令: $Task" -ForegroundColor Red
-            Write-Host "可用命令: check, lint, format, typecheck, security, test, test-cov, all, clean" -ForegroundColor Yellow
+            Write-Host "可用命令: check, lint, format, typecheck, security, test, test-cov, all, clean, commit, commit-auto, status, log" -ForegroundColor Yellow
         }
     }
 }
@@ -97,6 +127,10 @@ Set-Alias -Name "/test" -Value { Invoke-Check "test" }
 Set-Alias -Name "/test-cov" -Value { Invoke-Check "test-cov" }
 Set-Alias -Name "/all" -Value { Invoke-Check "all" }
 Set-Alias -Name "/clean" -Value { Invoke-Check "clean" }
+Set-Alias -Name "/commit" -Value { Invoke-Check "commit" }
+Set-Alias -Name "/commit-auto" -Value { Invoke-Check "commit-auto" }
+Set-Alias -Name "/status" -Value { Invoke-Check "status" }
+Set-Alias -Name "/log" -Value { Invoke-Check "log" }
 
 Write-Host "✓ 命令别名已加载到当前会话" -ForegroundColor Green
 Write-Host ""
@@ -104,4 +138,6 @@ Write-Host "使用示例:" -ForegroundColor Yellow
 Write-Host "  /check       # 运行完整工程纪律检查" -ForegroundColor White
 Write-Host "  /test        # 只运行测试" -ForegroundColor White
 Write-Host "  /format       # 只格式化代码" -ForegroundColor White
+Write-Host "  /commit      # 提交代码 (交互式)" -ForegroundColor White
+Write-Host "  /commit-auto  # 提交代码 (自动消息)" -ForegroundColor White
 Write-Host ""

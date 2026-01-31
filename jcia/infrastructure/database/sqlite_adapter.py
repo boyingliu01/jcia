@@ -60,7 +60,8 @@ class SQLiteAdapter:
 
     def _create_tables(self) -> None:
         """创建数据库表."""
-        self.execute("""
+        self.execute(
+            """
             CREATE TABLE IF NOT EXISTS test_runs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 commit_hash TEXT NOT NULL,
@@ -72,8 +73,10 @@ class SQLiteAdapter:
                 passed_tests INTEGER DEFAULT 0,
                 failed_tests INTEGER DEFAULT 0
             )
-        """)
-        self.execute("""
+        """
+        )
+        self.execute(
+            """
             CREATE TABLE IF NOT EXISTS test_results (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 run_id INTEGER NOT NULL,
@@ -84,8 +87,10 @@ class SQLiteAdapter:
                 error_message TEXT,
                 FOREIGN KEY (run_id) REFERENCES test_runs (id)
             )
-        """)
-        self.execute("""
+        """
+        )
+        self.execute(
+            """
             CREATE TABLE IF NOT EXISTS test_diffs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 baseline_run_id INTEGER NOT NULL,
@@ -97,4 +102,5 @@ class SQLiteAdapter:
                 FOREIGN KEY (baseline_run_id) REFERENCES test_runs (id),
                 FOREIGN KEY (regression_run_id) REFERENCES test_runs (id)
             )
-        """)
+        """
+        )

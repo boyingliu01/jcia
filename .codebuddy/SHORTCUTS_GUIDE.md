@@ -34,6 +34,10 @@ Ctrl + Shift + ~ (波浪号)
 | `/test-cov` | 📊 带覆盖率的测试 | - |
 | `/all` | 🔄 运行所有检查 | - |
 | `/clean` | 🧹 清理构建产物 | - |
+| `/commit` | 📝 Git 提交代码 (交互式) | - |
+| `/commit-auto` | 🤖 Git 提交代码 (自动消息) | - |
+| `/status` | 📊 Git 状态 | - |
+| `/log` | 📋 Git 日志 | - |
 
 ## 🎯 三种使用方式
 
@@ -100,6 +104,18 @@ Ctrl + Shift + B    # 显示任务面板
 /format       # 然后格式化
 /typecheck    # 再检查类型
 /test         # 最后运行测试
+```
+
+### 场景 5: 提交代码到 Git
+```powershell
+/commit       # 交互式提交 (输入提交信息)
+/commit-auto   # 自动提交 (使用自动消息)
+```
+
+### 场景 6: 查看 Git 状态和历史
+```powershell
+/status       # 查看当前 Git 状态
+/log          # 查看最近10条提交
 ```
 
 ### 场景 5: 查看覆盖率
