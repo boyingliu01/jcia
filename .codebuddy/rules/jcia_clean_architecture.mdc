@@ -1,0 +1,105 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2026-01-30T17:07:48.034Z
+provider: 
+---
+
+# JCIA 清洁架构规则
+
+## 架构层次（从外到内）
+
+### 1. Adapters Layer (适配器层)
+**位置**: `jcia/adapters/`
+**职责**: 外部系统集成（Git, Maven, AI Services, Database）
+**示例**: [git/pydriller_adapter.py](mdc:jcia/adapters/git/pydriller_adapter.py)
+
+### 2. Infrastructure Layer (基础设施层)
+**位置**: `jcia/infrastructure/`
+**职责**: 实现接口层定义的仓储模式、数据持久化
+**示例**: [database/sqlite_repository.py](mdc:jcia/infrastructure/database/sqlite_repository.py)
+
+### 3. Use Cases Layer (应用用例层)
+**位置**: `jcia/core/use_cases/`
+**职责**: 业务编排、协调实体和基础设施、定义事务边界
+**示例**: [analyze_impact.py](mdc:jcia/core/use_cases/analyze_impact.py)
+
+### 4. Services Layer (领域服务层)
+**位置**: `jcia/core/services/`
+**职责**: 封装不适合放入实体的业务逻辑
+**示例**: [impact_analyzer.py](mdc:jcia/core/services/impact_analyzer.py)
+
+### 5. Entities Layer (领域实体层)
+**位置**: `jcia/core/entities/`
+**职责**: 纯业务对象，不依赖外部系统
+**示例**: [change_set.py](mdc:jcia/core/entities/change_set.py), [impact_graph.py](mdc:jcia/core/entities/impact_graph.py)
+
+## 依赖规则（依赖倒置原则）
+
+### ✅ 正确的依赖方向
+```
+Adapters → Infrastructure → Use Cases → Services → Entities
+  ↓               ↓            ↓          ↓         ↓
+Interfaces ← Interfaces  ← Interfaces ← Interfaces
+```
+
+### ❌ 禁止的依赖
+- **Entities层** 绝对不能依赖 **Infrastructure** 或 **Adapters**
+- **Services层** 不能依赖 **Infrastructure** 或 **Use Cases**
+- **Use Cases** 不能依赖 **Adapters**
+
+### 正确的导入模式
+
+**在 Entities 中**：
+```python
+# ✅ 正确：只导入标准库和类型注解
+from dataclasses import dataclass
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    pass  # 不导入其他层
+```
+
+**在 Services 中**：
+```python
+# ✅ 正确：只导入 Entities
+from jcia.core.entities.change_set import ChangeSet
+# 不依赖 Infrastructure
+```
+
+**在 Use Cases 中**：
+```python
+# ✅ 正确：导入 Services 和 Entities
+from jcia.core.services.impact_analyzer import ImpactAnalyzer
+from jcia.core.entities.impact_graph import ImpactGraph
+```
+
+**在 Infrastructure 中**：
+```python
+# ✅ 正确：实现接口，导入 Entities
+from jcia.core.interfaces.repository import TestRunRepository
+from jcia.core.entities.test_run import TestRun
+
+class SQLiteTestRunRepository(TestRunRepository):
+    # 实现接口方法
+    pass
+```
+
+**在 Adapters 中**：
+```python
+# ✅ 正确：导入接口，转换为 Entities
+from jcia.core.interfaces.analyzer import ChangeAnalyzer
+from jcia.core.entities.change_set import ChangeSet
+
+class PyDrillerAdapter(ChangeAnalyzer):
+    # 实现接口方法，返回实体
+    pass
+```
+
+## 关键设计原则
+
+1. **依赖倒置（DIP）**: 高层模块依赖抽象，不依赖实现
+2. **单向依赖**: 只能向内层依赖，不能向外层依赖
+3. **接口在核心**: 所有接口定义在 `jcia/core/interfaces/`
+4. **实现在外层**: 接口实现在 `jcia/infrastructure/` 或 `jcia/adapters/`

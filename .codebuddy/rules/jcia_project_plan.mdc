@@ -1,0 +1,225 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2026-01-30T17:10:54.981Z
+provider: 
+---
+
+# JCIA 项目计划规则
+
+## 项目概况
+
+- **项目名称**: JCIA (Java Code Impact Analyzer)
+- **版本**: 0.1.0
+- **语言**: Python 3.10+
+- **架构**: Clean Architecture
+- **总阶段**: 13
+- **当前阶段**: 5
+- **完成度**: 30.8%
+
+## 13阶段开发计划
+
+### ✅ 已完成阶段（1-4）
+
+#### 阶段 1: 项目初始化
+**状态**: ✅ 完成
+**交付物**:
+- 项目目录结构
+- 配置文件（pyproject.toml, Makefile等）
+- 开发环境设置（虚拟环境、依赖管理）
+- 代码质量工具配置（ruff, pyright, pytest, bandit）
+- Pre-commit hooks配置
+
+#### 阶段 2: 代码质量工具配置
+**状态**: ✅ 完成
+**交付物**:
+- Ruff配置（linting和formatting）
+- Pyright类型检查配置
+- Pytest测试框架配置
+- Bandit安全扫描配置
+- Pre-commit hooks集成
+- Makefile自动化命令
+
+#### 阶段 3: 核心接口定义
+**状态**: ✅ 完成
+**文件**: [interfaces/analyzer.py](mdc:jcia/core/interfaces/analyzer.py), [interfaces/call_chain_analyzer.py](mdc:jcia/core/interfaces/call_chain_analyzer.py), [interfaces/repository.py](mdc:jcia/core/interfaces/repository.py), [interfaces/test_runner.py](mdc:jcia/core/interfaces/test_runner.py), [interfaces/tool_wrapper.py](mdc:jcia/core/interfaces/tool_wrapper.py)
+
+**交付物**:
+- 变更分析器接口（ChangeAnalyzer）
+- 调用链分析器接口（CallChainAnalyzer）
+- 工具包装器接口（ToolWrapper）
+- 仓储接口（TestRunRepository, TestResultRepository等）
+- 测试运行器接口（TestSelector, TestGenerator, TestExecutor）
+
+#### 阶段 4: 领域实体实现
+**状态**: ✅ 完成
+**测试**: 56个测试全部通过，覆盖率 100%
+**文件**: [entities/change_set.py](mdc:jcia/core/entities/change_set.py), [entities/impact_graph.py](mdc:jcia/core/entities/impact_graph.py), [entities/test_case.py](mdc:jcia/core/entities/test_case.py), [entities/test_run.py](mdc:jcia/core/entities/test_run.py)
+
+**交付物**:
+- **ChangeSet 模块**: ChangeSet, FileChange, MethodChange, CommitInfo, 枚举（ChangeType, ChangeStatus）
+- **ImpactGraph 模块**: ImpactGraph, ImpactNode, ImpactEdge, 枚举（ImpactType, ImpactSeverity）
+- **TestCase 模块**: TestCase, TestSuite, 枚举（TestPriority, TestType）
+- **TestRun 模块**: TestRun, TestResult, TestDiff, TestComparison, CoverageData, 枚举（TestStatus, RunType, RunStatus）
+
+### 🚧 进行中阶段（5）
+
+#### 阶段 5: 适配器层实现
+**状态**: ⏳ 进行中
+**目录**: `jcia/adapters/`
+
+**交付物**:
+- [ ] PyDriller适配器（Git仓库分析） - [git/pydriller_adapter.py](mdc:jcia/adapters/git/pydriller_adapter.py)
+- [ ] Maven适配器（Maven项目处理） - [maven/maven_adapter.py](mdc:jcia/adapters/maven/maven_adapter.py)
+- [ ] AI服务适配器（LLM集成） - [ai/llm_adapter.py](mdc:jcia/adapters/ai/llm_adapter.py)
+- [ ] 数据库适配器（SQLite/PostgreSQL） - [database/sqlite_adapter.py](mdc:jcia/adapters/database/sqlite_adapter.py)
+
+**关键实现**:
+```python
+from jcia.core.interfaces.analyzer import ChangeAnalyzer
+from jcia.core.entities.change_set import ChangeSet
+
+class PyDrillerAdapter(ChangeAnalyzer):
+    """PyDriller Git仓库分析适配器."""
+    
+    def analyze_commits(self, from_commit: str, to_commit: str | None = None) -> ChangeSet:
+        """分析Git提交差异."""
+        # 实现分析逻辑
+        pass
+```
+
+### ⏳ 待开始阶段（6-13）
+
+#### 阶段 6: 基础设施层实现
+**状态**: ⏸ 待开始
+**目录**: `jcia/infrastructure/`
+
+**交付物**:
+- [ ] 仓储实现（基于数据库） - [database/sqlite_repository.py](mdc:jcia/infrastructure/database/sqlite_repository.py)
+- [ ] 配置管理服务 - [config/config_manager.py](mdc:jcia/infrastructure/config/config_manager.py)
+- [ ] 日志服务 - [logging/logger.py](mdc:jcia/infrastructure/logging/logger.py)
+- [ ] 文件系统服务 - [fs/file_handler.py](mdc:jcia/infrastructure/fs/file_handler.py)
+
+#### 阶段 7: 领域服务实现
+**状态**: ⏸ 待开始
+**目录**: `jcia/core/services/`
+
+**交付物**:
+- [ ] 变更影响分析服务 - [impact_analyzer.py](mdc:jcia/core/services/impact_analyzer.py)
+- [ ] 调用链构建服务 - [call_chain_builder.py](mdc:jcia/core/services/call_chain_builder.py)
+- [ ] 测试选择服务（STARTS算法） - [test_selector.py](mdc:jcia/core/services/test_selector.py)
+- [ ] 测试生成服务 - [test_generator.py](mdc:jcia/core/services/test_generator.py)
+
+#### 阶段 8: 应用用例实现
+**状态**: ⏸ 待开始
+**目录**: `jcia/core/use_cases/`
+
+**交付物**:
+- [ ] 分析变更影响用例 - [analyze_impact.py](mdc:jcia/core/use_cases/analyze_impact.py)
+- [ ] 生成测试用例 - [generate_tests.py](mdc:jcia/core/use_cases/generate_tests.py)
+- [ ] 执行回归测试用例 - [run_regression.py](mdc:jcia/core/use_cases/run_regression.py)
+- [ ] 生成测试报告用例 - [generate_report.py](mdc:jcia/core/use_cases/generate_report.py)
+
+#### 阶段 9: CLI命令行工具
+**状态**: ⏸ 待开始
+**目录**: `jcia/cli/`
+
+**交付物**:
+- [ ] analyze命令（分析变更影响） - [cli.py](mdc:jcia/cli/cli.py)
+- [ ] test命令（生成和运行测试）
+- [ ] report命令（生成报告）
+- [ ] config命令（配置管理）
+
+#### 阶段 10: 报告生成模块
+**状态**: ⏸ 待开始
+**目录**: `jcia/reports/`
+
+**交付物**:
+- [ ] HTML报告生成器 - [html.py](mdc:jcia/reports/html.py)
+- [ ] JSON报告生成器 - [json.py](mdc:jcia/reports/json.py)
+- [ ] Markdown报告生成器 - [markdown.py](mdc:jcia/reports/markdown.py)
+- [ ] 控制台输出格式化 - [console.py](mdc:jcia/reports/console.py)
+
+#### 阶段 11: 集成测试
+**状态**: ⏸ 待开始
+**目录**: `tests/integration/`
+
+**交付物**:
+- [ ] 完整工作流测试 - [test_workflow.py](mdc:tests/integration/test_workflow.py)
+- [ ] 与真实Git仓库集成测试 - [test_git_integration.py](mdc:tests/integration/test_git_integration.py)
+- [ ] 与Maven项目集成测试 - [test_maven_integration.py](mdc:tests/integration/test_maven_integration.py)
+- [ ] 性能测试 - [test_performance.py](mdc:tests/integration/test_performance.py)
+
+#### 阶段 12: 文档完善
+**状态**: ⏸ 待开始
+**目录**: `docs/`
+
+**交付物**:
+- [ ] 用户手册（使用指南） - [user_guide.md](mdc:docs/user_guide.md)
+- [ ] API文档 - [api.md](mdc:docs/api.md)
+- [ ] 开发者指南（贡献指南） - [developer_guide.md](mdc:docs/developer_guide.md)
+- [ ] 架构文档 - [architecture.md](mdc:docs/architecture.md)
+
+#### 阶段 13: CI/CD和部署
+**状态**: ⏸ 待开始
+**目录**: `.github/workflows/`
+
+**交付物**:
+- [ ] GitHub Actions CI/CD配置 - [ci.yml](mdc:.github/workflows/ci.yml)
+- [ ] Docker镜像构建 - [Dockerfile](mdc:Dockerfile)
+- [ ] PyPI包发布
+- [ ] 版本发布流程
+
+## 技术栈
+
+### 核心技术
+- **语言**: Python 3.10+
+- **测试**: pytest
+- **代码质量**: ruff, pyright, bandit
+- **依赖管理**: pip, pyproject.toml
+
+### 外部依赖
+- **pydriller**: Git仓库分析
+- **networkx**: 调用链图构建和分析
+- **pyyaml**: 配置文件解析
+- **click**: CLI框架
+- **pydantic**: 数据验证
+- **rich**: 终端输出
+
+## 关键指标
+
+### 代码统计
+- **总代码行数**: ~2,067 LOC
+- **测试代码行数**: ~804 test LOC
+- **测试/代码比**: ~39%
+
+### 测试统计
+- **单元测试数量**: 56个
+- **测试通过率**: 100%
+- **实体层覆盖率**: 100%
+- **接口层覆盖率**: 0%（预期）
+- **整体覆盖率**: 49.44%
+
+## 下一步行动
+
+1. 开始阶段 5：适配器层实现
+2. 优先实现 PyDriller Git 适配器（核心功能）
+3. 编写适配器单元测试
+4. 验证适配器与实体的集成
+5. 确保测试覆盖率达标（80%+）
+
+## 项目文档
+
+### 计划文档
+- [plan.md](mdc:plan.md): 详细的Markdown格式开发计划
+- [plan.json](mdc:plan.json): 结构化的JSON格式计划
+
+### 指南文档
+- [AGENTS.md](mdc:AGENTS.md): AI代理配置指南
+- [CODEBUDDY.md](mdc:CODEBUDDY.md): CodeBuddy工作指南
+
+### 配置文件
+- [pyproject.toml](mdc:pyproject.toml): 项目配置和依赖
+- [Makefile](mdc:Makefile): 自动化命令
+- [.pre-commit-config.yaml](mdc:.pre-commit-config.yaml): Pre-commit hooks

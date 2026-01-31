@@ -1,0 +1,126 @@
+# JCIA 配置文件示例
+# 复制此文件到项目根目录并重命名为 .jcia.yaml
+
+# 项目基本信息
+project:
+  name: "your-project-name"
+  language: "java"
+  build_tool: "maven"  # 或 "gradle"
+  
+# Java工具配置
+tools:
+  # java-all-call-graph 配置
+  call_graph:
+    jar_path: "~/.jcia/tools/java-all-call-graph.jar"
+    options:
+      - "-method"
+      - "-output"
+  
+  # EvoSuite 配置
+  evosuite:
+    jar_path: "~/.jcia/tools/evosuite.jar"
+    timeout: 300  # 秒
+    criteria: "branch"  # branch, line, mutation
+  
+  # STARTS 配置
+  starts:
+    enabled: true
+    mvn_options:
+      - "-DstartsLogging=INFO"
+  
+  # JaCoCo 配置
+  jacoco:
+    enabled: true
+    output_format: "xml"  # xml, html, csv
+  
+  # Pitest 配置
+  pitest:
+    enabled: false  # 默认关闭（较慢）
+    target_classes: []
+
+# 多仓库配置（微服务场景）
+multi_repo:
+  enabled: false
+  repos:
+    - name: "user-service"
+      path: "/repos/user-service"
+      git_url: "git@github.com:company/user-service.git"
+    - name: "order-service"
+      path: "/repos/order-service"
+      git_url: "git@github.com:company/order-service.git"
+  
+  service_dependencies:
+    - from: "order-service"
+      to: ["user-service", "payment-service"]
+      protocol: "REST"
+
+# DeepWiki AI集成配置
+deepwiki:
+  enabled: false
+  base_url: "http://your-internal-deepwiki.com"
+  access_method: "url"  # url | api
+  
+  url_config:
+    timeout: 30
+    retry_count: 3
+    cache_ttl: 3600
+  
+  repository_mapping:
+    - repo_name: "user-service"
+      deepwiki_path: "/repos/user-service"
+
+# 分析配置
+analysis:
+  # 变更检测配置
+  change_detection:
+    ignore_patterns:
+      - "*.md"
+      - "*.txt"
+      - "*.properties"
+      - "*.yml"
+      - "*.yaml"
+    
+  # 调用链分析配置
+  call_chain:
+    max_depth: 10
+    include_upstream: true
+    include_downstream: true
+    
+  # 影响范围计算配置
+  impact:
+    include_indirect: true
+    include_external_libs: false
+
+# 测试配置
+testing:
+  # 测试选择配置
+  test_selection:
+    enabled: true
+    strategy: "starts"  # starts | all
+    
+  # 测试生成配置
+  test_generation:
+    enabled: true
+    max_tests_per_class: 10
+    
+  # 回归测试配置
+  regression:
+    baseline_branch: "main"
+    save_baseline: true
+    auto_compare: false
+
+# 报告配置
+report:
+  output_format: "html"  # html, json, both
+  output_dir: "./jcia-reports"
+  include_coverage: true
+  include_impact_graph: true
+
+# 数据库配置
+database:
+  path: "~/.jcia/jcia.db"
+  
+# WSL配置
+wsl:
+  enabled: true  # 自动检测WSL环境
+  java_home: "/usr/lib/jvm/java-11-openjdk-amd64"

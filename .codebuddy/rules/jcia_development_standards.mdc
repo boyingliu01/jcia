@@ -1,0 +1,214 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2026-01-30T17:08:43.252Z
+provider: 
+---
+
+# JCIA 开发规范规则
+
+## 环境要求
+
+### 1. 虚拟环境（强制）
+```bash
+# 必须使用虚拟环境，避免 PEP 668 externally-managed-environment 问题
+python -m venv .venv
+source .venv/bin/activate  # Linux/WSL
+```
+
+### 2. WSL/Linux 测试（强制）
+```bash
+# 所有测试必须在 WSL 或 Linux 环境中执行
+# 不能直接在 Windows PowerShell 中执行测试
+.venv/bin/python -m pytest tests/unit -v
+```
+
+### 3. 测试结果输出（强制）
+```bash
+# 测试结果必须输出到文件，不要直接显示在终端
+.venv/bin/python -m pytest tests/unit -v > test_output/pytest_results.txt 2>&1
+```
+
+## 代码规范
+
+### 1. 类型注解（Python 3.10+）
+```python
+# ✅ 正确：使用联合类型语法
+def example(value: str | None) -> str:
+    return value or ""
+
+# ❌ 错误：旧式 Optional 语法
+from typing import Optional
+def example(value: Optional[str]) -> str:
+    return value or ""
+```
+
+### 2. TYPE_CHECKING 前向引用
+```python
+# ✅ 正确：避免循环导入
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from jcia.core.entities.test_run import TestRun
+
+class TestRunRepository(ABC):
+    def save(self, test_run: "TestRun") -> int:
+        pass
+
+# ❌ 错误：直接导入导致循环
+from jcia.core.entities.test_run import TestRun
+
+class TestRunRepository(ABC):
+    def save(self, test_run: TestRun) -> int:
+        pass
+```
+
+### 3. Test* 类命名
+```python
+# ✅ 正确：所有以 Test 开头的实体类必须包含 __test__ = False
+@dataclass
+class TestResult:
+    """测试结果实体."""
+    __test__ = False  # 防止 pytest 误收集
+
+    status: TestStatus = TestStatus.PENDING
+
+# ❌ 错误：缺少 __test__ = False
+@dataclass
+class TestResult:
+    """测试结果实体."""
+    status: TestStatus = TestStatus.PENDING
+```
+
+## 测试驱动开发（TDD）
+
+### TDD 流程（强制）
+1. **先写测试** → 2. **运行测试（失败）** → 3. **实现功能** → 4. **运行测试（通过）** → 5. **重构**
+
+### 测试要求
+- 所有新功能必须有单元测试
+- 测试覆盖率要求：80%+（接口层除外）
+- 接口层（`jcia/core/interfaces/`）不需要测试（仅抽象方法）
+
+### 运行测试
+```bash
+# 运行所有单元测试
+.venv/bin/python -m pytest tests/unit -v
+
+# 运行特定测试文件
+.venv/bin/python -m pytest tests/unit/core/test_change_set.py -v
+
+# 运行特定测试方法
+.venv/bin/python -m pytest tests/unit/core/test_change_set.py::TestChangeSet::test_changed_files -v
+
+# 运行带覆盖率的测试
+.venv/bin/python -m pytest tests/unit -v --cov=jcia --cov-report=term-missing
+```
+
+## 代码质量检查
+
+### Pre-commit Hooks
+项目配置了自动化的 pre-commit hooks：
+1. **ruff**: 自动修复 linting 问题
+2. **ruff-format**: 格式化代码
+3. **pyright**: 类型检查
+4. **bandit**: 安全扫描
+5. **pytest-check**: 提交前运行单元测试
+
+### 提交前检查清单
+```bash
+# 运行完整检查
+make check  # 或
+.venv/bin/python -m ruff check jcia
+.venv/bin/python -m pyright jcia
+.venv/bin/python -m pytest tests/unit
+```
+
+### 禁止的操作
+```python
+# ❌ 不要使用 any 类型（除非有充分理由）
+def process(data: any) -> None:
+    pass
+
+# ❌ 不要使用 # type: ignore 抑制类型错误
+def example(value: str) -> int:
+    return value  # type: ignore
+
+# ❌ 不要使用裸 except
+try:
+    risky_operation()
+except:  # ❌ 错误
+    pass
+
+# ✅ 正确的做法
+try:
+    risky_operation()
+except Exception as e:
+    logger.error(f"Operation failed: {e}")
+    raise
+```
+
+## 测试脚本使用
+
+项目提供了多个测试脚本（在 `scripts/` 目录）：
+
+### run_pytest.sh
+```bash
+# 在 WSL 中运行单元测试，结果输出到文件
+bash /mnt/e/Study/LLM/Java代码变更影响分析/scripts/run_pytest.sh
+```
+
+### 其他实用脚本
+- `dev_workflow.sh`: 开发工作流
+- `fix_and_test.sh`: 自动修复和测试
+
+## 错误处理规范
+
+```python
+# ✅ 正确：使用描述性的异常类型
+class AnalysisError(Exception):
+    """分析过程错误."""
+    pass
+
+# ✅ 正确：记录日志后重新抛出
+try:
+    result = analyzer.analyze_commits(from_commit)
+except GitError as e:
+    logger.error(f"Git operation failed: {e}")
+    raise
+
+# ❌ 错误：捕获所有异常但不处理
+try:
+    result = analyzer.analyze_commits(from_commit)
+except:
+    pass
+```
+
+## 文档规范
+
+### Docstring 格式（Google 风格）
+```python
+def analyze_commits(
+    self,
+    from_commit: str,
+    to_commit: str | None = None
+) -> ChangeSet:
+    """分析指定提交范围的变更.
+
+    Args:
+        from_commit: 起始提交哈希
+        to_commit: 结束提交哈希（默认为HEAD）
+
+    Returns:
+        ChangeSet: 变更集合，包含所有变更的文件和方法
+
+    Raises:
+        AnalysisError: 分析过程中发生错误
+        GitError: Git操作失败
+
+    Example:
+        >>> analyzer = PyDrillerAdapter(repo_path)
+        >>> changes = analyzer.analyze_commits("abc123", "def456")
+    """
+```

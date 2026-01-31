@@ -1,0 +1,316 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2026-01-30T17:10:13.385Z
+provider: 
+---
+
+# JCIA 测试规范和覆盖率规则
+
+## 覆盖率要求
+
+### 整体覆盖率目标
+- **最低要求**: 80%
+- **推荐目标**: 90%+
+
+### 各层覆盖率要求
+| 层次 | 位置 | 覆盖率要求 | 说明 |
+|-------|--------|-------------|------|
+| Entities | `jcia/core/entities/` | 100% | 核心业务逻辑，必须完全测试 |
+| Services | `jcia/core/services/` | 90%+ | 领域服务，关键业务逻辑 |
+| Use Cases | `jcia/core/use_cases/` | 85%+ | 应用编排，主要逻辑路径 |
+| Infrastructure | `jcia/infrastructure/` | 80%+ | 数据持久化实现 |
+| Adapters | `jcia/adapters/` | 75%+ | 外部系统集成 |
+| **Interfaces** | `jcia/core/interfaces/` | **0%** | **仅抽象方法，无需测试** |
+
+### 覆盖率配置
+```toml
+# pyproject.toml
+[tool.coverage.run]
+source = ["jcia"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "jcia/__main__.py",
+    "jcia/core/interfaces/*",  # 接口层已排除
+]
+```
+
+## 测试结构
+
+### 目录结构
+```
+tests/
+├── unit/                    # 单元测试
+│   ├── core/
+│   │   ├── test_change_set.py
+│   │   ├── test_impact_graph.py
+│   │   ├── test_test_case.py
+│   │   └── test_test_run.py
+│   ├── adapters/
+│   └── infrastructure/
+└── integration/             # 集成测试
+    ├── test_git_integration.py
+    └── test_maven_integration.py
+```
+
+### 测试命名规范
+```python
+# ✅ 测试类：Test + 实体/功能名称
+class TestChangeSet:
+    """ChangeSet测试类."""
+
+# ✅ 测试方法：test_ + 方法/属性名称
+def test_changed_files(self) -> None:
+    """测试变更文件列表."""
+
+# ✅ 使用描述性名称
+def test_empty_change_set_returns_true_for_is_empty(self) -> None:
+    """测试空变更集判断."""
+
+# ❌ 避免过于简单的名称
+def test_empty(self) -> None:
+    pass
+```
+
+## 测试模式
+
+### 1. 实体属性测试
+```python
+def test_full_name_with_signature(self) -> None:
+    """测试全限定名包含签名."""
+    method_change = MethodChange(
+        class_name="Service",
+        method_name="method",
+        signature="(String)"
+    )
+    assert method_change.full_name == "com.Service.method(String)"
+```
+
+### 2. 属性计算测试
+```python
+def test_is_java_file(self) -> None:
+    """测试是否为Java文件."""
+    java_file = FileChange(file_path="src/com/Service.java")
+    assert java_file.is_java_file is True
+    
+    non_java = FileChange(file_path="README.md")
+    assert non_java.is_java_file is False
+```
+
+### 3. 边界条件测试
+```python
+def test_empty_change_set(self) -> None:
+    """测试空变更集."""
+    empty_set = ChangeSet()
+    assert empty_set.is_empty() is True
+    assert empty_set.total_insertions == 0
+    assert empty_set.total_deletions == 0
+```
+
+### 4. 集合操作测试
+```python
+def test_add_file_change(self) -> None:
+    """测试添加文件变更."""
+    change_set = ChangeSet()
+    file_change = FileChange(file_path="Service.java")
+    
+    change_set.add_file_change(file_change)
+    
+    assert change_set.total_changes == 1
+    assert "Service.java" in change_set.changed_files
+```
+
+### 5. 转换方法测试
+```python
+def test_to_dict(self) -> None:
+    """测试转换为字典."""
+    change_set = ChangeSet(
+        file_changes=[FileChange(file_path="File.java")]
+    )
+    result_dict = change_set.to_dict()
+    
+    assert isinstance(result_dict, dict)
+    assert "changed_files" in result_dict
+```
+
+## Test Fixtures
+
+### 实体 Fixture
+```python
+@pytest.fixture
+def sample_change_set() -> ChangeSet:
+    """创建示例变更集."""
+    return ChangeSet(
+        file_changes=[
+            FileChange(file_path="File1.java"),
+            FileChange(file_path="File2.java"),
+        ]
+    )
+```
+
+### 配置 Fixture
+```python
+@pytest.fixture
+def test_config() -> Config:
+    """创建测试配置."""
+    config = Config()
+    config.project.build_tool = "maven"
+    config.tools.call_graph.jar_path = "/path/to/call-graph.jar"
+    config.database.path = ":memory:"  # 使用内存数据库
+    return config
+```
+
+## Mock 使用规则
+
+### Mock 适配器
+```python
+from unittest.mock import Mock
+from jcia.core.interfaces.analyzer import ChangeAnalyzer
+
+def test_change_analyzer_mock(self):
+    """使用 mock 测试用例."""
+    # 创建 mock
+    mock_analyzer = Mock(spec=ChangeAnalyzer)
+    mock_analyzer.analyze_commits.return_value = ChangeSet()
+    
+    # 使用 mock
+    result = mock_analyzer.analyze_commits("abc123")
+    
+    # 验证
+    mock_analyzer.analyze_commits.assert_called_once_with("abc123")
+    assert isinstance(result, ChangeSet)
+```
+
+### Mock 仓储
+```python
+from unittest.mock import Mock
+from jcia.core.interfaces.repository import TestRunRepository
+
+def test_with_repository_mock(self):
+    """使用仓储 mock 测试用例."""
+    mock_repo = Mock(spec=TestRunRepository)
+    mock_test_run = TestRun(id=1)
+    mock_repo.save.return_value = 1
+    
+    # 使用 mock
+    test_run_id = mock_repo.save(mock_test_run)
+    
+    # 验证
+    assert test_run_id == 1
+    mock_repo.save.assert_called_once_with(mock_test_run)
+```
+
+## 测试标记
+
+```python
+# 单元测试标记
+@pytest.mark.unit
+def test_unit_functionality(self) -> None:
+    """单元测试."""
+    pass
+
+# 集成测试标记
+@pytest.mark.integration
+def test_integration(self) -> None:
+    """集成测试."""
+    pass
+
+# 慢速测试标记
+@pytest.mark.slow
+def test_slow_operation(self) -> None:
+    """慢速测试."""
+    pass
+
+# 跳过测试
+@pytest.mark.skip(reason="功能未实现")
+def test_not_implemented(self) -> None:
+    """未实现功能."""
+    pass
+```
+
+## 异常测试
+
+```python
+def test_invalid_input_raises_error(self) -> None:
+    """测试无效输入抛出错误."""
+    with pytest.raises(AnalysisError) as exc_info:
+        analyzer.analyze_commits("")
+    
+    assert "invalid commit" in str(exc_info.value)
+```
+
+## 参数化测试
+
+```python
+@pytest.mark.parametrize("file_path,expected", [
+    ("Test.java", True),
+    ("test.java", True),
+    ("Service.java", True),
+    ("README.md", False),
+    ("pom.xml", False),
+])
+def test_is_test_file(self, file_path: str, expected: bool) -> None:
+    """参数化测试：判断是否为测试文件."""
+    file_change = FileChange(file_path=file_path)
+    assert file_change.is_test_file == expected
+```
+
+## 运行测试
+
+### 在 WSL 中运行
+```bash
+# 进入项目目录
+cd /mnt/e/Study/LLM/Java代码变更影响分析
+
+# 激活虚拟环境
+source .venv/bin/activate
+
+# 运行单元测试
+.venv/bin/python -m pytest tests/unit -v
+
+# 运行带覆盖率的测试
+.venv/bin/python -m pytest tests/unit -v --cov=jcia --cov-report=term-missing
+```
+
+### 使用测试脚本
+```bash
+# 使用预定义脚本（结果输出到文件）
+bash scripts/run_pytest.sh
+
+# 查看测试结果
+cat test_output/pytest_results.txt
+```
+
+## 测试覆盖率报告
+
+### 查看覆盖率报告
+```bash
+# 终端输出（显示缺失的行）
+pytest --cov=jcia --cov-report=term-missing
+
+# HTML 报告（可视化）
+pytest --cov=jcia --cov-report=html
+open htmlcov/index.html
+```
+
+### 关键指标
+```
+Name                                          Stmts   Miss  Cover   Missing
+---------------------------------------------------------------------------
+jcia/core/entities/change_set.py              104      0   100%
+jcia/core/entities/impact_graph.py            112      0   100%
+jcia/core/interfaces/repository.py               57     57     0%   7-39  (预期)
+---------------------------------------------------------------------------
+TOTAL                                           449    227    49%
+```
+
+## 测试最佳实践
+
+1. **独立测试**: 每个测试应该独立运行，不依赖其他测试
+2. **快速测试**: 单元测试应该在毫秒级完成
+3. **明确断言**: 使用具体的断言消息
+4. **测试边界**: 测试空值、None、极值等边界条件
+5. **测试异常**: 验证正确的错误抛出
+6. **清理资源**: 使用 teardown 清理测试资源
