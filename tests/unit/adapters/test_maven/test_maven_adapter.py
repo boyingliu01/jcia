@@ -109,3 +109,69 @@ class TestMavenAdapter:
         assert result.success is False
         assert result.exit_code == 1
         assert result.stderr == "Build failed"
+
+    def test_install_returns_true(self) -> None:
+        """测试安装方法返回True。"""
+        # Arrange
+        adapter = MavenAdapter(project_path="/test/project")
+
+        # Act
+        result = adapter.install()
+
+        # Assert
+        assert result is True
+
+    def test_plugin_group_id_returns_default(self) -> None:
+        """测试默认插件groupId。"""
+        # Arrange
+        adapter = MavenAdapter(project_path="/test/project")
+
+        # Act
+        group_id = adapter.plugin_group_id()
+
+        # Assert
+        assert group_id == "org.apache.maven.plugins"
+
+    def test_plugin_artifact_id_returns_default(self) -> None:
+        """测试默认插件artifactId。"""
+        # Arrange
+        adapter = MavenAdapter(project_path="/test/project")
+
+        # Act
+        artifact_id = adapter.plugin_artifact_id()
+
+        # Assert
+        assert artifact_id == "maven-surefire-plugin"
+
+    def test_get_maven_goal_returns_default(self) -> None:
+        """测试默认Maven目标。"""
+        # Arrange
+        adapter = MavenAdapter(project_path="/test/project")
+
+        # Act
+        goal = adapter.get_maven_goal()
+
+        # Assert
+        assert goal == "surefire:test"
+
+    def test_build_maven_args_default(self) -> None:
+        """测试默认构建参数。"""
+        # Arrange
+        adapter = MavenAdapter(project_path="/test/project")
+
+        # Act
+        args = adapter.build_maven_args()
+
+        # Assert
+        assert args == ["clean", "test"]
+
+    def test_build_maven_args_skip_tests(self) -> None:
+        """测试跳过测试的构建参数。"""
+        # Arrange
+        adapter = MavenAdapter(project_path="/test/project")
+
+        # Act
+        args = adapter.build_maven_args(skip_tests=True)
+
+        # Assert
+        assert args == ["test-compile", "test"]

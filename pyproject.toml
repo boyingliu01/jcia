@@ -98,6 +98,8 @@ line-ending = "auto"
 [tool.pyright]
 pythonVersion = "3.10"
 typeCheckingMode = "basic"
+venvPath = "."
+venv = ".venv"
 include = ["jcia", "tests"]
 exclude = [
     "**/node_modules",
@@ -112,6 +114,7 @@ reportUnknownVariableType = false
 reportMissingParameterType = false
 reportUnknownArgumentType = false
 reportUnknownLambdaType = false
+
 
 
 
