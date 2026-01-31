@@ -4,6 +4,15 @@
 所有外部实现都通过这些接口与核心业务逻辑交互。
 """
 
+from jcia.core.interfaces.ai_service import (
+    AIAnalyzer,
+    AIProvider,
+    AITestGenerator,
+    CodeAnalysisRequest,
+    CodeAnalysisResponse,
+    TestGenerationRequest,
+    TestGenerationResponse,
+)
 from jcia.core.interfaces.analyzer import ChangeAnalyzer, ImpactAnalyzer
 from jcia.core.interfaces.call_chain_analyzer import (
     AnalyzerType,
@@ -45,6 +54,14 @@ __all__ = [
     "CallChainDirection",
     "CallChainGraph",
     "CallChainNode",
+    # AI 服务接口
+    "AIAnalyzer",
+    "AIProvider",
+    "AITestGenerator",
+    "CodeAnalysisRequest",
+    "CodeAnalysisResponse",
+    "TestGenerationRequest",
+    "TestGenerationResponse",
     # 仓储接口
     "ChangeImpactRepository",
     "TestDiffRepository",

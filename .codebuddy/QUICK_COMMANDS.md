@@ -21,6 +21,12 @@
 | `/test-cov` | 带覆盖率的测试 | - |
 | `/all` | 运行所有检查 (lint+format+typecheck+security+test) | - |
 | `/clean` | 清理构建产物 | - |
+| `/commit` | Git 提交代码 (交互式) | - |
+| `/commit-auto` | Git 提交代码 (自动消息) | - |
+| `/save` | Git 快速保存 | - |
+| `/status` | Git 状态 | - |
+| `/log` | Git 日志 | - |
+
 
 ## 🔧 使用方式
 
@@ -157,9 +163,9 @@ PS E:\Study\LLM\Java代码变更影响分析> /check
 /check
 
 # 如果通过
-git add .
-git commit -m "feat: 完成功能"
+/save
 ```
+
 
 ### 只运行特定检查
 
@@ -186,6 +192,12 @@ git commit -m "feat: 完成功能"
 - `/test - 运行单元测试 (Pytest)`
 - `/test-cov - 带覆盖率的测试`
 - `/clean - 清理构建产物`
+- `/commit - Git 提交代码 (交互式)`
+- `/commit-auto - Git 提交代码 (自动消息)`
+- `/save - Git 快速保存`
+- `/status - Git 状态`
+- `/log - Git 日志`
+
 
 ### .vscode/keybindings.json
 定义了快捷键：

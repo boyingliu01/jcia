@@ -1,1 +1,5 @@
-"""AI工具适配器（DeepWiki等）."""
+"""AI 服务适配器."""
+
+from jcia.adapters.ai.volcengine_adapter import VolcengineAdapter
+
+__all__ = ["VolcengineAdapter"]

@@ -19,14 +19,9 @@ help:
 
 # 虚拟环境路径
 VENV_DIR := .venv
-# Windows 和 Unix 兼容
-ifeq ($(OS),Windows_NT)
-    VENV_PYTHON := $(VENV_DIR)\Scripts\python.exe
-    VENV_PIP := $(VENV_DIR)\Scripts\pip.exe
-else
-    VENV_PYTHON := $(VENV_DIR)/bin/python
-    VENV_PIP := $(VENV_DIR)/bin/pip
-endif
+VENV_PYTHON := $(VENV_DIR)\Scripts\python.exe
+VENV_PIP := $(VENV_DIR)\Scripts\pip.exe
+
 
 venv:
 	python -m venv $(VENV_DIR)
@@ -61,15 +56,10 @@ security:
 	python -m bandit -r jcia -c pyproject.toml
 
 clean:
-ifeq ($(OS),Windows_NT)
 	powershell -Command "Remove-Item -Path build, dist, *.egg-info, htmlcov, .pytest_cache, .mypy_cache, .ruff_cache -Recurse -Force -ErrorAction SilentlyContinue"
 	powershell -Command "Get-ChildItem -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
 	powershell -Command "Get-ChildItem -Recurse -File -Filter *.pyc | Remove-Item -Force -ErrorAction SilentlyContinue"
-else
-	rm -rf build/ dist/ *.egg-info/ htmlcov/ .pytest_cache/ .mypy_cache/ .ruff_cache/
-	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name "*.pyc" -delete 2>/dev/null || true
-endif
+
 
 setup-hooks: install-dev
 	python -m pre_commit install

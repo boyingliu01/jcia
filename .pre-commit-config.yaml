@@ -42,8 +42,10 @@ repos:
     hooks:
       - id: pytest-check
         name: "🧪 Pytest 单元测试"
-        entry: .venv\Scripts\python -m pytest tests/unit -v --tb=short -q
+        entry: .venv/Scripts/python.exe -m pytest tests/unit -v --tb=short -q
+
         language: system
+
         pass_filenames: false
         always_run: true
         stages: [pre-commit]

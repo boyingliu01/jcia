@@ -2,7 +2,8 @@
 
 ## 问题说明
 
-在VS Code中创建新终端时，如果显示"WSL（默认）"，说明IDE的终端配置仍然默认使用WSL。本指南说明如何将默认终端更改为PowerShell。
+在VS Code中创建新终端时，如果不是"PowerShell"，说明IDE的终端配置未使用PowerShell。本指南说明如何将默认终端更改为PowerShell。
+
 
 ## 解决方案
 
@@ -15,7 +16,8 @@
 1. 关闭VS Code
 2. 重新打开项目
 3. 按 `Ctrl+`` 或点击"终端" → "新建终端"
-4. 应该看到终端标题显示为"PowerShell"而不是"WSL"
+4. 应该看到终端标题显示为"PowerShell"
+
 
 ### 方法2：手动设置VS Code默认终端
 
@@ -98,7 +100,7 @@ where.exe python
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-### Q2: 终端仍然显示WSL
+### Q2: 终端仍然不是PowerShell
 
 **检查清单**：
 - [ ] `.vscode/settings.json`文件是否存在于项目根目录
@@ -108,10 +110,11 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ### Q3: 多个项目配置冲突
 
-如果某些项目需要WSL，而本项目需要PowerShell：
+如果其他项目需要不同终端，而本项目需要PowerShell：
 
 - 项目级设置（`.vscode/settings.json`）会覆盖用户级设置
 - 只需要在本项目创建`.vscode/settings.json`即可
+
 
 ## 完整的开发环境初始化
 
@@ -148,19 +151,14 @@ make test
 
 ## VS Code终端切换
 
-如果需要临时切换到其他终端：
-
-### 切换到WSL
-```
-1. 点击终端标题栏右侧的下拉箭头
-2. 选择"Ubuntu (WSL)"或其他Linux发行版
-```
+如果需要临时切换终端：
 
 ### 切换到PowerShell
 ```
 1. 点击终端标题栏右侧的下拉箭头
 2. 选择"PowerShell"
 ```
+
 
 ## 相关配置文件
 

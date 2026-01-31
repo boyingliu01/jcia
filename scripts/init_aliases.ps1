@@ -25,8 +25,10 @@ Write-Host "  /all       - 运行所有检查" -ForegroundColor Green
 Write-Host "  /clean     - 清理构建产物" -ForegroundColor Green
 Write-Host "  /commit    - Git 提交代码 (交互式)" -ForegroundColor Green
 Write-Host "  /commit-auto - Git 提交代码 (自动消息)" -ForegroundColor Green
+Write-Host "  /save      - Git 快速保存" -ForegroundColor Green
 Write-Host "  /status    - Git 状态" -ForegroundColor Green
 Write-Host "  /log       - Git 日志" -ForegroundColor Green
+
 Write-Host ""
 Write-Host "快捷键:" -ForegroundColor Yellow
 Write-Host "  Ctrl+Shift+A - 运行工程纪律完整检查" -ForegroundColor Cyan
@@ -99,7 +101,15 @@ function Invoke-Check {
             git commit -m "chore: auto commit at $timestamp"
             Write-Host "✓ 自动提交完成" -ForegroundColor Green
         }
+        "save" {
+            Write-Host "💾 Git 快速保存..." -ForegroundColor Cyan
+            $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm'
+            git add .
+            git commit -m "chore: save progress at $timestamp"
+            Write-Host "✓ 快速保存完成" -ForegroundColor Green
+        }
         "status" {
+
             Write-Host "📊 Git 状态..." -ForegroundColor Cyan
             git status
         }
@@ -129,8 +139,10 @@ Set-Alias -Name "/all" -Value { Invoke-Check "all" }
 Set-Alias -Name "/clean" -Value { Invoke-Check "clean" }
 Set-Alias -Name "/commit" -Value { Invoke-Check "commit" }
 Set-Alias -Name "/commit-auto" -Value { Invoke-Check "commit-auto" }
+Set-Alias -Name "/save" -Value { Invoke-Check "save" }
 Set-Alias -Name "/status" -Value { Invoke-Check "status" }
 Set-Alias -Name "/log" -Value { Invoke-Check "log" }
+
 
 Write-Host "✓ 命令别名已加载到当前会话" -ForegroundColor Green
 Write-Host ""
@@ -140,4 +152,6 @@ Write-Host "  /test        # 只运行测试" -ForegroundColor White
 Write-Host "  /format       # 只格式化代码" -ForegroundColor White
 Write-Host "  /commit      # 提交代码 (交互式)" -ForegroundColor White
 Write-Host "  /commit-auto  # 提交代码 (自动消息)" -ForegroundColor White
-Write-Host ""
+Write-Host "  /save        # 快速保存当前成果" -ForegroundColor White
+Write-Host "" 
+

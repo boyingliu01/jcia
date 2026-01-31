@@ -36,8 +36,10 @@ Ctrl + Shift + ~ (波浪号)
 | `/clean` | 🧹 清理构建产物 | - |
 | `/commit` | 📝 Git 提交代码 (交互式) | - |
 | `/commit-auto` | 🤖 Git 提交代码 (自动消息) | - |
+| `/save` | 💾 Git 快速保存 | - |
 | `/status` | 📊 Git 状态 | - |
 | `/log` | 📋 Git 日志 | - |
+
 
 ## 🎯 三种使用方式
 
@@ -110,6 +112,7 @@ Ctrl + Shift + B    # 显示任务面板
 ```powershell
 /commit       # 交互式提交 (输入提交信息)
 /commit-auto   # 自动提交 (使用自动消息)
+/save         # 快速保存当前成果
 ```
 
 ### 场景 6: 查看 Git 状态和历史
@@ -117,6 +120,7 @@ Ctrl + Shift + B    # 显示任务面板
 /status       # 查看当前 Git 状态
 /log          # 查看最近10条提交
 ```
+
 
 ### 场景 5: 查看覆盖率
 ```powershell

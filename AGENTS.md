@@ -48,7 +48,7 @@ def test_new_feature_should_work(self) -> None:
 ```
 
 Run test and confirm it fails:
-```bash
+```powershell
 pytest tests/unit/core/test_change_set.py::TestChangeSet::test_new_feature_should_work -v
 # Expected: FAILED
 ```
@@ -62,7 +62,7 @@ class ChangeSet:
 ```
 
 Run test and confirm it passes:
-```bash
+```powershell
 pytest tests/unit/core/test_change_set.py::TestChangeSet::test_new_feature_should_work -v
 # Expected: PASSED
 ```
@@ -79,7 +79,7 @@ class ChangeSet:
 ```
 
 Run all tests to ensure nothing broke:
-```bash
+```powershell
 pytest tests/unit -v
 # Expected: ALL PASSED
 ```
@@ -120,7 +120,7 @@ make check && make test-unit
 
 **Git 提交前会自动触发以下检查，任何失败都会阻止提交：**
 
-```bash
+```powershell
 # 正常提交（自动触发所有检查）
 git commit -m "feat: add new feature"
 
@@ -180,8 +180,8 @@ on:
 
 Before starting development, ensure environment passes quality checks:
 
-```bash
-make check     # Full quality check (lint + type + security)
+```powershell
+make check     # Full quality check (lint + type check + security)
 make test      # Run all tests with coverage
 ```
 
@@ -212,9 +212,10 @@ make test      # Run all tests with coverage
 详细使用指南：[QUICK_COMMANDS.md](mdc:.codebuddy/QUICK_COMMANDS.md)
 
 ### Setup (Virtual Environment Required)
-```bash
+```powershell
 python -m venv .venv
-.venv/bin/pip install -e ".[dev]"  # Install with dev dependencies
+.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"  # Install with dev dependencies
 ```
 
 ### Testing (PowerShell)
@@ -233,14 +234,14 @@ python -m pytest tests/unit/core/test_change_set.py -v
 ```
 
 ### Testing via Makefile
-```bash
+```powershell
 make test             # Run all tests with coverage (80% minimum)
 make test-unit        # Run unit tests only
 make test-integration # Run integration tests only
 ```
 
 ### Code Quality
-```bash
+```powershell
 make lint       # Run ruff linter (includes import sorting)
 make format     # Format code with ruff format
 make check      # Full check: lint + type check + security
@@ -249,7 +250,7 @@ make clean      # Clean build artifacts
 ```
 
 ### Type Checking
-```bash
+```powershell
 pyright jcia tests              # Type check (strict mode)
 mypy jcia --strict             # Alternative type checker
 ```
@@ -602,7 +603,7 @@ Key external libraries:
 
 ## Quick Reference
 
-```bash
+```powershell
 # Full quality check before development
 make check && make test
 

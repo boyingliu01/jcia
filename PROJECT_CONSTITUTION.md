@@ -64,7 +64,7 @@ Red → Green → Refactor
 
 所有代码在提交前必须通过以下检查：
 
-```bash
+```powershell
 make check  # 包含：lint + type check + security
 make test   # 包含：测试 + 覆盖率检查
 ```
@@ -153,7 +153,7 @@ Adapters → Infrastructure → Use Cases → Services → Entities
 
 使用以下命令验证依赖方向：
 
-```bash
+```powershell
 # 检查是否有跨层违规导入
 ruff check --select I jcia
 ```
@@ -284,7 +284,7 @@ def test_add_file_change_with_fixture(
 
 所有开发者必须配置 pre-commit hooks：
 
-```bash
+```powershell
 make install-dev  # 包含 pre-commit hooks 安装
 ```
 
@@ -313,7 +313,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
 
@@ -347,7 +347,7 @@ jobs:
 #### 版本发布流程
 
 1. **提交所有更改**
-   ```bash
+   ```powershell
    git add .
    git commit -m "feat: implement new feature"
    ```
@@ -357,7 +357,7 @@ jobs:
    - 遵循语义化版本 (SemVer)：`MAJOR.MINOR.PATCH`
 
 3. **创建 Git tag**
-   ```bash
+   ```powershell
    git tag v0.1.0
    git push origin main --tags
    ```
@@ -517,7 +517,7 @@ except GitError as e:
 - 及时更新依赖到安全版本
 - 使用 `bandit` 扫描安全漏洞
 
-```bash
+```powershell
 pip install pip-audit
 pip-audit
 bandit -r jcia -c pyproject.toml
@@ -674,7 +674,7 @@ make test
 
 ## 附录：常用命令
 
-```bash
+```powershell
 # 开发环境
 make install-dev      # 安装所有依赖
 make setup-hooks      # 配置 pre-commit hooks
