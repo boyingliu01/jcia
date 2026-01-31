@@ -53,3 +53,75 @@ class TestSQLiteAdapter:
 
         # Assert
         assert adapter.is_connected() is False
+
+    def test_execute_write_returns_lastrowid(self) -> None:
+        """测试写入返回自增ID."""
+        # Arrange
+        adapter = SQLiteAdapter(":memory:")
+        adapter.connect()
+
+        # Act
+        row_id = adapter.execute_write(
+            """
+            INSERT INTO test_runs (
+                commit_hash,
+                run_type,
+                start_time,
+                status,
+                total_tests,
+                passed_tests,
+                failed_tests
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "abc123",
+                "baseline",
+                "2024-01-01T00:00:00",
+                "completed",
+                1,
+                1,
+                0,
+            ),
+        )
+        adapter.disconnect()
+
+        # Assert
+        assert row_id == 1
+
+    def test_execute_non_query_returns_rowcount(self) -> None:
+        """测试更新/删除返回影响行数."""
+        # Arrange
+        adapter = SQLiteAdapter(":memory:")
+        adapter.connect()
+        row_id = adapter.execute_write(
+            """
+            INSERT INTO test_runs (
+                commit_hash,
+                run_type,
+                start_time,
+                status,
+                total_tests,
+                passed_tests,
+                failed_tests
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "abc123",
+                "baseline",
+                "2024-01-01T00:00:00",
+                "pending",
+                1,
+                1,
+                0,
+            ),
+        )
+
+        # Act
+        affected = adapter.execute_non_query(
+            "UPDATE test_runs SET status = ? WHERE id = ?",
+            ("completed", row_id),
+        )
+        adapter.disconnect()
+
+        # Assert
+        assert affected == 1

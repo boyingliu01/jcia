@@ -1,0 +1,472 @@
+"""SQLite 仓储实现."""
+
+from datetime import datetime
+
+from jcia.core.entities.test_run import (
+    RunStatus,
+    RunType,
+    TestDiff,
+    TestResult,
+    TestRun,
+    TestStatus,
+)
+from jcia.core.interfaces.repository import (
+    TestDiffRepository,
+    TestResultRepository,
+    TestRunRepository,
+)
+from jcia.infrastructure.database.sqlite_adapter import SQLiteAdapter
+
+
+class SQLiteTestRunRepository(TestRunRepository):
+    """SQLite TestRun 仓储实现."""
+
+    def __init__(self, adapter: SQLiteAdapter) -> None:
+        """初始化仓储.
+
+        Args:
+            adapter: SQLite 适配器
+        """
+        self._adapter = adapter
+        if not self._adapter.is_connected():
+            self._adapter.connect()
+
+    def save(self, test_run: TestRun) -> int:
+        """保存测试运行记录."""
+        row_id = self._adapter.execute_write(
+            """
+            INSERT INTO test_runs (
+                commit_hash,
+                run_type,
+                start_time,
+                end_time,
+                status,
+                total_tests,
+                passed_tests,
+                failed_tests
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                test_run.commit_hash,
+                test_run.run_type.value,
+                test_run.timestamp.isoformat() if test_run.timestamp else None,
+                None,
+                test_run.status.value,
+                test_run.total_tests,
+                test_run.passed_tests,
+                test_run.failed_tests,
+            ),
+        )
+        test_run.id = row_id
+        return row_id
+
+    def find_by_id(self, run_id: int) -> TestRun | None:
+        """根据ID查询测试运行."""
+        rows = self._adapter.execute(
+            """
+            SELECT id, commit_hash, run_type, start_time, end_time, status,
+                   total_tests, passed_tests, failed_tests
+              FROM test_runs
+             WHERE id = ?
+            """,
+            (run_id,),
+        )
+        if not rows:
+            return None
+        return _row_to_test_run(rows[0])
+
+    def find_by_commit(self, commit_hash: str, run_type: str | None = None) -> list[TestRun]:
+        """根据提交哈希查询测试运行."""
+        if run_type:
+            rows = self._adapter.execute(
+                """
+                SELECT id, commit_hash, run_type, start_time, end_time, status,
+                       total_tests, passed_tests, failed_tests
+                  FROM test_runs
+                 WHERE commit_hash = ? AND run_type = ?
+                """,
+                (commit_hash, run_type),
+            )
+        else:
+            rows = self._adapter.execute(
+                """
+                SELECT id, commit_hash, run_type, start_time, end_time, status,
+                       total_tests, passed_tests, failed_tests
+                  FROM test_runs
+                 WHERE commit_hash = ?
+                """,
+                (commit_hash,),
+            )
+        return [_row_to_test_run(row) for row in rows]
+
+    def find_latest(self, run_type: str | None = None) -> TestRun | None:
+        """查询最新的测试运行."""
+        if run_type:
+            rows = self._adapter.execute(
+                """
+                SELECT id, commit_hash, run_type, start_time, end_time, status,
+                       total_tests, passed_tests, failed_tests
+                  FROM test_runs
+                 WHERE run_type = ?
+                 ORDER BY start_time DESC
+                 LIMIT 1
+                """,
+                (run_type,),
+            )
+        else:
+            rows = self._adapter.execute(
+                """
+                SELECT id, commit_hash, run_type, start_time, end_time, status,
+                       total_tests, passed_tests, failed_tests
+                  FROM test_runs
+                 ORDER BY start_time DESC
+                 LIMIT 1
+                """,
+                (),
+            )
+        if not rows:
+            return None
+        return _row_to_test_run(rows[0])
+
+    def update(self, test_run: TestRun) -> bool:
+        """更新测试运行记录."""
+        if test_run.id is None:
+            return False
+        affected = self._adapter.execute_non_query(
+            """
+            UPDATE test_runs
+               SET commit_hash = ?,
+                   run_type = ?,
+                   start_time = ?,
+                   status = ?,
+                   total_tests = ?,
+                   passed_tests = ?,
+                   failed_tests = ?
+             WHERE id = ?
+            """,
+            (
+                test_run.commit_hash,
+                test_run.run_type.value,
+                test_run.timestamp.isoformat() if test_run.timestamp else None,
+                test_run.status.value,
+                test_run.total_tests,
+                test_run.passed_tests,
+                test_run.failed_tests,
+                test_run.id,
+            ),
+        )
+        return affected > 0
+
+    def delete(self, run_id: int) -> bool:
+        """删除测试运行记录."""
+        affected = self._adapter.execute_non_query(
+            "DELETE FROM test_runs WHERE id = ?",
+            (run_id,),
+        )
+        return affected > 0
+
+
+class SQLiteTestResultRepository(TestResultRepository):
+    """SQLite TestResult 仓储实现."""
+
+    def __init__(self, adapter: SQLiteAdapter) -> None:
+        """初始化仓储.
+
+        Args:
+            adapter: SQLite 适配器
+        """
+        self._adapter = adapter
+        if not self._adapter.is_connected():
+            self._adapter.connect()
+
+    def save(self, test_result: TestResult) -> int:
+        """保存测试结果."""
+        row_id = self._adapter.execute_write(
+            """
+            INSERT INTO test_results (
+                run_id,
+                test_class,
+                test_method,
+                status,
+                duration_ms,
+                error_message
+            ) VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                test_result.test_run_id,
+                test_result.test_class,
+                test_result.test_method,
+                test_result.status.value,
+                test_result.duration_ms,
+                test_result.error_message,
+            ),
+        )
+        test_result.id = row_id
+        return row_id
+
+    def save_batch(self, results: list[TestResult]) -> int:
+        """批量保存测试结果."""
+        count = 0
+        for result in results:
+            self.save(result)
+            count += 1
+        return count
+
+    def find_by_run_id(self, run_id: int) -> list[TestResult]:
+        """根据运行ID查询测试结果."""
+        rows = self._adapter.execute(
+            """
+            SELECT id, run_id, test_class, test_method, status, duration_ms, error_message
+              FROM test_results
+             WHERE run_id = ?
+            """,
+            (run_id,),
+        )
+        return [_row_to_test_result(row) for row in rows]
+
+    def find_failed_by_run_id(self, run_id: int) -> list[TestResult]:
+        """查询指定运行的失败测试."""
+        rows = self._adapter.execute(
+            """
+            SELECT id, run_id, test_class, test_method, status, duration_ms, error_message
+              FROM test_results
+             WHERE run_id = ? AND status IN (?, ?)
+            """,
+            (run_id, TestStatus.FAILED.value, TestStatus.ERROR.value),
+        )
+        return [_row_to_test_result(row) for row in rows]
+
+
+class SQLiteTestDiffRepository(TestDiffRepository):
+    """SQLite TestDiff 仓储实现."""
+
+    def __init__(self, adapter: SQLiteAdapter) -> None:
+        """初始化仓储.
+
+        Args:
+            adapter: SQLite 适配器
+        """
+        self._adapter = adapter
+        if not self._adapter.is_connected():
+            self._adapter.connect()
+
+    def save(self, test_diff: TestDiff) -> int:
+        """保存测试差异."""
+        row_id = self._adapter.execute_write(
+            """
+            INSERT INTO test_diffs (
+                baseline_run_id,
+                regression_run_id,
+                test_class,
+                test_method,
+                baseline_status,
+                regression_status,
+                diff_type,
+                analysis_result,
+                analysis_reason,
+                reviewed_by,
+                reviewed_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                test_diff.baseline_run_id,
+                test_diff.regression_run_id,
+                test_diff.test_class,
+                test_diff.test_method,
+                test_diff.baseline_status.value if test_diff.baseline_status else None,
+                test_diff.regression_status.value if test_diff.regression_status else None,
+                test_diff.diff_type,
+                test_diff.analysis_result,
+                test_diff.analysis_reason,
+                test_diff.reviewed_by,
+                test_diff.reviewed_at.isoformat() if test_diff.reviewed_at else None,
+            ),
+        )
+
+        test_diff.id = row_id
+        return row_id
+
+    def save_batch(self, diffs: list[TestDiff]) -> int:
+        """批量保存测试差异."""
+        count = 0
+        for diff in diffs:
+            self.save(diff)
+            count += 1
+        return count
+
+    def find_by_run_ids(self, baseline_run_id: int, regression_run_id: int) -> list[TestDiff]:
+        """根据基线和回归运行ID查询差异."""
+        rows = self._adapter.execute(
+            """
+            SELECT id, baseline_run_id, regression_run_id, test_class, test_method,
+                   baseline_status, regression_status, diff_type, analysis_result,
+                   analysis_reason, reviewed_by, reviewed_at
+              FROM test_diffs
+             WHERE baseline_run_id = ? AND regression_run_id = ?
+            """,
+            (baseline_run_id, regression_run_id),
+        )
+
+        return [_row_to_test_diff(row) for row in rows]
+
+    def find_unexpected_failures(
+        self, baseline_run_id: int, regression_run_id: int
+    ) -> list[TestDiff]:
+        """查询非预期的失败（基线通过，回归失败）."""
+        rows = self._adapter.execute(
+            """
+            SELECT id, baseline_run_id, regression_run_id, test_class, test_method,
+                   baseline_status, regression_status, diff_type, analysis_result,
+                   analysis_reason, reviewed_by, reviewed_at
+              FROM test_diffs
+             WHERE baseline_run_id = ?
+               AND regression_run_id = ?
+               AND baseline_status = ?
+               AND regression_status IN (?, ?)
+            """,
+            (
+                baseline_run_id,
+                regression_run_id,
+                TestStatus.PASSED.value,
+                TestStatus.FAILED.value,
+                TestStatus.ERROR.value,
+            ),
+        )
+
+        return [_row_to_test_diff(row) for row in rows]
+
+
+def _row_to_test_run(row: tuple[object, ...]) -> TestRun:
+    """将查询行转换为 TestRun."""
+    (
+        run_id,
+        commit_hash,
+        run_type,
+        start_time,
+        _end_time,
+        status,
+        total_tests,
+        passed_tests,
+        failed_tests,
+    ) = row
+    return TestRun(
+        id=_to_int(run_id),
+        commit_hash=str(commit_hash),
+        run_type=_safe_run_type(run_type),
+        timestamp=_parse_datetime(start_time),
+        status=_safe_run_status(status),
+        total_tests=_to_int(total_tests),
+        passed_tests=_to_int(passed_tests),
+        failed_tests=_to_int(failed_tests),
+    )
+
+
+def _row_to_test_result(row: tuple[object, ...]) -> TestResult:
+    """将查询行转换为 TestResult."""
+    result_id, run_id, test_class, test_method, status, duration_ms, error_message = row
+    return TestResult(
+        id=_to_int(result_id),
+        test_run_id=_to_int(run_id),
+        test_class=str(test_class),
+        test_method=str(test_method),
+        status=_safe_test_status_required(status),
+        duration_ms=_to_int(duration_ms),
+        error_message=error_message if error_message is None else str(error_message),
+    )
+
+
+def _row_to_test_diff(row: tuple[object, ...]) -> TestDiff:
+    """将查询行转换为 TestDiff."""
+    (
+        diff_id,
+        baseline_run_id,
+        regression_run_id,
+        test_class,
+        test_method,
+        baseline_status,
+        regression_status,
+        diff_type,
+        analysis_result,
+        analysis_reason,
+        reviewed_by,
+        reviewed_at,
+    ) = row
+    return TestDiff(
+        id=_to_int(diff_id),
+        baseline_run_id=_to_int(baseline_run_id),
+        regression_run_id=_to_int(regression_run_id),
+        test_class=str(test_class),
+        test_method=str(test_method),
+        baseline_status=_safe_test_status(baseline_status),
+        regression_status=_safe_test_status(regression_status),
+        diff_type=str(diff_type) if diff_type is not None else "",
+        analysis_result=str(analysis_result) if analysis_result is not None else "PENDING",
+        analysis_reason=analysis_reason if analysis_reason is None else str(analysis_reason),
+        reviewed_by=reviewed_by if reviewed_by is None else str(reviewed_by),
+        reviewed_at=_parse_optional_datetime(reviewed_at),
+    )
+
+
+def _parse_datetime(value: object) -> datetime:
+    """解析时间字符串."""
+    if isinstance(value, datetime):
+        return value
+    if value is None:
+        return datetime.now()
+    return datetime.fromisoformat(str(value))
+
+
+def _parse_optional_datetime(value: object) -> datetime | None:
+    """解析可选时间字符串."""
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+    return datetime.fromisoformat(str(value))
+
+
+def _to_int(value: object | None) -> int:
+    """安全转换为 int."""
+    if value is None:
+        return 0
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int | float | str):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return 0
+
+    return 0
+
+
+def _safe_run_type(value: object) -> RunType:
+    """安全解析运行类型."""
+    try:
+        return RunType(str(value))
+    except ValueError:
+        return RunType.REGRESSION
+
+
+def _safe_run_status(value: object) -> RunStatus:
+    """安全解析运行状态."""
+    try:
+        return RunStatus(str(value))
+    except ValueError:
+        return RunStatus.PENDING
+
+
+def _safe_test_status(value: object, allow_none: bool = True) -> TestStatus | None:
+    """安全解析测试状态."""
+    if value is None:
+        return None if allow_none else TestStatus.PENDING
+    try:
+        return TestStatus(str(value))
+    except ValueError:
+        return TestStatus.PENDING
+
+
+def _safe_test_status_required(value: object) -> TestStatus:
+    """安全解析必需的测试状态，默认回退 PENDING."""
+    result = _safe_test_status(value, allow_none=True)
+    return result if result is not None else TestStatus.PENDING
