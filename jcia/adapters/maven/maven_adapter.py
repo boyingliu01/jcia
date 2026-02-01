@@ -1,5 +1,6 @@
 """Maven 适配器实现."""
 
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -33,9 +34,13 @@ class MavenAdapter:
     def check_status(self) -> ToolStatus:
         """检查工具状态."""
         pom_path = Path(self._project_path) / "pom.xml"
-        if pom_path.exists():
-            return ToolStatus.READY
-        return ToolStatus.NOT_INSTALLED
+        if not pom_path.exists():
+            return ToolStatus.NOT_INSTALLED
+
+        if shutil.which("mvn") is None:
+            return ToolStatus.NOT_INSTALLED
+
+        return ToolStatus.READY
 
     def install(self) -> bool:
         """安装/初始化工具。
@@ -51,9 +56,15 @@ class MavenAdapter:
                 ["mvn", "-v"],
                 capture_output=True,
                 text=True,
+                check=False,
             )
-            if result.returncode == 0:
-                return result.stdout.split("Apache Maven")[1].strip()
+            if result.returncode != 0:
+                return None
+
+            if "Apache Maven" not in result.stdout:
+                return None
+
+            return result.stdout.split("Apache Maven", maxsplit=1)[1].strip()
         except FileNotFoundError:
             return None
 
@@ -73,7 +84,18 @@ class MavenAdapter:
         if cwd is None:
             cwd = Path(self._project_path)
 
-        cmd = ["mvn"] + (args or [])
+        mvn_path = shutil.which("mvn")
+        if mvn_path is None:
+            return ToolResult(
+                success=False,
+                exit_code=-1,
+                stdout="",
+                stderr="mvn executable not found",
+            )
+
+        normalized_args = self._normalize_args(args or [])
+        cmd = [mvn_path] + normalized_args
+
         try:
             result = subprocess.run(
                 cmd,
@@ -121,3 +143,13 @@ class MavenAdapter:
         if "skip_tests" in kwargs and kwargs["skip_tests"]:
             args[0] = "test-compile"
         return args
+
+    def _normalize_args(self, args: list[str]) -> list[str]:
+        """移除前导 mvn 前缀，保证命令唯一。"""
+        if not args:
+            return []
+
+        normalized = list(args)
+        while normalized and normalized[0].lower().startswith("mvn"):
+            normalized.pop(0)
+        return normalized
