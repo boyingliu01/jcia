@@ -21,6 +21,7 @@ from jcia.core.interfaces.call_chain_analyzer import (
     CallChainGraph,
     CallChainNode,
 )
+from jcia.core.interfaces.file_system import FileSystemService
 from jcia.core.interfaces.repository import (
     ChangeImpactRepository,
     TestDiffRepository,
@@ -81,4 +82,5 @@ __all__ = [
     "ToolStatus",
     "ToolType",
     "ToolWrapper",
+    "FileSystemService",
 ]
