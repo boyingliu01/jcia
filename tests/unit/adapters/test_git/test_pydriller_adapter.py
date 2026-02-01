@@ -1,9 +1,16 @@
 """PyDrillerAdapter 单元测试."""
 
+from enum import Enum
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
-from jcia.core.entities.change_set import ChangeSet
+from jcia.core.entities.change_set import ChangeSet, ChangeType
+
+
+class DummyChangeType(Enum):
+    RENAME = "rename"
 
 
 class TestPyDrillerAdapter:
@@ -28,8 +35,9 @@ class TestPyDrillerAdapter:
         # Assert
         assert adapter._repo_path == "/test/repo"
 
+    @patch("jcia.adapters.git.pydriller_adapter.Path.exists", return_value=True)
     @patch("jcia.adapters.git.pydriller_adapter.Repository")
-    def test_analyze_commit_range_with_dots_syntax(self, mock_repo_class) -> None:
+    def test_analyze_commit_range_with_dots_syntax(self, mock_repo_class, mock_exists) -> None:
         """测试分析提交范围语法."""
         # Arrange
         adapter = PyDrillerAdapter(repo_path="/fake/repo")
@@ -43,9 +51,11 @@ class TestPyDrillerAdapter:
         # Assert
         assert isinstance(result, ChangeSet)
         mock_repo_class.assert_called_once()
+        mock_exists.assert_called()
 
+    @patch("jcia.adapters.git.pydriller_adapter.Path.exists", return_value=True)
     @patch("jcia.adapters.git.pydriller_adapter.Repository")
-    def test_analyze_commit_range_single_commit(self, mock_repo_class) -> None:
+    def test_analyze_commit_range_single_commit(self, mock_repo_class, mock_exists) -> None:
         """测试单个提交范围."""
         # Arrange
         adapter = PyDrillerAdapter(repo_path="/fake/repo")
@@ -59,9 +69,11 @@ class TestPyDrillerAdapter:
         # Assert
         assert isinstance(result, ChangeSet)
         mock_repo_class.assert_called_once()
+        mock_exists.assert_called()
 
+    @patch("jcia.adapters.git.pydriller_adapter.Path.exists", return_value=True)
     @patch("jcia.adapters.git.pydriller_adapter.Repository")
-    def test_analyze_commits_maps_commit_and_files(self, mock_repo_class) -> None:
+    def test_analyze_commits_maps_commit_and_files(self, mock_repo_class, mock_exists) -> None:
         """测试提交与文件变更映射."""
         # Arrange
         adapter = PyDrillerAdapter(repo_path="/fake/repo")
@@ -96,9 +108,33 @@ class TestPyDrillerAdapter:
         assert result.total_insertions == 10
         assert result.total_deletions == 2
         assert result.commits[0].hash == "abc123"
+        mock_exists.assert_called()
 
+    def test_convert_file_change_supports_enum_and_unknown(self) -> None:
+        """支持枚举 change_type 并对未知类型回退为 MODIFY."""
+        adapter = PyDrillerAdapter(repo_path="/fake/repo")
+
+        file_with_enum = MagicMock()
+        file_with_enum.change_type = DummyChangeType.RENAME
+        file_with_enum.filename = "Service.java"
+        file_with_enum.added_lines = 1
+        file_with_enum.deleted_lines = 2
+
+        file_unknown = MagicMock()
+        file_unknown.change_type = "WEIRD"
+        file_unknown.filename = "Other.java"
+        file_unknown.added_lines = 0
+        file_unknown.deleted_lines = 0
+
+        result_enum = adapter._convert_file_change(file_with_enum)
+        result_unknown = adapter._convert_file_change(file_unknown)
+
+        assert result_enum.change_type == ChangeType.RENAME
+        assert result_unknown.change_type == ChangeType.MODIFY
+
+    @patch("jcia.adapters.git.pydriller_adapter.Path.exists", return_value=True)
     @patch("jcia.adapters.git.pydriller_adapter.Repository")
-    def test_get_changed_methods_returns_long_names(self, mock_repo_class) -> None:
+    def test_get_changed_methods_returns_long_names(self, mock_repo_class, mock_exists) -> None:
         """测试获取变更方法列表."""
         # Arrange
         adapter = PyDrillerAdapter(repo_path="/fake/repo")
@@ -119,3 +155,33 @@ class TestPyDrillerAdapter:
             "com.demo.Service.methodB()",
         ]
         mock_repo_class.assert_called_once()
+        mock_exists.assert_called()
+
+    @patch("jcia.adapters.git.pydriller_adapter.Path.exists", return_value=True)
+    @patch("jcia.adapters.git.pydriller_adapter.Repository")
+    def test_get_changed_methods_skips_missing_attribute(
+        self, mock_repo_class, mock_exists
+    ) -> None:
+        """缺少 changed_methods 时返回空列表."""
+        adapter = PyDrillerAdapter(repo_path="/fake/repo")
+        mock_repo_instance = MagicMock()
+        mock_repo_instance.traverse_commits.return_value = [object()]
+        mock_repo_class.return_value = mock_repo_instance
+
+        methods = adapter.get_changed_methods("abc123")
+
+        assert methods == []
+        mock_repo_class.assert_called_once()
+        mock_exists.assert_called()
+
+    @patch("jcia.adapters.git.pydriller_adapter.Repository")
+    @patch("jcia.adapters.git.pydriller_adapter.Path.exists", return_value=False)
+    def test_analyze_commits_raises_for_missing_repo(self, mock_exists, mock_repo_class) -> None:
+        """仓库路径不存在时抛出 FileNotFoundError."""
+        adapter = PyDrillerAdapter(repo_path="/missing/repo")
+
+        with pytest.raises(FileNotFoundError):
+            adapter.analyze_commits("abc123", "def456")
+
+        mock_repo_class.assert_not_called()
+        mock_exists.assert_called()

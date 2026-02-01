@@ -1,5 +1,7 @@
 """PyDriller Git 适配器实现."""
 
+from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from pydriller import Repository  # type: ignore[import-untyped]
@@ -37,6 +39,8 @@ class PyDrillerAdapter(ChangeAnalyzer):
         Returns:
             ChangeSet: 变更集合，包含所有变更的文件和方法
         """
+        self._ensure_repo_exists()
+
         change_set = ChangeSet(
             from_commit=from_commit,
             to_commit=to_commit,
@@ -51,19 +55,19 @@ class PyDrillerAdapter(ChangeAnalyzer):
         )
 
         for commit in commits:
-            # 添加提交信息
+            author = getattr(commit, "author", None)
+            parents = getattr(commit, "parents", []) or []
             commit_info = CommitInfo(
-                hash=commit.hash,
-                message=commit.msg,
-                author=commit.author.name or "",  # type: ignore[union-attr]
-                email=commit.author.email or "",  # type: ignore[union-attr]
-                timestamp=commit.author_date,
-                parents=[p.hash for p in commit.parents],  # type: ignore[union-attr]
+                hash=getattr(commit, "hash", ""),
+                message=getattr(commit, "msg", "") or "",
+                author=getattr(author, "name", "") or "",
+                email=getattr(author, "email", "") or "",
+                timestamp=getattr(commit, "author_date", datetime.min) or datetime.min,
+                parents=[getattr(p, "hash", "") for p in parents],
             )
             change_set.commits.append(commit_info)
 
-            # 分析文件变更
-            for file_change in commit.modified_files:
+            for file_change in getattr(commit, "modified_files", []) or []:
                 file_entity = self._convert_file_change(file_change)
                 change_set.add_file_change(file_entity)
 
@@ -94,6 +98,8 @@ class PyDrillerAdapter(ChangeAnalyzer):
         Returns:
             List[str]: 变更的方法全限定名列表
         """
+        self._ensure_repo_exists()
+
         methods: list[str] = []
 
         for commit in Repository(
@@ -101,11 +107,14 @@ class PyDrillerAdapter(ChangeAnalyzer):
             from_commit=commit_hash,
             to_commit=commit_hash,
         ).traverse_commits():
-            # PyDriller 可以解析 Java 方法变更
-            # 这里简单返回方法名
-            if hasattr(commit, "changed_methods"):
-                for method in commit.changed_methods:  # type: ignore[attr-defined]
-                    methods.append(method.long_name)
+            changed_methods = getattr(commit, "changed_methods", None)
+            if not changed_methods:
+                continue
+
+            for method in changed_methods:  # type: ignore[assignment]
+                long_name = getattr(method, "long_name", None)
+                if long_name:
+                    methods.append(long_name)
 
         return methods
 
@@ -118,6 +127,31 @@ class PyDrillerAdapter(ChangeAnalyzer):
         """
         return "pydriller"
 
+    def _ensure_repo_exists(self) -> None:
+        """校验仓库路径是否存在."""
+        if not Path(self._repo_path).exists():
+            raise FileNotFoundError(f"Repository path not found: {self._repo_path}")
+
+    def _map_change_type(self, change_type_value: Any) -> ChangeType:
+        """兼容字符串或枚举的变更类型映射."""
+        change_type_map = {
+            "ADD": ChangeType.ADD,
+            "DELETE": ChangeType.DELETE,
+            "MODIFY": ChangeType.MODIFY,
+            "RENAME": ChangeType.RENAME,
+        }
+
+        if change_type_value is None:
+            return ChangeType.MODIFY
+
+        key = None
+        if hasattr(change_type_value, "name"):
+            key = str(change_type_value.name).upper()
+        else:
+            key = str(change_type_value).upper()
+
+        return change_type_map.get(key, ChangeType.MODIFY)
+
     def _convert_file_change(self, pydriller_file: Any) -> FileChange:
         """转换 PyDriller 文件变更为领域实体.
 
@@ -127,22 +161,11 @@ class PyDrillerAdapter(ChangeAnalyzer):
         Returns:
             FileChange: 文件变更实体
         """
-        # 映射变更类型
-        change_type_map = {
-            "ADD": ChangeType.ADD,
-            "DELETE": ChangeType.DELETE,
-            "MODIFY": ChangeType.MODIFY,
-            "RENAME": ChangeType.RENAME,
-        }
-
-        change_type = change_type_map.get(
-            pydriller_file.change_type,
-            ChangeType.MODIFY,
-        )
+        change_type = self._map_change_type(getattr(pydriller_file, "change_type", None))
 
         return FileChange(
-            file_path=pydriller_file.filename,
+            file_path=getattr(pydriller_file, "filename", ""),
             change_type=change_type,
-            insertions=pydriller_file.added_lines,
-            deletions=pydriller_file.deleted_lines,
+            insertions=getattr(pydriller_file, "added_lines", 0) or 0,
+            deletions=getattr(pydriller_file, "deleted_lines", 0) or 0,
         )

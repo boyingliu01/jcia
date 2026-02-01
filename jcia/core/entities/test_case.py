@@ -9,6 +9,8 @@ from typing import Any
 class TestType(Enum):
     """测试类型枚举."""
 
+    __test__ = False  # 避免被 pytest 收集
+
     UNIT = "unit"  # 单元测试
     INTEGRATION = "integration"  # 集成测试
     GENERATED = "generated"  # 自动生成的测试
@@ -17,6 +19,8 @@ class TestType(Enum):
 
 class TestPriority(Enum):
     """测试优先级枚举."""
+
+    __test__ = False  # 避免被 pytest 收集
 
     CRITICAL = "critical"  # 关键测试
     HIGH = "high"  # 高优先级
@@ -104,6 +108,8 @@ class TestSuite:
         test_cases: 测试用例列表
         description: 描述
     """
+
+    __test__ = False  # 避免被 pytest 收集
 
     name: str
     test_cases: list[TestCase] = field(default_factory=list)
