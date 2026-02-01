@@ -1,30 +1,186 @@
-E:\Study\LLM\Java代码变更影响分析\.venv\Lib\site-packages\pytest_asyncio\plugin.py:247: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
-The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
-
-  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
 ============================= test session starts =============================
 platform win32 -- Python 3.13.9, pytest-8.3.5, pluggy-1.6.0 -- e:\Study\LLM\Java代码变更影响分析\.venv\Scripts\python.exe
 cachedir: .pytest_cache
 rootdir: e:\Study\LLM\Java代码变更影响分析
 configfile: pytest.ini
 plugins: asyncio-1.3.0, cov-5.0.0, mock-3.15.1
-asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collecting ... collected 15 items
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collecting ... collected 141 items
 
-tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_adapter_name_returns_sqlite PASSED [  6%]
-tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_execute_requires_connection PASSED [ 13%]
-tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_connect_creates_tables PASSED [ 20%]
-tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_disconnect_resets_connection PASSED [ 26%]
-tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_execute_write_returns_lastrowid PASSED [ 33%]
-tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_execute_non_query_returns_rowcount PASSED [ 40%]
-tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestRunRepository::test_save_and_find_by_id PASSED [ 46%]
-tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestRunRepository::test_find_by_commit_with_run_type PASSED [ 53%]
-tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestRunRepository::test_find_latest_returns_newest PASSED [ 60%]
-tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestRunRepository::test_update_and_delete PASSED [ 66%]
-tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestResultRepository::test_save_and_find_by_run_id PASSED [ 73%]
-tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestResultRepository::test_save_batch_returns_count PASSED [ 80%]
-tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestResultRepository::test_find_failed_by_run_id PASSED [ 86%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_provider_returns_volcengine PASSED [  0%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_model_returns_default_model PASSED [  1%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_model_returns_custom_model PASSED [  2%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_generate_tests_creates_test_cases PASSED [  2%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_generate_tests_includes_token_usage PASSED [  3%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_generate_for_uncovered_creates_tests PASSED [  4%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_refine_test_updates_test_code PASSED [  4%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_analyze_code_returns_analysis PASSED [  5%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_explain_change_impact_returns_explanation PASSED [  6%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_generate_tests_with_multiple_classes PASSED [  7%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_generate_tests_with_requirements PASSED [  7%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_call_api_builds_auth_headers PASSED [  8%]
+tests/unit/adapters/test_ai/test_volcengine_adapter.py::TestVolcengineAdapter::test_call_api_handles_request_errors PASSED [  9%]
+tests/unit/adapters/test_database/test_sqlite_database_adapter.py::TestSQLiteDatabaseAdapter::test_connect_and_repositories_available PASSED [  9%]
+tests/unit/adapters/test_database/test_sqlite_database_adapter.py::TestSQLiteDatabaseAdapter::test_save_and_fetch_test_run PASSED [ 10%]
+tests/unit/adapters/test_git/test_pydriller_adapter.py::TestPyDrillerAdapter::test_analyzer_name_returns_pydriller PASSED [ 11%]
+tests/unit/adapters/test_git/test_pydriller_adapter.py::TestPyDrillerAdapter::test_init_stores_repo_path PASSED [ 12%]
+tests/unit/adapters/test_git/test_pydriller_adapter.py::TestPyDrillerAdapter::test_analyze_commit_range_with_dots_syntax PASSED [ 12%]
+tests/unit/adapters/test_git/test_pydriller_adapter.py::TestPyDrillerAdapter::test_analyze_commit_range_single_commit PASSED [ 13%]
+tests/unit/adapters/test_git/test_pydriller_adapter.py::TestPyDrillerAdapter::test_analyze_commits_maps_commit_and_files PASSED [ 14%]
+tests/unit/adapters/test_git/test_pydriller_adapter.py::TestPyDrillerAdapter::test_convert_file_change_supports_enum_and_unknown PASSED [ 14%]
+tests/unit/adapters/test_git/test_pydriller_adapter.py::TestPyDrillerAdapter::test_get_changed_methods_returns_long_names PASSED [ 15%]
+tests/unit/adapters/test_git/test_pydriller_adapter.py::TestPyDrillerAdapter::test_get_changed_methods_skips_missing_attribute PASSED [ 16%]
+tests/unit/adapters/test_git/test_pydriller_adapter.py::TestPyDrillerAdapter::test_analyze_commits_raises_for_missing_repo PASSED [ 17%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_tool_name_returns_maven PASSED [ 17%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_tool_type_is_coverage PASSED [ 18%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_init_stores_project_path PASSED [ 19%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_check_status_when_maven_installed PASSED [ 19%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_check_status_when_maven_not_installed PASSED [ 20%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_check_status_requires_mvn_executable PASSED [ 21%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_get_version_returns_version PASSED [ 21%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_execute_maven_command_success PASSED [ 22%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_execute_normalizes_leading_mvn PASSED [ 23%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_execute_returns_error_when_mvn_missing PASSED [ 24%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_execute_maven_command_failure PASSED [ 24%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_install_returns_true PASSED [ 25%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_plugin_group_id_returns_default PASSED [ 26%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_plugin_artifact_id_returns_default PASSED [ 26%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_get_maven_goal_returns_default PASSED [ 27%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_build_maven_args_default PASSED [ 28%]
+tests/unit/adapters/test_maven/test_maven_adapter.py::TestMavenAdapter::test_build_maven_args_skip_tests PASSED [ 29%]
+tests/unit/core/test_change_set.py::TestMethodChange::test_full_name_with_signature PASSED [ 29%]
+tests/unit/core/test_change_set.py::TestMethodChange::test_full_name_without_signature PASSED [ 30%]
+tests/unit/core/test_change_set.py::TestMethodChange::test_is_new PASSED [ 31%]
+tests/unit/core/test_change_set.py::TestMethodChange::test_is_deleted PASSED [ 31%]
+tests/unit/core/test_change_set.py::TestFileChange::test_is_java_file PASSED [ 32%]
+tests/unit/core/test_change_set.py::TestFileChange::test_is_test_file PASSED [ 33%]
+tests/unit/core/test_change_set.py::TestFileChange::test_total_changes PASSED [ 34%]
+tests/unit/core/test_change_set.py::TestFileChange::test_method_changes PASSED [ 34%]
+tests/unit/core/test_change_set.py::TestCommitInfo::test_short_hash PASSED [ 35%]
+tests/unit/core/test_change_set.py::TestCommitInfo::test_short_hash_short_input PASSED [ 36%]
+tests/unit/core/test_change_set.py::TestCommitInfo::test_short_hash_empty_input PASSED [ 36%]
+tests/unit/core/test_change_set.py::TestCommitInfo::test_title PASSED    [ 37%]
+tests/unit/core/test_change_set.py::TestCommitInfo::test_title_empty_and_newlines PASSED [ 38%]
+tests/unit/core/test_change_set.py::TestChangeSet::test_changed_files PASSED [ 39%]
+tests/unit/core/test_change_set.py::TestChangeSet::test_changed_java_files PASSED [ 39%]
+tests/unit/core/test_change_set.py::TestChangeSet::test_changed_methods PASSED [ 40%]
+tests/unit/core/test_change_set.py::TestChangeSet::test_total_insertions_and_deletions PASSED [ 41%]
+tests/unit/core/test_change_set.py::TestChangeSet::test_commit_count PASSED [ 41%]
+tests/unit/core/test_change_set.py::TestChangeSet::test_get_file_change PASSED [ 42%]
+tests/unit/core/test_change_set.py::TestChangeSet::test_add_file_change PASSED [ 43%]
+tests/unit/core/test_change_set.py::TestChangeSet::test_is_empty PASSED  [ 43%]
+tests/unit/core/test_change_set.py::TestChangeSet::test_to_dict PASSED   [ 44%]
+tests/unit/core/test_impact_graph.py::TestImpactNode::test_is_direct_impact PASSED [ 45%]
+tests/unit/core/test_impact_graph.py::TestImpactNode::test_is_entry_point PASSED [ 46%]
+tests/unit/core/test_impact_graph.py::TestImpactNode::test_is_leaf PASSED [ 46%]
+tests/unit/core/test_impact_graph.py::TestImpactNode::test_full_name PASSED [ 47%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_total_affected_methods PASSED [ 48%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_direct_impact_count PASSED [ 48%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_indirect_impact_count PASSED [ 49%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_high_severity_count PASSED [ 50%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_affected_classes PASSED [ 51%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_get_node PASSED [ 51%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_add_node PASSED [ 52%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_add_edge_updates_relationships PASSED [ 53%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_add_edge_prevents_duplicates PASSED [ 53%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_get_downstream_chain PASSED [ 54%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_get_downstream_chain_order_and_depth PASSED [ 55%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_get_upstream_chain PASSED [ 56%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_merge PASSED [ 56%]
+tests/unit/core/test_impact_graph.py::TestImpactGraph::test_to_dict PASSED [ 57%]
+tests/unit/core/test_test_case.py::TestTestCase::test_full_name_and_to_maven_test PASSED [ 58%]
+tests/unit/core/test_test_case.py::TestTestCase::test_flags_generated_unit_and_critical PASSED [ 58%]
+tests/unit/core/test_test_case.py::TestTestCase::test_tags_priority_and_targets PASSED [ 59%]
+tests/unit/core/test_test_case.py::TestTestCase::test_to_dict_serializes_path_and_metadata PASSED [ 60%]
+tests/unit/core/test_test_case.py::TestTestSuite::test_add_and_count_tests PASSED [ 60%]
+tests/unit/core/test_test_case.py::TestTestSuite::test_filters_by_priority_and_tag PASSED [ 61%]
+tests/unit/core/test_test_case.py::TestTestSuite::test_to_maven_test_list_and_dict PASSED [ 62%]
+tests/unit/core/test_test_run.py::TestCoverageData::test_coverage_ratio PASSED [ 63%]
+tests/unit/core/test_test_run.py::TestTestResult::test_full_name PASSED  [ 63%]
+tests/unit/core/test_test_run.py::TestTestResult::test_passed PASSED     [ 64%]
+tests/unit/core/test_test_run.py::TestTestResult::test_failed PASSED     [ 65%]
+tests/unit/core/test_test_run.py::TestTestRun::test_short_commit_hash PASSED [ 65%]
+tests/unit/core/test_test_run.py::TestTestRun::test_is_baseline PASSED   [ 66%]
+tests/unit/core/test_test_run.py::TestTestRun::test_is_regression PASSED [ 67%]
+tests/unit/core/test_test_run.py::TestTestRun::test_success_rate PASSED  [ 68%]
+tests/unit/core/test_test_run.py::TestTestRun::test_success_rate_zero_total PASSED [ 68%]
+tests/unit/core/test_test_run.py::TestTestRun::test_has_failures PASSED  [ 69%]
+tests/unit/core/test_test_run.py::TestTestRun::test_add_result_updates_counts PASSED [ 70%]
+tests/unit/core/test_test_run.py::TestTestRun::test_get_failed_results PASSED [ 70%]
+tests/unit/core/test_test_run.py::TestTestRun::test_get_result_by_name PASSED [ 71%]
+tests/unit/core/test_test_run.py::TestTestDiff::test_full_name PASSED    [ 72%]
+tests/unit/core/test_test_run.py::TestTestDiff::test_is_new_pass PASSED  [ 73%]
+tests/unit/core/test_test_run.py::TestTestDiff::test_is_new_fail PASSED  [ 73%]
+tests/unit/core/test_test_run.py::TestTestDiff::test_is_regression_issue PASSED [ 74%]
+tests/unit/core/test_test_run.py::TestTestComparison::test_new_passes PASSED [ 75%]
+tests/unit/core/test_test_run.py::TestTestComparison::test_new_failures PASSED [ 75%]
+tests/unit/core/test_test_run.py::TestTestComparison::test_has_regression_issues PASSED [ 76%]
+tests/unit/core/test_test_run.py::TestTestComparison::test_to_dict PASSED [ 77%]
+tests/unit/infrastructure/test_config/test_config_manager.py::TestYamlConfigManager::test_load_reads_yaml_and_get_by_key PASSED [ 78%]
+tests/unit/infrastructure/test_config/test_config_manager.py::TestYamlConfigManager::test_load_missing_file_raises PASSED [ 78%]
+tests/unit/infrastructure/test_config/test_config_manager.py::TestYamlConfigManager::test_overrides_apply_deep_merge PASSED [ 79%]
+tests/unit/infrastructure/test_config/test_config_manager.py::TestYamlConfigManager::test_get_returns_default_when_missing PASSED [ 80%]
+tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_adapter_name_returns_sqlite PASSED [ 80%]
+tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_execute_requires_connection PASSED [ 81%]
+tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_connect_creates_tables PASSED [ 82%]
+tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_disconnect_resets_connection PASSED [ 82%]
+tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_execute_write_returns_lastrowid PASSED [ 83%]
+tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_execute_non_query_returns_rowcount PASSED [ 84%]
+tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_context_manager_connects_and_disconnects PASSED [ 85%]
+tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteAdapter::test_execute_many_inserts_rows PASSED [ 85%]
+tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteRepositories::test_test_run_repository_crud_and_filters PASSED [ 86%]
+tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteRepositories::test_test_result_repository_save_and_query_failed PASSED [ 87%]
+tests/unit/infrastructure/test_database/test_sqlite_adapter.py::TestSQLiteRepositories::test_test_diff_repository_batch_and_filters PASSED [ 87%]
+tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestRunRepository::test_save_and_find_by_id PASSED [ 88%]
+tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestRunRepository::test_find_by_commit_with_run_type PASSED [ 89%]
+tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestRunRepository::test_find_latest_returns_newest PASSED [ 90%]
+tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestRunRepository::test_update_and_delete PASSED [ 90%]
+tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestResultRepository::test_save_and_find_by_run_id PASSED [ 91%]
+tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestResultRepository::test_save_batch_returns_count PASSED [ 92%]
+tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestResultRepository::test_find_failed_by_run_id PASSED [ 92%]
 tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestDiffRepository::test_save_and_find_by_run_ids PASSED [ 93%]
-tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestDiffRepository::test_find_unexpected_failures PASSED [100%]
+tests/unit/infrastructure/test_database/test_sqlite_repository.py::TestSQLiteTestDiffRepository::test_find_unexpected_failures PASSED [ 94%]
+tests/unit/infrastructure/test_fs/test_local_file_system.py::TestLocalFileSystemService::test_write_and_read_text_creates_parents PASSED [ 95%]
+tests/unit/infrastructure/test_fs/test_local_file_system.py::TestLocalFileSystemService::test_write_and_read_bytes PASSED [ 95%]
+tests/unit/infrastructure/test_fs/test_local_file_system.py::TestLocalFileSystemService::test_exists_and_remove_is_idempotent PASSED [ 96%]
+tests/unit/infrastructure/test_fs/test_local_file_system.py::TestLocalFileSystemService::test_read_missing_raises_file_not_found PASSED [ 97%]
+tests/unit/infrastructure/test_fs/test_local_file_system.py::TestLocalFileSystemService::test_ensure_dir_is_idempotent PASSED [ 97%]
+tests/unit/infrastructure/test_logging/test_app_logger.py::TestAppLogger::test_get_logger_is_singleton_and_no_duplicate_handlers PASSED [ 98%]
+tests/unit/infrastructure/test_logging/test_app_logger.py::TestAppLogger::test_default_level_and_propagation PASSED [ 99%]
+tests/unit/infrastructure/test_logging/test_app_logger.py::TestAppLogger::test_log_output_written_to_stream PASSED [100%]
 
-============================= 15 passed in 0.14s ==============================
+---------- coverage: platform win32, python 3.13.9-final-0 -----------
+Name                                                Stmts   Miss  Cover   Missing
+---------------------------------------------------------------------------------
+jcia\__init__.py                                        7      0   100%
+jcia\adapters\__init__.py                               0      0   100%
+jcia\adapters\ai\__init__.py                            2      0   100%
+jcia\adapters\ai\volcengine_adapter.py                108      1    99%   469
+jcia\adapters\database\__init__.py                      0      0   100%
+jcia\adapters\database\sqlite_adapter.py               30      9    70%   41-43, 47, 67, 77-78, 96-97
+jcia\adapters\git\__init__.py                           0      0   100%
+jcia\adapters\git\pydriller_adapter.py                 57      1    98%   145
+jcia\adapters\maven\__init__.py                         0      0   100%
+jcia\adapters\maven\maven_adapter.py                   65      9    86%   62, 65, 68-69, 113-121, 150
+jcia\adapters\tools\__init__.py                         0      0   100%
+jcia\core\__init__.py                                   0      0   100%
+jcia\core\entities\__init__.py                          5      0   100%
+jcia\core\entities\change_set.py                      104      0   100%
+jcia\core\entities\impact_graph.py                    126      7    94%   137, 194, 202, 225, 264, 266-267
+jcia\core\services\__init__.py                          0      0   100%
+jcia\core\use_cases\__init__.py                         0      0   100%
+jcia\infrastructure\__init__.py                         0      0   100%
+jcia\infrastructure\config\__init__.py                  2      0   100%
+jcia\infrastructure\config\config_manager.py           38      2    95%   39, 57
+jcia\infrastructure\database\sqlite_adapter.py         65      4    94%   82, 101, 112, 114
+jcia\infrastructure\database\sqlite_repository.py     148     28    81%   33, 111, 134, 141, 187, 258, 299, 456, 458, 461-462, 478, 480, 489-491, 497, 499, 503-506, 513-514, 521-522, 528, 531-532
+jcia\infrastructure\fs\__init__.py                      2      0   100%
+jcia\infrastructure\fs\file_system.py                  43      2    95%   31, 58
+jcia\infrastructure\logging\__init__.py                 2      0   100%
+jcia\infrastructure\logging\logger.py                  25      4    84%   53-56
+jcia\reports\__init__.py                                0      0   100%
+---------------------------------------------------------------------------------
+TOTAL                                                 829     67    92%
+
+
+============================= 141 passed in 8.00s =============================
