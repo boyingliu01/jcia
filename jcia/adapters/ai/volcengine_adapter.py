@@ -295,17 +295,8 @@ class VolcengineAdapter(AITestGenerator, AIAnalyzer):
         Returns:
             Dict[str, Any]: API 响应数据
         """
-        payload = {
-            "model": self._model,
-            "messages": messages,
-            "temperature": self._temperature,
-            **kwargs,
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self._access_key}",
-        }
+        payload = self._build_payload(messages, **kwargs)
+        headers = self._build_headers()
 
         try:
             response = requests.post(
@@ -317,8 +308,26 @@ class VolcengineAdapter(AITestGenerator, AIAnalyzer):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException:
-            # 返回空响应，避免测试失败
             return {"choices": [{"message": {"content": ""}}], "usage": {}}
+
+    def _build_payload(self, messages: list[dict[str, Any]], **kwargs: Any) -> dict[str, Any]:
+        """构建请求负载，包含模型、温度和 app_id 信息."""
+        return {
+            "model": self._model,
+            "messages": messages,
+            "temperature": self._temperature,
+            "app_id": self._app_id,
+            **kwargs,
+        }
+
+    def _build_headers(self) -> dict[str, str]:
+        """构建鉴权请求头."""
+        return {
+            "Content-Type": "application/json",
+            "Authorization": f"VolcengineAK {self._access_key}:{self._secret_key}",
+            "X-Volc-App-Id": self._app_id,
+            "X-Volc-Region": self._region,
+        }
 
     def _build_test_generation_prompt(self, request: TestGenerationRequest) -> str:
         """构建测试生成 prompt.
