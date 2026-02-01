@@ -2,7 +2,15 @@
 
 from typing import TYPE_CHECKING
 
-from jcia.core.entities.test_run import RunStatus, RunType, TestDiff, TestResult, TestRun
+from jcia.core.entities.test_run import (
+    DiffType,
+    RunStatus,
+    RunType,
+    TestDiff,
+    TestResult,
+    TestRun,
+    TestStatus,
+)
 from jcia.infrastructure.database.sqlite_adapter import SQLiteAdapter
 from jcia.infrastructure.database.sqlite_repository import (
     SQLiteTestDiffRepository,
@@ -52,15 +60,15 @@ class SQLiteDatabaseAdapter:
         run_id: int,
         test_class: str,
         test_method: str,
-        status: RunStatus | None = None,
+        status: TestStatus | None = None,
     ) -> TestResult:
         """创建 TestResult 实例（未持久化）。"""
-        test_status = status if status is not None else RunStatus.PENDING
+        test_status = status if status is not None else TestStatus.PENDING
         return TestResult(
             test_run_id=run_id,
             test_class=test_class,
             test_method=test_method,
-            status=test_status,  # type: ignore[arg-type]
+            status=test_status,
         )
 
     def create_test_diff(
@@ -69,17 +77,18 @@ class SQLiteDatabaseAdapter:
         regression_run_id: int,
         test_class: str,
         test_method: str,
-        baseline_status: RunStatus | None,
-        regression_status: RunStatus | None,
-        diff_type: str,
+        baseline_status: TestStatus | None,
+        regression_status: TestStatus | None,
+        diff_type: DiffType | str,
     ) -> TestDiff:
         """创建 TestDiff 实例（未持久化）。"""
+        diff_type_value = diff_type if isinstance(diff_type, DiffType) else DiffType(str(diff_type))
         return TestDiff(
             baseline_run_id=baseline_run_id,
             regression_run_id=regression_run_id,
             test_class=test_class,
             test_method=test_method,
-            baseline_status=baseline_status,  # type: ignore[arg-type]
-            regression_status=regression_status,  # type: ignore[arg-type]
-            diff_type=diff_type,
+            baseline_status=baseline_status,
+            regression_status=regression_status,
+            diff_type=diff_type_value,
         )

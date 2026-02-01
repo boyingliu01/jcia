@@ -122,6 +122,17 @@ class TestCommitInfo:
         )
         assert commit.short_hash == "abc"
 
+    def test_short_hash_empty_input(self) -> None:
+        """空哈希应返回空字符串而不是异常."""
+        commit = CommitInfo(
+            hash="",
+            message="Test",
+            author="Test",
+            email="test@test.com",
+            timestamp=datetime.now(),
+        )
+        assert commit.short_hash == ""
+
     def test_title(self) -> None:
         """测试提交标题."""
         commit = CommitInfo(
@@ -132,6 +143,26 @@ class TestCommitInfo:
             timestamp=datetime.now(),
         )
         assert commit.title == "First line"
+
+    def test_title_empty_and_newlines(self) -> None:
+        """空消息或仅换行应返回空标题."""
+        commit_empty = CommitInfo(
+            hash="abc123",
+            message="",
+            author="Test",
+            email="test@test.com",
+            timestamp=datetime.now(),
+        )
+        commit_newlines = CommitInfo(
+            hash="abc123",
+            message="\n\n",
+            author="Test",
+            email="test@test.com",
+            timestamp=datetime.now(),
+        )
+
+        assert commit_empty.title == ""
+        assert commit_newlines.title == ""
 
 
 class TestChangeSet:
@@ -148,18 +179,26 @@ class TestChangeSet:
         assert change_set.changed_files == ["File1.java", "File2.java"]
 
     def test_changed_java_files(self) -> None:
-        """测试Java文件过滤."""
+        """测试Java文件过滤（包含与排除）。"""
         change_set = ChangeSet(
             file_changes=[
                 FileChange(file_path="Service.java"),
                 FileChange(file_path="README.md"),
                 FileChange(file_path="Config.java"),
+                FileChange(file_path="Service.java.bak"),
+                FileChange(file_path="docs/test.txt"),
             ]
         )
-        assert change_set.changed_java_files == ["Service.java", "Config.java"]
+
+        assert "Service.java" in change_set.changed_java_files
+        assert "Config.java" in change_set.changed_java_files
+        assert "README.md" not in change_set.changed_java_files
+        assert "Service.java.bak" not in change_set.changed_java_files
+        assert "docs/test.txt" not in change_set.changed_java_files
+        assert len(change_set.changed_java_files) == 2
 
     def test_changed_methods(self) -> None:
-        """测试变更方法列表."""
+        """测试变更方法列表与格式."""
         change_set = ChangeSet(
             file_changes=[
                 FileChange(
@@ -172,14 +211,19 @@ class TestChangeSet:
                         MethodChange(
                             class_name="com.example.Service",
                             method_name="method2",
+                            signature="(String)",
                         ),
                     ],
                 ),
             ]
         )
-        assert len(change_set.changed_methods) == 2
-        assert "com.example.Service.method1" in change_set.changed_methods
-        assert "com.example.Service.method2" in change_set.changed_methods
+        methods = change_set.changed_methods
+        assert len(methods) == 2
+        assert "com.example.Service.method1" in methods
+        assert "com.example.Service.method2(String)" in methods
+        for method in methods:
+            assert "." in method
+            assert len(method.split(".")) >= 3
 
     def test_total_insertions_and_deletions(self) -> None:
         """测试总增删行数."""
@@ -248,14 +292,32 @@ class TestChangeSet:
         change_set = ChangeSet(
             from_commit="abc123",
             to_commit="def456",
+            commits=[
+                CommitInfo(
+                    hash="h1",
+                    message="m1",
+                    author="a",
+                    email="e",
+                    timestamp=datetime.now(),
+                )
+            ],
             file_changes=[
-                FileChange(file_path="File.java", insertions=10, deletions=5),
+                FileChange(
+                    file_path="File.java",
+                    insertions=10,
+                    deletions=5,
+                    method_changes=[
+                        MethodChange(class_name="C", method_name="m"),
+                    ],
+                ),
             ],
         )
         data = change_set.to_dict()
 
         assert data["from_commit"] == "abc123"
         assert data["to_commit"] == "def456"
-        assert data["commit_count"] == 0
+        assert data["commit_count"] == 1
         assert data["total_insertions"] == 10
         assert data["total_deletions"] == 5
+        assert data["changed_files"] == ["File.java"]
+        assert data["changed_methods"] == ["C.m"]

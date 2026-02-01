@@ -182,12 +182,38 @@ class TestImpactGraph:
         assert "Child" in graph.nodes["Parent"].downstream
         assert "Parent" in graph.nodes["Child"].upstream
 
+    def test_add_edge_prevents_duplicates(self) -> None:
+        """重复边不应重复记录上下游关系."""
+        graph = ImpactGraph()
+        parent = ImpactNode(method_name="Parent", class_name="Parent")
+        child = ImpactNode(method_name="Child", class_name="Child")
+        graph.add_node(parent)
+        graph.add_node(child)
+
+        graph.add_edge(ImpactEdge(source="Parent", target="Child"))
+        graph.add_edge(ImpactEdge(source="Parent", target="Child"))
+
+        assert graph.nodes["Parent"].downstream.count("Child") == 1
+        assert graph.nodes["Child"].upstream.count("Parent") == 1
+        assert len([e for e in graph.edges if e.source == "Parent" and e.target == "Child"]) == 1
+
     def test_get_downstream_chain(self, sample_graph: ImpactGraph) -> None:
         """测试获取下游调用链."""
         chain = sample_graph.get_downstream_chain("com.Service.root")
 
         assert "com.Service.child1" in chain
         assert "com.Other.child2" in chain
+
+    def test_get_downstream_chain_order_and_depth(self, sample_graph: ImpactGraph) -> None:
+        """验证遍历顺序与深度限制不包含起点."""
+        limited = sample_graph.get_downstream_chain("com.Service.root", max_depth=1)
+        assert "com.Service.child1" in limited
+        assert "com.Other.child2" not in limited
+        assert len(limited) == 1
+
+        deep = sample_graph.get_downstream_chain("com.Service.root", max_depth=10)
+        assert deep.index("com.Service.child1") < deep.index("com.Other.child2")
+        assert "com.Service.root" not in deep
 
     def test_get_upstream_chain(self, sample_graph: ImpactGraph) -> None:
         """测试获取上游调用链."""

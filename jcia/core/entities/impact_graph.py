@@ -149,17 +149,20 @@ class ImpactGraph:
         self.nodes[node.method_name] = node
 
     def add_edge(self, edge: ImpactEdge) -> None:
-        """添加影响边.
+        """添加影响边（避免重复）.
 
         Args:
             edge: 影响边
         """
+        if edge in self.edges:
+            return
+
         self.edges.append(edge)
 
-        # 更新节点的上下游关系
-        if edge.source in self.nodes:
+        # 更新节点的上下游关系，避免重复记录
+        if edge.source in self.nodes and edge.target not in self.nodes[edge.source].downstream:
             self.nodes[edge.source].downstream.append(edge.target)
-        if edge.target in self.nodes:
+        if edge.target in self.nodes and edge.source not in self.nodes[edge.target].upstream:
             self.nodes[edge.target].upstream.append(edge.source)
 
     def get_node(self, method_name: str) -> ImpactNode | None:
@@ -194,8 +197,12 @@ class ImpactGraph:
             node = self.nodes.get(method)
             if node:
                 for upstream in node.upstream:
-                    chain.append(upstream)
-                    traverse(upstream, depth + 1)
+                    next_depth = depth + 1
+                    if next_depth > max_depth:
+                        continue
+                    if upstream not in chain:
+                        chain.append(upstream)
+                    traverse(upstream, next_depth)
 
         traverse(method_name, 0)
         return chain
@@ -221,8 +228,12 @@ class ImpactGraph:
             node = self.nodes.get(method)
             if node:
                 for downstream in node.downstream:
-                    chain.append(downstream)
-                    traverse(downstream, depth + 1)
+                    next_depth = depth + 1
+                    if next_depth > max_depth:
+                        continue
+                    if downstream not in chain:
+                        chain.append(downstream)
+                    traverse(downstream, next_depth)
 
         traverse(method_name, 0)
         return chain

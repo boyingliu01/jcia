@@ -4,6 +4,7 @@ import pytest
 
 from jcia.core.entities.test_run import (
     CoverageData,
+    DiffType,
     RunType,
     TestComparison,
     TestDiff,
@@ -17,12 +18,18 @@ class TestCoverageData:
     """CoverageData测试类."""
 
     def test_coverage_ratio(self) -> None:
-        """测试覆盖率比例."""
+        """测试覆盖率比例（含越界情况）。"""
         high = CoverageData(line_coverage=80.0)
         zero = CoverageData(line_coverage=0.0)
+        negative = CoverageData(line_coverage=-10.0)
+        over_100 = CoverageData(line_coverage=150.0)
+        full = CoverageData(line_coverage=100.0)
 
         assert high.coverage_ratio == 0.8
         assert zero.coverage_ratio == 0.0
+        assert negative.coverage_ratio == 0.0
+        assert over_100.coverage_ratio == 1.0
+        assert full.coverage_ratio == 1.0
 
 
 class TestTestResult:
@@ -101,14 +108,22 @@ class TestTestRun:
 
         assert sample_run.success_rate == 2 / 3
 
+    def test_success_rate_zero_total(self) -> None:
+        """无测试时成功率应为0而非异常."""
+        empty_run = TestRun()
+        assert empty_run.success_rate == 0.0
+
     def test_has_failures(self, sample_run: TestRun) -> None:
-        """测试失败判断."""
+        """测试失败判断（包含 error 计数）。"""
         no_failures = TestRun()
         with_failures = TestRun()
         with_failures.failed_tests = 2
+        with_error_only = TestRun()
+        with_error_only.error_tests = 1
 
         assert no_failures.has_failures is False
         assert with_failures.has_failures is True
+        assert with_error_only.has_failures is True
 
     def test_add_result_updates_counts(self, sample_run: TestRun) -> None:
         """测试添加结果更新计数."""
@@ -166,32 +181,37 @@ class TestTestDiff:
 
     def test_is_new_pass(self) -> None:
         """测试新增通过."""
-        new_pass = TestDiff(diff_type="NEW_PASS")
-        not_new = TestDiff(diff_type="STABLE_PASS")
+        new_pass = TestDiff(diff_type=DiffType.NEW_PASS)
+        not_new = TestDiff(diff_type=DiffType.STABLE_PASS)
 
         assert new_pass.is_new_pass is True
         assert not_new.is_new_pass is False
 
     def test_is_new_fail(self) -> None:
         """测试新增失败."""
-        new_fail = TestDiff(diff_type="NEW_FAIL")
-        not_new = TestDiff(diff_type="STABLE_FAIL")
+        new_fail = TestDiff(diff_type=DiffType.NEW_FAIL)
+        not_new = TestDiff(diff_type=DiffType.STABLE_FAIL)
 
         assert new_fail.is_new_fail is True
         assert not_new.is_new_fail is False
 
     def test_is_regression_issue(self) -> None:
-        """测试回归问题判断."""
-        regression = TestDiff(
+        """测试回归问题判断，包含 ERROR 状态."""
+        regression_fail = TestDiff(
             baseline_status=TestStatus.PASSED,
             regression_status=TestStatus.FAILED,
+        )
+        regression_error = TestDiff(
+            baseline_status=TestStatus.PASSED,
+            regression_status=TestStatus.ERROR,
         )
         stable = TestDiff(
             baseline_status=TestStatus.PASSED,
             regression_status=TestStatus.PASSED,
         )
 
-        assert regression.is_regression_issue is True
+        assert regression_fail.is_regression_issue is True
+        assert regression_error.is_regression_issue is True
         assert stable.is_regression_issue is False
 
 
@@ -205,10 +225,10 @@ class TestTestComparison:
         regression = TestRun(id=2, run_type=RunType.REGRESSION)
 
         diffs = [
-            TestDiff(diff_type="STABLE_PASS"),
-            TestDiff(diff_type="NEW_PASS"),
-            TestDiff(diff_type="NEW_FAIL"),
-            TestDiff(diff_type="NEW_FAIL"),
+            TestDiff(diff_type=DiffType.STABLE_PASS),
+            TestDiff(diff_type=DiffType.NEW_PASS),
+            TestDiff(diff_type=DiffType.NEW_FAIL),
+            TestDiff(diff_type=DiffType.NEW_FAIL),
         ]
 
         return TestComparison(

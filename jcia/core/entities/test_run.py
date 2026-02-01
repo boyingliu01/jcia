@@ -38,6 +38,17 @@ class RunStatus(Enum):
     CANCELLED = "cancelled"
 
 
+class DiffType(Enum):
+    """测试差异类型枚举."""
+
+    NEW_PASS = "NEW_PASS"  # noqa: S105  # nosec B105
+    NEW_FAIL = "NEW_FAIL"
+    STABLE_PASS = "STABLE_PASS"  # noqa: S105  # nosec B105
+    STABLE_FAIL = "STABLE_FAIL"
+
+    REMOVED = "REMOVED"
+
+
 @dataclass
 class CoverageData:
     """覆盖率数据.
@@ -63,7 +74,11 @@ class CoverageData:
     @property
     def coverage_ratio(self) -> float:
         """返回覆盖率比例（0-1）."""
-        return self.line_coverage / 100.0 if self.line_coverage > 0 else 0.0
+        if self.line_coverage <= 0:
+            return 0.0
+        if self.line_coverage >= 100.0:
+            return 1.0
+        return self.line_coverage / 100.0
 
 
 @dataclass
@@ -292,7 +307,7 @@ class TestDiff:
     test_method: str = ""
     baseline_status: TestStatus | None = None
     regression_status: TestStatus | None = None
-    diff_type: str = ""  # NEW_PASS, NEW_FAIL, STABLE_PASS, STABLE_FAIL, REMOVED
+    diff_type: DiffType = DiffType.STABLE_PASS
     analysis_result: str = "PENDING"  # EXPECTED, UNEXPECTED, NEED_REVIEW
     analysis_reason: str | None = None
     reviewed_by: str | None = None
@@ -306,12 +321,12 @@ class TestDiff:
     @property
     def is_new_pass(self) -> bool:
         """是否是新增通过."""
-        return self.diff_type == "NEW_PASS"
+        return self.diff_type == DiffType.NEW_PASS
 
     @property
     def is_new_fail(self) -> bool:
         """是否是新增失败."""
-        return self.diff_type == "NEW_FAIL"
+        return self.diff_type == DiffType.NEW_FAIL
 
     @property
     def is_regression_issue(self) -> bool:
@@ -328,7 +343,7 @@ class TestDiff:
             "full_name": self.full_name,
             "baseline_status": self.baseline_status.value if self.baseline_status else None,
             "regression_status": self.regression_status.value if self.regression_status else None,
-            "diff_type": self.diff_type,
+            "diff_type": self.diff_type.value,
             "is_regression_issue": self.is_regression_issue,
             "analysis_result": self.analysis_result,
             "analysis_reason": self.analysis_reason,

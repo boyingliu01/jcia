@@ -6,6 +6,7 @@ from datetime import datetime
 import pytest
 
 from jcia.core.entities.test_run import (
+    DiffType,
     RunStatus,
     RunType,
     TestDiff,
@@ -162,17 +163,14 @@ class TestSQLiteTestResultRepository:
         result_repo: SQLiteTestResultRepository,
     ) -> None:
         """测试批量保存返回数量."""
-        # Arrange
         run_id = run_repo.save(TestRun(commit_hash="c2"))
         results = [
             TestResult(test_run_id=run_id, test_class="T", test_method="a"),
             TestResult(test_run_id=run_id, test_class="T", test_method="b"),
         ]
 
-        # Act
         count = result_repo.save_batch(results)
 
-        # Assert
         assert count == 2
 
     def test_find_failed_by_run_id(
@@ -216,7 +214,6 @@ class TestSQLiteTestDiffRepository:
         diff_repo: SQLiteTestDiffRepository,
     ) -> None:
         """测试保存并按运行ID查询差异."""
-        # Arrange
         diff = TestDiff(
             baseline_run_id=1,
             regression_run_id=2,
@@ -224,21 +221,18 @@ class TestSQLiteTestDiffRepository:
             test_method="test_case",
             baseline_status=TestStatus.PASSED,
             regression_status=TestStatus.FAILED,
-            diff_type="NEW_FAIL",
+            diff_type=DiffType.NEW_FAIL,
         )
 
-        # Act
         diff_id = diff_repo.save(diff)
         diffs = diff_repo.find_by_run_ids(1, 2)
 
-        # Assert
         assert diff_id > 0
         assert len(diffs) == 1
-        assert diffs[0].diff_type == "NEW_FAIL"
+        assert diffs[0].diff_type == DiffType.NEW_FAIL
 
     def test_find_unexpected_failures(self, diff_repo: SQLiteTestDiffRepository) -> None:
         """测试查询非预期失败."""
-        # Arrange
         diff_repo.save(
             TestDiff(
                 baseline_run_id=10,
@@ -247,7 +241,7 @@ class TestSQLiteTestDiffRepository:
                 test_method="case1",
                 baseline_status=TestStatus.PASSED,
                 regression_status=TestStatus.FAILED,
-                diff_type="NEW_FAIL",
+                diff_type=DiffType.NEW_FAIL,
             )
         )
         diff_repo.save(
@@ -258,13 +252,11 @@ class TestSQLiteTestDiffRepository:
                 test_method="case2",
                 baseline_status=TestStatus.FAILED,
                 regression_status=TestStatus.FAILED,
-                diff_type="STABLE_FAIL",
+                diff_type=DiffType.STABLE_FAIL,
             )
         )
 
-        # Act
         unexpected = diff_repo.find_unexpected_failures(10, 11)
 
-        # Assert
         assert len(unexpected) == 1
         assert unexpected[0].test_method == "case1"

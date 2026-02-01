@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from jcia.core.entities.test_run import (
+    DiffType,
     RunStatus,
     RunType,
     TestDiff,
@@ -275,7 +276,7 @@ class SQLiteTestDiffRepository(TestDiffRepository):
                 test_diff.test_method,
                 test_diff.baseline_status.value if test_diff.baseline_status else None,
                 test_diff.regression_status.value if test_diff.regression_status else None,
-                test_diff.diff_type,
+                test_diff.diff_type.value,
                 test_diff.analysis_result,
                 test_diff.analysis_reason,
                 test_diff.reviewed_by,
@@ -287,12 +288,54 @@ class SQLiteTestDiffRepository(TestDiffRepository):
         return row_id
 
     def save_batch(self, diffs: list[TestDiff]) -> int:
-        """批量保存测试差异."""
-        count = 0
-        for diff in diffs:
-            self.save(diff)
-            count += 1
-        return count
+        """批量保存测试差异（单事务批量插入）."""
+        if not diffs:
+            return 0
+
+        rows = [
+            (
+                diff.baseline_run_id,
+                diff.regression_run_id,
+                diff.test_class,
+                diff.test_method,
+                diff.baseline_status.value if diff.baseline_status else None,
+                diff.regression_status.value if diff.regression_status else None,
+                diff.diff_type.value,
+                diff.analysis_result,
+                diff.analysis_reason,
+                diff.reviewed_by,
+                diff.reviewed_at.isoformat() if diff.reviewed_at else None,
+            )
+            for diff in diffs
+        ]
+
+        connection = self._adapter._connection
+        if connection is None:
+            raise RuntimeError("Database not connected")
+
+        cursor = connection.cursor()
+        cursor.executemany(
+            """
+            INSERT INTO test_diffs (
+                baseline_run_id,
+                regression_run_id,
+                test_class,
+                test_method,
+                baseline_status,
+                regression_status,
+                diff_type,
+                analysis_result,
+                analysis_reason,
+                reviewed_by,
+                reviewed_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            rows,
+        )
+        connection.commit()
+        rowcount = cursor.rowcount or 0
+        cursor.close()
+        return int(rowcount)
 
     def find_by_run_ids(self, baseline_run_id: int, regression_run_id: int) -> list[TestDiff]:
         """根据基线和回归运行ID查询差异."""
@@ -399,7 +442,7 @@ def _row_to_test_diff(row: tuple[object, ...]) -> TestDiff:
         test_method=str(test_method),
         baseline_status=_safe_test_status(baseline_status),
         regression_status=_safe_test_status(regression_status),
-        diff_type=str(diff_type) if diff_type is not None else "",
+        diff_type=_safe_diff_type(diff_type),
         analysis_result=str(analysis_result) if analysis_result is not None else "PENDING",
         analysis_reason=analysis_reason if analysis_reason is None else str(analysis_reason),
         reviewed_by=reviewed_by if reviewed_by is None else str(reviewed_by),
@@ -407,8 +450,21 @@ def _row_to_test_diff(row: tuple[object, ...]) -> TestDiff:
     )
 
 
+def _safe_diff_type(value: object | None) -> DiffType:
+    """安全解析差异类型，默认返回 STABLE_PASS."""
+    if isinstance(value, DiffType):
+        return value
+    if value is None:
+        return DiffType.STABLE_PASS
+    try:
+        return DiffType(str(value))
+    except ValueError:
+        return DiffType.STABLE_PASS
+
+
 def _parse_datetime(value: object) -> datetime:
     """解析时间字符串."""
+
     if isinstance(value, datetime):
         return value
     if value is None:
