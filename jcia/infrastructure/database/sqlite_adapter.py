@@ -103,13 +103,20 @@ class SQLiteAdapter:
             CREATE TABLE IF NOT EXISTS test_runs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 commit_hash TEXT NOT NULL,
+                commit_message TEXT,
+                branch_name TEXT,
                 run_type TEXT NOT NULL,
                 start_time TIMESTAMP NOT NULL,
                 end_time TIMESTAMP,
                 status TEXT NOT NULL,
                 total_tests INTEGER DEFAULT 0,
                 passed_tests INTEGER DEFAULT 0,
-                failed_tests INTEGER DEFAULT 0
+                failed_tests INTEGER DEFAULT 0,
+                skipped_tests INTEGER DEFAULT 0,
+                error_tests INTEGER DEFAULT 0,
+                total_duration_ms INTEGER DEFAULT 0,
+                coverage_json TEXT,
+                metadata_json TEXT
             )
         """
         )
@@ -123,6 +130,9 @@ class SQLiteAdapter:
                 status TEXT NOT NULL,
                 duration_ms INTEGER DEFAULT 0,
                 error_message TEXT,
+                stack_trace TEXT,
+                coverage_data_json TEXT,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (run_id) REFERENCES test_runs (id)
             )
         """
@@ -135,8 +145,8 @@ class SQLiteAdapter:
                 regression_run_id INTEGER NOT NULL,
                 test_class TEXT NOT NULL,
                 test_method TEXT NOT NULL,
-                baseline_status TEXT NOT NULL,
-                regression_status TEXT NOT NULL,
+                baseline_status TEXT,
+                regression_status TEXT,
                 diff_type TEXT NOT NULL DEFAULT "",
                 analysis_result TEXT DEFAULT "PENDING",
                 analysis_reason TEXT,

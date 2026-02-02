@@ -1,7 +1,7 @@
 """Maven 适配器实现."""
 
 import shutil
-import subprocess
+import subprocess  # nosec B404
 from pathlib import Path
 
 from jcia.core.interfaces.tool_wrapper import ToolResult, ToolStatus, ToolType
@@ -52,7 +52,7 @@ class MavenAdapter:
     def get_version(self) -> str | None:
         """获取 Maven 版本."""
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 B607
                 ["mvn", "-v"],
                 capture_output=True,
                 text=True,
@@ -97,7 +97,7 @@ class MavenAdapter:
         cmd = [mvn_path] + normalized_args
 
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603
                 cmd,
                 cwd=cwd,
                 capture_output=True,
@@ -141,7 +141,8 @@ class MavenAdapter:
         """构建 Maven 参数列表。"""
         args = ["clean", "test"]
         if "skip_tests" in kwargs and kwargs["skip_tests"]:
-            args[0] = "test-compile"
+            # 正确的 Maven 跳过测试参数是 -DskipTests
+            args.append("-DskipTests")
         return args
 
     def _normalize_args(self, args: list[str]) -> list[str]:

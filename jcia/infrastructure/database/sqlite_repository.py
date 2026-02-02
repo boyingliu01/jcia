@@ -1,8 +1,11 @@
 """SQLite 仓储实现."""
 
+import json
 from datetime import datetime
+from typing import Any
 
 from jcia.core.entities.test_run import (
+    CoverageData,
     DiffType,
     RunStatus,
     RunType,
@@ -38,17 +41,26 @@ class SQLiteTestRunRepository(TestRunRepository):
             """
             INSERT INTO test_runs (
                 commit_hash,
+                commit_message,
+                branch_name,
                 run_type,
                 start_time,
                 end_time,
                 status,
                 total_tests,
                 passed_tests,
-                failed_tests
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                failed_tests,
+                skipped_tests,
+                error_tests,
+                total_duration_ms,
+                coverage_json,
+                metadata_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 test_run.commit_hash,
+                test_run.commit_message,
+                test_run.branch_name,
                 test_run.run_type.value,
                 test_run.timestamp.isoformat() if test_run.timestamp else None,
                 None,
@@ -56,6 +68,11 @@ class SQLiteTestRunRepository(TestRunRepository):
                 test_run.total_tests,
                 test_run.passed_tests,
                 test_run.failed_tests,
+                test_run.skipped_tests,
+                test_run.error_tests,
+                test_run.total_duration_ms,
+                json.dumps(test_run.coverage.__dict__) if test_run.coverage else None,
+                json.dumps(test_run.metadata) if test_run.metadata else None,
             ),
         )
         test_run.id = row_id
@@ -65,13 +82,16 @@ class SQLiteTestRunRepository(TestRunRepository):
         """根据ID查询测试运行."""
         rows = self._adapter.execute(
             """
-            SELECT id, commit_hash, run_type, start_time, end_time, status,
-                   total_tests, passed_tests, failed_tests
+            SELECT id, commit_hash, commit_message, branch_name, run_type, start_time,
+                   end_time, status, total_tests, passed_tests, failed_tests,
+                   skipped_tests, error_tests, total_duration_ms, coverage_json,
+                   metadata_json
               FROM test_runs
              WHERE id = ?
             """,
             (run_id,),
         )
+
         if not rows:
             return None
         return _row_to_test_run(rows[0])
@@ -81,8 +101,10 @@ class SQLiteTestRunRepository(TestRunRepository):
         if run_type:
             rows = self._adapter.execute(
                 """
-                SELECT id, commit_hash, run_type, start_time, end_time, status,
-                       total_tests, passed_tests, failed_tests
+                SELECT id, commit_hash, commit_message, branch_name, run_type,
+                       start_time, end_time, status, total_tests, passed_tests,
+                       failed_tests, skipped_tests, error_tests, total_duration_ms,
+                       coverage_json, metadata_json
                   FROM test_runs
                  WHERE commit_hash = ? AND run_type = ?
                 """,
@@ -91,13 +113,16 @@ class SQLiteTestRunRepository(TestRunRepository):
         else:
             rows = self._adapter.execute(
                 """
-                SELECT id, commit_hash, run_type, start_time, end_time, status,
-                       total_tests, passed_tests, failed_tests
+                SELECT id, commit_hash, commit_message, branch_name, run_type,
+                       start_time, end_time, status, total_tests, passed_tests,
+                       failed_tests, skipped_tests, error_tests, total_duration_ms,
+                       coverage_json, metadata_json
                   FROM test_runs
                  WHERE commit_hash = ?
                 """,
                 (commit_hash,),
             )
+
         return [_row_to_test_run(row) for row in rows]
 
     def find_latest(self, run_type: str | None = None) -> TestRun | None:
@@ -105,8 +130,10 @@ class SQLiteTestRunRepository(TestRunRepository):
         if run_type:
             rows = self._adapter.execute(
                 """
-                SELECT id, commit_hash, run_type, start_time, end_time, status,
-                       total_tests, passed_tests, failed_tests
+                SELECT id, commit_hash, commit_message, branch_name, run_type,
+                       start_time, end_time, status, total_tests, passed_tests,
+                       failed_tests, skipped_tests, error_tests, total_duration_ms,
+                       coverage_json, metadata_json
                   FROM test_runs
                  WHERE run_type = ?
                  ORDER BY start_time DESC
@@ -117,14 +144,17 @@ class SQLiteTestRunRepository(TestRunRepository):
         else:
             rows = self._adapter.execute(
                 """
-                SELECT id, commit_hash, run_type, start_time, end_time, status,
-                       total_tests, passed_tests, failed_tests
+                SELECT id, commit_hash, commit_message, branch_name, run_type,
+                       start_time, end_time, status, total_tests, passed_tests,
+                       failed_tests, skipped_tests, error_tests, total_duration_ms,
+                       coverage_json, metadata_json
                   FROM test_runs
                  ORDER BY start_time DESC
                  LIMIT 1
                 """,
                 (),
             )
+
         if not rows:
             return None
         return _row_to_test_run(rows[0])
@@ -137,22 +167,36 @@ class SQLiteTestRunRepository(TestRunRepository):
             """
             UPDATE test_runs
                SET commit_hash = ?,
+                   commit_message = ?,
+                   branch_name = ?,
                    run_type = ?,
                    start_time = ?,
                    status = ?,
                    total_tests = ?,
                    passed_tests = ?,
-                   failed_tests = ?
+                   failed_tests = ?,
+                   skipped_tests = ?,
+                   error_tests = ?,
+                   total_duration_ms = ?,
+                   coverage_json = ?,
+                   metadata_json = ?
              WHERE id = ?
             """,
             (
                 test_run.commit_hash,
+                test_run.commit_message,
+                test_run.branch_name,
                 test_run.run_type.value,
                 test_run.timestamp.isoformat() if test_run.timestamp else None,
                 test_run.status.value,
                 test_run.total_tests,
                 test_run.passed_tests,
                 test_run.failed_tests,
+                test_run.skipped_tests,
+                test_run.error_tests,
+                test_run.total_duration_ms,
+                json.dumps(test_run.coverage.__dict__) if test_run.coverage else None,
+                json.dumps(test_run.metadata) if test_run.metadata else None,
                 test_run.id,
             ),
         )
@@ -190,8 +234,11 @@ class SQLiteTestResultRepository(TestResultRepository):
                 test_method,
                 status,
                 duration_ms,
-                error_message
-            ) VALUES (?, ?, ?, ?, ?, ?)
+                error_message,
+                stack_trace,
+                coverage_data_json,
+                timestamp
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 test_result.test_run_id,
@@ -200,6 +247,11 @@ class SQLiteTestResultRepository(TestResultRepository):
                 test_result.status.value,
                 test_result.duration_ms,
                 test_result.error_message,
+                test_result.stack_trace,
+                json.dumps(test_result.coverage_data.__dict__)
+                if test_result.coverage_data
+                else None,
+                test_result.timestamp.isoformat() if test_result.timestamp else None,
             ),
         )
         test_result.id = row_id
@@ -207,17 +259,56 @@ class SQLiteTestResultRepository(TestResultRepository):
 
     def save_batch(self, results: list[TestResult]) -> int:
         """批量保存测试结果."""
-        count = 0
-        for result in results:
-            self.save(result)
-            count += 1
-        return count
+        if not results:
+            return 0
+
+        rows = [
+            (
+                r.test_run_id,
+                r.test_class,
+                r.test_method,
+                r.status.value,
+                r.duration_ms,
+                r.error_message,
+                r.stack_trace,
+                json.dumps(r.coverage_data.__dict__) if r.coverage_data else None,
+                r.timestamp.isoformat() if r.timestamp else None,
+            )
+            for r in results
+        ]
+
+        connection = self._adapter._connection
+        if connection is None:
+            raise RuntimeError("Database not connected")
+
+        cursor = connection.cursor()
+        cursor.executemany(
+            """
+            INSERT INTO test_results (
+                run_id,
+                test_class,
+                test_method,
+                status,
+                duration_ms,
+                error_message,
+                stack_trace,
+                coverage_data_json,
+                timestamp
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            rows,
+        )
+        connection.commit()
+        rowcount = cursor.rowcount or 0
+        cursor.close()
+        return int(rowcount)
 
     def find_by_run_id(self, run_id: int) -> list[TestResult]:
         """根据运行ID查询测试结果."""
         rows = self._adapter.execute(
             """
-            SELECT id, run_id, test_class, test_method, status, duration_ms, error_message
+            SELECT id, run_id, test_class, test_method, status, duration_ms,
+                   error_message, stack_trace, coverage_data_json, timestamp
               FROM test_results
              WHERE run_id = ?
             """,
@@ -229,7 +320,8 @@ class SQLiteTestResultRepository(TestResultRepository):
         """查询指定运行的失败测试."""
         rows = self._adapter.execute(
             """
-            SELECT id, run_id, test_class, test_method, status, duration_ms, error_message
+            SELECT id, run_id, test_class, test_method, status, duration_ms,
+                   error_message, stack_trace, coverage_data_json, timestamp
               FROM test_results
              WHERE run_id = ? AND status IN (?, ?)
             """,
@@ -379,42 +471,54 @@ class SQLiteTestDiffRepository(TestDiffRepository):
         return [_row_to_test_diff(row) for row in rows]
 
 
-def _row_to_test_run(row: tuple[object, ...]) -> TestRun:
+def _row_to_test_run(row: tuple[Any, ...]) -> TestRun:
     """将查询行转换为 TestRun."""
-    (
-        run_id,
-        commit_hash,
-        run_type,
-        start_time,
-        _end_time,
-        status,
-        total_tests,
-        passed_tests,
-        failed_tests,
-    ) = row
+    # 假设查询包含了所有新字段，按顺序解析
+    # 如果 find_by_id 等方法还没有更新 SELECT 语句，这里会报错，所以需要同步更新 find 方法
+    # 目前先根据 save 的字段顺序调整查询和解析
     return TestRun(
-        id=_to_int(run_id),
-        commit_hash=str(commit_hash),
-        run_type=_safe_run_type(run_type),
-        timestamp=_parse_datetime(start_time),
-        status=_safe_run_status(status),
-        total_tests=_to_int(total_tests),
-        passed_tests=_to_int(passed_tests),
-        failed_tests=_to_int(failed_tests),
+        id=_to_int(row[0]),
+        commit_hash=str(row[1]),
+        commit_message=str(row[2]) if row[2] else None,
+        branch_name=str(row[3]) if row[3] else None,
+        run_type=_safe_run_type(row[4]),
+        timestamp=_parse_datetime(row[5]),
+        status=_safe_run_status(row[7]),  # row[6] 是 end_time
+        total_tests=_to_int(row[8]),
+        passed_tests=_to_int(row[9]),
+        failed_tests=_to_int(row[10]),
+        skipped_tests=_to_int(row[11]),
+        error_tests=_to_int(row[12]),
+        total_duration_ms=_to_int(row[13]),
+        coverage=_parse_coverage_json(row[14]),
+        metadata=json.loads(str(row[15])) if row[15] else {},
     )
 
 
-def _row_to_test_result(row: tuple[object, ...]) -> TestResult:
+def _parse_coverage_json(data: Any) -> CoverageData | None:
+    """解析覆盖率 JSON."""
+    if not data:
+        return None
+    try:
+        d = json.loads(str(data))
+        return CoverageData(**d)
+    except Exception:
+        return None
+
+
+def _row_to_test_result(row: tuple[Any, ...]) -> TestResult:
     """将查询行转换为 TestResult."""
-    result_id, run_id, test_class, test_method, status, duration_ms, error_message = row
     return TestResult(
-        id=_to_int(result_id),
-        test_run_id=_to_int(run_id),
-        test_class=str(test_class),
-        test_method=str(test_method),
-        status=_safe_test_status_required(status),
-        duration_ms=_to_int(duration_ms),
-        error_message=error_message if error_message is None else str(error_message),
+        id=_to_int(row[0]),
+        test_run_id=_to_int(row[1]),
+        test_class=str(row[2]),
+        test_method=str(row[3]),
+        status=_safe_test_status_required(row[4]),
+        duration_ms=_to_int(row[5]),
+        error_message=str(row[6]) if row[6] else None,
+        stack_trace=str(row[7]) if row[7] else None,
+        coverage_data=_parse_coverage_json(row[8]),
+        timestamp=_parse_datetime(row[9]),
     )
 
 

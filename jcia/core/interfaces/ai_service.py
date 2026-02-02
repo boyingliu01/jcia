@@ -19,6 +19,7 @@ class AIProvider(Enum):
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     AZURE = "azure"
+    VOLCENGINE = "volcengine"
     LOCAL = "local"
     CUSTOM = "custom"
 

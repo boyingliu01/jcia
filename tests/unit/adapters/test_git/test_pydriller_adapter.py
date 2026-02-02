@@ -132,6 +132,60 @@ class TestPyDrillerAdapter:
         assert result_enum.change_type == ChangeType.RENAME
         assert result_unknown.change_type == ChangeType.MODIFY
 
+    def test_convert_method_change_with_signature(self) -> None:
+        """测试带签名的方法变更转换."""
+        adapter = PyDrillerAdapter(repo_path="/fake/repo")
+        mock_method = MagicMock()
+        mock_method.long_name = "com.demo.Service.process(String, int)"
+        mock_method.name = "process"
+        mock_method.start_line = 10
+        mock_method.end_line = 20
+
+        result = adapter._convert_method_change(mock_method)
+
+        assert result.class_name == "com.demo.Service"
+        assert result.method_name == "process"
+        assert result.signature == "(String, int)"
+        assert result.line_start == 10
+        assert result.line_end == 20
+
+    def test_convert_method_change_without_signature(self) -> None:
+        """测试不带签名的方法变更转换."""
+        adapter = PyDrillerAdapter(repo_path="/fake/repo")
+        mock_method = MagicMock()
+        mock_method.long_name = "com.demo.Service.doWork"
+        mock_method.name = "doWork"
+        mock_method.start_line = 30
+        mock_method.end_line = 40
+
+        result = adapter._convert_method_change(mock_method)
+
+        assert result.class_name == "com.demo.Service"
+        assert result.method_name == "doWork"
+        assert result.signature is None
+
+    def test_convert_file_change_with_java_methods(self) -> None:
+        """测试转换包含 Java 方法的 FileChange。"""
+        adapter = PyDrillerAdapter(repo_path="/fake/repo")
+        mock_file = MagicMock()
+        mock_file.filename = "Service.java"
+        mock_file.change_type = "MODIFY"
+        mock_file.added_lines = 5
+        mock_file.deleted_lines = 1
+
+        mock_method = MagicMock()
+        mock_method.long_name = "com.demo.Service.save()"
+        mock_method.name = "save"
+        mock_method.start_line = 5
+        mock_method.end_line = 10
+        mock_file.changed_methods = [mock_method]
+
+        result = adapter._convert_file_change(mock_file)
+
+        assert result.file_path == "Service.java"
+        assert len(result.method_changes) == 1
+        assert result.method_changes[0].method_name == "save"
+
     @patch("jcia.adapters.git.pydriller_adapter.Path.exists", return_value=True)
     @patch("jcia.adapters.git.pydriller_adapter.Repository")
     def test_get_changed_methods_returns_long_names(self, mock_repo_class, mock_exists) -> None:

@@ -11,6 +11,7 @@ from jcia.core.entities.change_set import (
     ChangeType,
     CommitInfo,
     FileChange,
+    MethodChange,
 )
 from jcia.core.interfaces.analyzer import ChangeAnalyzer
 
@@ -163,9 +164,54 @@ class PyDrillerAdapter(ChangeAnalyzer):
         """
         change_type = self._map_change_type(getattr(pydriller_file, "change_type", None))
 
-        return FileChange(
+        file_change = FileChange(
             file_path=getattr(pydriller_file, "filename", ""),
             change_type=change_type,
+            old_path=getattr(pydriller_file, "old_path", None),
             insertions=getattr(pydriller_file, "added_lines", 0) or 0,
             deletions=getattr(pydriller_file, "deleted_lines", 0) or 0,
+        )
+
+        # 提取方法级变更（仅针对 Java 文件）
+        if file_change.is_java_file:
+            changed_methods = getattr(pydriller_file, "changed_methods", []) or []
+            for method in changed_methods:
+                method_entity = self._convert_method_change(method)
+                file_change.method_changes.append(method_entity)
+
+        return file_change
+
+    def _convert_method_change(self, pydriller_method: Any) -> MethodChange:
+        """转换 PyDriller 方法变更为领域实体.
+
+        Args:
+            pydriller_method: PyDriller 方法对象
+
+        Returns:
+            MethodChange: 方法变更实体
+        """
+        long_name = getattr(pydriller_method, "long_name", "")
+        # 简单的类名和签名提取逻辑
+        class_name = ""
+        method_name = getattr(pydriller_method, "name", "")
+        signature = None
+
+        if "(" in long_name:
+            # 分离方法名部分和签名部分
+            name_part = long_name.split("(", 1)[0]
+            signature = "(" + long_name.split("(", 1)[1]
+
+            # 提取类名（去掉方法名后的剩余部分）
+            if "." in name_part:
+                class_name = ".".join(name_part.split(".")[:-1])
+        elif "." in long_name:
+            class_name = ".".join(long_name.split(".")[:-1])
+
+        return MethodChange(
+            class_name=class_name,
+            method_name=method_name,
+            signature=signature,
+            change_type=ChangeType.MODIFY,  # pydriller.changed_methods 通常表示修改
+            line_start=getattr(pydriller_method, "start_line", 0),
+            line_end=getattr(pydriller_method, "end_line", 0),
         )

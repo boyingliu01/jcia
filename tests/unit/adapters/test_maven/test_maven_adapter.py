@@ -126,6 +126,38 @@ class TestMavenAdapter:
         called_args, _ = mock_run.call_args
         assert called_args[0] == ["mvn", "test"]
 
+    @patch("shutil.which", return_value="mvn")
+    @patch("subprocess.run")
+    def test_execute_timeout_expired(self, mock_run, mock_which) -> None:
+        """测试 Maven 执行超时。"""
+        import subprocess
+
+        adapter = MavenAdapter(project_path="/test/project")
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd=["mvn"], timeout=10)
+
+        result = adapter.execute(["test"], timeout=10)
+
+        assert result.success is False
+        assert "timed out" in result.stderr
+
+    @patch("shutil.which", return_value="mvn")
+    @patch("subprocess.run")
+    def test_execute_generic_exception(self, mock_run, mock_which) -> None:
+        """测试 Maven 执行抛出通用异常。"""
+        adapter = MavenAdapter(project_path="/test/project")
+        mock_run.side_effect = RuntimeError("Something went wrong")
+
+        result = adapter.execute(["test"])
+
+        assert result.success is False
+        assert "Something went wrong" in result.stderr
+
+    def test_normalize_args_multiple_mvn(self) -> None:
+        """测试 normalize_args 处理多个前导 mvn。"""
+        adapter = MavenAdapter(project_path="/test/project")
+        assert adapter._normalize_args(["mvn", "mvn", "test"]) == ["test"]
+        assert adapter._normalize_args(["MVN", "compile"]) == ["compile"]
+
     @patch("shutil.which", return_value=None)
     @patch("subprocess.run")
     def test_execute_returns_error_when_mvn_missing(self, mock_run, mock_which) -> None:
@@ -221,4 +253,6 @@ class TestMavenAdapter:
         args = adapter.build_maven_args(skip_tests=True)
 
         # Assert
-        assert args == ["test-compile", "test"]
+        assert "clean" in args
+        assert "test" in args
+        assert "-DskipTests" in args

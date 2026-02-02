@@ -95,10 +95,12 @@ class FileChange:
     @property
     def is_test_file(self) -> bool:
         """是否是测试文件."""
+        # 统一路径分隔符为正斜杠进行判断，增加 Windows 兼容性
+        normalized_path = self.file_path.replace("\\", "/").lower()
         return (
-            self.file_path.endswith("Test.java")
-            or self.file_path.endswith("Tests.java")
-            or "/test/" in self.file_path.lower()
+            normalized_path.endswith("test.java")
+            or normalized_path.endswith("tests.java")
+            or "/test/" in normalized_path
         )
 
     @property

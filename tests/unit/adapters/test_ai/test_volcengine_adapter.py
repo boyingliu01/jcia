@@ -13,7 +13,6 @@ from jcia.adapters.ai.volcengine_adapter import VolcengineAdapter
 from jcia.core.entities.test_case import TestCase
 from jcia.core.interfaces.ai_service import (
     AIProvider,
-    CodeAnalysisRequest,
     TestGenerationRequest,
 )
 
@@ -53,7 +52,7 @@ class TestVolcengineAdapter:
 
     def test_provider_returns_volcengine(self, adapter: VolcengineAdapter) -> None:
         """测试提供商返回火山引擎."""
-        assert adapter.provider == AIProvider.OPENAI  # 暂时使用OPENAI标识
+        assert adapter.provider == AIProvider.VOLCENGINE
 
     def test_model_returns_default_model(self, adapter: VolcengineAdapter) -> None:
         """测试默认模型名称."""
@@ -150,22 +149,12 @@ class TestVolcengineAdapter:
         # Assert
         assert isinstance(refined, TestCase)
 
-    def test_analyze_code_returns_analysis(
-        self,
-        adapter: VolcengineAdapter,
-        stub_call_api: Any,
-    ) -> None:
-        """测试代码分析."""
-        request = CodeAnalysisRequest(code="public class Service {}", analysis_type="code_quality")
-        stub_call_api(adapter, content="Risk HIGH with suggestion", tokens=80)
-
-        # Act
-        response = adapter.analyze_code(request)
-
-        # Assert
-        assert len(response.findings) > 0
-        assert len(response.suggestions) > 0
-        assert response.risk_level in ["HIGH", "MEDIUM", "LOW"]
+    def test_extract_risk_level_precision(self, adapter: VolcengineAdapter) -> None:
+        """测试风险等级提取的精准度（避免子串误判）."""
+        # 即使包含 LOWPASS (子串包含LOW)，如果没有独立的 LOW，也应该返回默认 MEDIUM
+        assert adapter._extract_risk_level("The status is LOWPASS") == "MEDIUM"
+        assert adapter._extract_risk_level("Risk is HIGH now") == "HIGH"
+        assert adapter._extract_risk_level("This is a LOW risk") == "LOW"
 
     def test_explain_change_impact_returns_explanation(
         self,

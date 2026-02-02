@@ -62,7 +62,7 @@ class VolcengineAdapter(AITestGenerator, AIAnalyzer):
     @property
     def provider(self) -> AIProvider:
         """返回 AI 服务提供商."""
-        return AIProvider.OPENAI  # 使用OPENAI标识符（兼容接口）
+        return AIProvider.VOLCENGINE
 
     @property
     def model(self) -> str:
@@ -459,11 +459,14 @@ class VolcengineAdapter(AITestGenerator, AIAnalyzer):
         Returns:
             str: 风险级别 (HIGH/MEDIUM/LOW)
         """
-        risk_keywords = {"HIGH": "HIGH", "LOW": "LOW"}
+        import re
+
         content_upper = content.upper()
 
-        for keyword, level in risk_keywords.items():
-            if keyword in content_upper:
-                return level
+        # 使用正则表达式匹配，确保是独立的单词，避免子串误判
+        if re.search(r"\bHIGH\b", content_upper):
+            return "HIGH"
+        if re.search(r"\bLOW\b", content_upper):
+            return "LOW"
 
         return "MEDIUM"
