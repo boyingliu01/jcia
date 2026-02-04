@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 class TestSelectionStrategy(Enum):
     """测试选择策略枚举."""
 
+    __test__ = False  # 避免被 pytest 收集
+
     ALL = "all"  # 运行所有测试
     STARTS = "starts"  # 使用STARTS选择
     IMPACT_BASED = "impact"  # 基于影响范围选择
