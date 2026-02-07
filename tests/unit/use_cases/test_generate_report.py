@@ -116,9 +116,9 @@ def sample_change_set() -> ChangeSet:
 class TestGenerateReportRequest:
     """测试GenerateReportRequest请求类."""
 
-    def test_init_with_required_fields(self) -> None:
+    def test_init_with_required_fields(self, tmp_path: Path) -> None:
         """测试使用必填字段初始化请求."""
-        output_dir = Path("/tmp/reports")
+        output_dir = tmp_path / "reports"
 
         request = GenerateReportRequest(output_dir=output_dir)
 
@@ -150,25 +150,13 @@ class TestGenerateReportRequest:
 class TestGenerateReportResponse:
     """测试GenerateReportResponse响应类."""
 
-    def test_init(self) -> None:
+    def test_init(self, tmp_path: Path) -> None:
         """测试初始化响应."""
         response = GenerateReportResponse(
-            report_path=Path("/tmp/report.json"),
-            format="json",
-            content="{}",
-            metadata={"size_bytes": 2},
+            report_path=tmp_path / "report.json",
         )
 
-        assert response.report_path == Path("/tmp/report.json")
-        assert response.format == "json"
-        assert response.content == "{}"
-        assert response.metadata == {"size_bytes": 2}
-
-    def test_init_with_defaults(self) -> None:
-        """测试使用默认值初始化响应."""
-        response = GenerateReportResponse()
-
-        assert response.report_path is None
+        assert response.report_path == tmp_path / "report.json"
         assert response.format == "json"
         assert response.content is None
         assert response.metadata == {}

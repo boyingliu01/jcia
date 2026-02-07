@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from jcia.reports.base import ReportData
 from jcia.reports.markdown_reporter import MarkdownReporter
 
@@ -268,8 +266,8 @@ class TestMarkdownReporter:
 
         from jcia.core.entities.change_set import (
             ChangeSet,
-            FileChange,
             ChangeType,
+            FileChange,
         )
 
         # 创建变更集

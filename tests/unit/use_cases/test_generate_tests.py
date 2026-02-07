@@ -94,15 +94,20 @@ class TestGenerateTestsUseCase:
         mock_gen_response.confidence = 0.9
         mock_gen_response.tokens_used = 100
 
-        with patch.object(use_case._service, "generate_tests", return_value=mock_gen_response):
-            with patch.object(
-                use_case._service, "filter_by_confidence", return_value=mock_gen_response
-            ):
-                with patch.object(
-                    use_case._service, "prioritize_tests", return_value=mock_gen_response.test_cases
-                ):
-                    # Act
-                    response = use_case.execute(request)
+        with patch.object(
+            use_case._service, "generate_tests", return_value=mock_gen_response
+        ), patch.object(
+            use_case._service, "filter_by_confidence", return_value=mock_gen_response
+        ), patch.object(
+            use_case._service, "prioritize_tests", return_value=mock_gen_response.test_cases
+        ):
+            # Act
+            response = use_case.execute(request)
+
+            # Assert
+            assert isinstance(response, GenerateTestsResponse)
+            assert response.generated_count == 1
+            assert response.confidence == 0.9
 
                     # Assert
                     assert isinstance(response, GenerateTestsResponse)

@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from jcia.reports.base import ReportData
 from jcia.reports.html_reporter import HTMLReporter
 
@@ -224,8 +222,8 @@ class TestHTMLReporter:
 
         from jcia.core.entities.change_set import (
             ChangeSet,
-            FileChange,
             ChangeType,
+            FileChange,
         )
 
         # 创建变更集

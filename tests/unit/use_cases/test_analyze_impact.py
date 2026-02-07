@@ -235,11 +235,6 @@ class TestAnalyzeImpactUseCase:
 
     def test_generate_summary(self, mock_analyzer: Mock, valid_repo_path: Path) -> None:
         """测试生成摘要."""
-        # Arrange
-        request = AnalyzeImpactRequest(
-            repo_path=valid_repo_path, from_commit="abc123", to_commit="def456"
-        )
-
         # 创建模拟调用链分析器
         mock_call_chain_analyzer = MagicMock()
 

@@ -3,8 +3,6 @@
 from datetime import datetime
 from pathlib import Path
 
-import pytest
-
 from jcia.reports.base import BaseReporter, ReportData, ReportResult
 
 
