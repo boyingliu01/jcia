@@ -559,7 +559,7 @@ CI触发JCIA分析
 
 ---
 
-### 阶段 8：应用用例实现
+### 阶段 8：应用用例实现 ✅
 **目标**：实现应用层的业务用例
 
 **交付物**：
@@ -574,7 +574,13 @@ CI触发JCIA分析
 - `jcia/core/use_cases/run_regression.py`
 - `jcia/core/use_cases/generate_report.py`
 
-**状态**：待开始
+**单元测试**：
+- `tests/unit/use_cases/test_analyze_impact.py`
+- `tests/unit/use_cases/test_generate_tests.py`
+- `tests/unit/use_cases/test_run_regression.py`
+
+**状态**：已完成
+**测试状态**：29个测试全部通过
 
 ---
 
