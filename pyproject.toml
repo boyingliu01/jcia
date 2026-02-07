@@ -23,16 +23,17 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
 ]
 requires-python = ">=3.10"
-dependencies = [
-    "click>=8.1.0",
-    "pydriller>=2.6.0",
-    "pyyaml>=6.0.1",
-    "jinja2>=3.1.2",
-    "requests>=2.31.0",
-    "beautifulsoup4>=4.12.0",
-    "rich>=13.7.0",
-    "pydantic>=2.5.0",
-]
+    dependencies = [
+        "click>=8.0.0",
+        "pydriller>=2.6.0",
+        "pyyaml>=6.0.1",
+        "jinja2>=3.1.2",
+        "requests>=2.31.0",
+        "beautifulsoup4>=4.12.0",
+        "rich>=13.7.0",
+        "pydantic>=2.5.0",
+        "pathlib>=2.3.6",
+    ]
 
 [project.optional-dependencies]
 dev = [
