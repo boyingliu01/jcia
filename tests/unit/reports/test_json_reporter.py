@@ -3,8 +3,6 @@
 import json
 from pathlib import Path
 
-import pytest
-
 from jcia.reports.base import ReportData
 from jcia.reports.json_reporter import JSONReporter
 
