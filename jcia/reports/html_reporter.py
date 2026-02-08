@@ -98,6 +98,10 @@ class HTMLReporter(BaseReporter):
         if test_run:
             html += self._render_test_summary(test_run)
 
+        # 测试详情
+        if test_run:
+            html += self._render_test_details(test_run)
+
         # 测试对比
         if comparison:
             html += self._render_comparison(comparison)
@@ -357,6 +361,68 @@ class HTMLReporter(BaseReporter):
             </div>
         </div>
 """
+
+    def _render_test_details(self, test_run: dict[str, Any]) -> str:
+        """渲染详细的测试结果表格.
+
+        Args:
+            test_run: 测试运行数据
+
+        Returns:
+            str: HTML内容
+        """
+        test_results = test_run.get("test_results", [])
+
+        if not test_results:
+            return ""
+
+        html = """
+        <div class="card">
+            <h2>测试详情</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>测试类</th>
+                        <th>测试方法</th>
+                        <th>状态</th>
+                        <th>耗时(ms)</th>
+                        <th>错误信息</th>
+                    </tr>
+                </thead>
+                <tbody>
+"""
+
+        for result in test_results[:50]:  # 限制显示前50条
+            test_class = result.get("test_class", "Unknown")
+            test_method = result.get("test_method", "Unknown")
+            status = result.get("status", "unknown")
+            duration = result.get("duration_ms", 0)
+            error_message = result.get("error_message", "")
+
+            status_class = "passed" if status == "passed" else "failed"
+
+            if error_message and len(error_message) > 100:
+                error_display = error_message[:100] + "..."
+            else:
+                error_display = error_message
+
+            html += f"""
+                <tr>
+                    <td>{test_class}</td>
+                    <td>{test_method}</td>
+                    <td><span class="badge {status_class}">{status}</span></td>
+                    <td>{duration}</td>
+                    <td style="max-width: 300px; word-wrap: break-word;">{error_display}</td>
+                </tr>
+"""
+
+        html += """
+                </tbody>
+            </table>
+        </div>
+"""
+
+        return html
 
     def _render_comparison(self, comparison: dict[str, Any]) -> str:
         """渲染测试对比.

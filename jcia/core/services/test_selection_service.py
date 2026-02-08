@@ -50,6 +50,166 @@ class TestSelectionService:
 
         return selected
 
+    def select_by_starts(
+        self, impact_graph: ImpactGraph, test_pool: list[TestCase]
+    ) -> list[TestCase]:
+        """使用STARTS算法选择测试.
+
+        STARTS (Static Test Assignment for Regression Test Selection) 算法
+        基于静态分析选择最相关的测试用例。
+
+        Args:
+            impact_graph: 影响图
+            test_pool: 测试用例池
+
+        Returns:
+            List[TestCase]: 选中的测试用例
+        """
+        if impact_graph.total_affected_methods == 0:
+            return test_pool.copy()
+
+        # 计算测试权重
+        test_weights = self._calculate_test_weights(impact_graph, test_pool)
+
+        # 按权重排序并选择
+        return self._select_tests_by_weights(test_pool, test_weights)
+
+    def _calculate_test_weights(
+        self, impact_graph: ImpactGraph, test_pool: list[TestCase]
+    ) -> dict[str, float]:
+        """计算每个测试的影响权重.
+
+        Args:
+            impact_graph: 影响图
+            test_pool: 测试用例池
+
+        Returns:
+            dict[str, float]: 测试权重字典
+        """
+        test_weights: dict[str, float] = {}
+        affected_methods_set = set(impact_graph.nodes.keys())
+
+        for test_case in test_pool:
+            weight = 0.0
+
+            # 基于目标类的权重
+            weight += self._calculate_class_weight(test_case, affected_methods_set)
+
+            # 基于目标方法的权重（更高）
+            weight += self._calculate_method_weight(test_case, affected_methods_set)
+
+            # 基于测试类名的权重
+            weight += self._calculate_test_class_weight(test_case, affected_methods_set)
+
+            # 基于优先级的权重
+            weight *= self._get_priority_weight(test_case.priority)
+
+            test_weights[test_case.full_name] = weight
+
+        return test_weights
+
+    def _calculate_class_weight(self, test_case: TestCase, affected_methods: set[str]) -> float:
+        """计算基于目标类的权重.
+
+        Args:
+            test_case: 测试用例
+            affected_methods: 受影响的方法集合
+
+        Returns:
+            float: 类权重
+        """
+        if not test_case.target_class:
+            return 0.0
+
+        weight = 0.0
+        for method_name in affected_methods:
+            if test_case.target_class in method_name:
+                weight += 1.0
+        return weight
+
+    def _calculate_method_weight(self, test_case: TestCase, affected_methods: set[str]) -> float:
+        """计算基于目标方法的权重.
+
+        Args:
+            test_case: 测试用例
+            affected_methods: 受影响的方法集合
+
+        Returns:
+            float: 方法权重
+        """
+        if not test_case.target_method:
+            return 0.0
+
+        weight = 0.0
+        for method_name in affected_methods:
+            if test_case.target_method in method_name:
+                weight += 2.0
+        return weight
+
+    def _calculate_test_class_weight(
+        self, test_case: TestCase, affected_methods: set[str]
+    ) -> float:
+        """计算基于测试类名的权重.
+
+        Args:
+            test_case: 测试用例
+            affected_methods: 受影响的方法集合
+
+        Returns:
+            float: 测试类权重
+        """
+        weight = 0.0
+        for method_name in affected_methods:
+            class_name = method_name.split(".")[-1]
+            if class_name in test_case.class_name:
+                weight += 0.5
+        return weight
+
+    def _get_priority_weight(self, priority: TestPriority) -> float:
+        """获取优先级权重.
+
+        Args:
+            priority: 测试优先级
+
+        Returns:
+            float: 优先级权重
+        """
+        priority_weights = {
+            TestPriority.CRITICAL: 3.0,
+            TestPriority.HIGH: 2.0,
+            TestPriority.MEDIUM: 1.0,
+            TestPriority.LOW: 0.5,
+        }
+        return priority_weights.get(priority, 1.0)
+
+    def _select_tests_by_weights(
+        self, test_pool: list[TestCase], test_weights: dict[str, float]
+    ) -> list[TestCase]:
+        """根据权重选择测试.
+
+        Args:
+            test_pool: 测试用例池
+            test_weights: 测试权重字典
+
+        Returns:
+            list[TestCase]: 选中的测试用例
+        """
+        # 按权重排序
+        sorted_tests = sorted(
+            test_pool,
+            key=lambda tc: test_weights.get(tc.full_name, 0),
+            reverse=True,
+        )
+
+        # 选择权重大于0的测试
+        selected = [tc for tc in sorted_tests if test_weights.get(tc.full_name, 0) > 0]
+
+        # 如果没有选中的测试，返回所有测试（保守策略）
+        if not selected:
+            return test_pool.copy()
+
+        return selected
+
     def select_by_priority(
         self, test_pool: list[TestCase], min_priority: TestPriority
     ) -> list[TestCase]:
@@ -145,9 +305,14 @@ class TestSelectionService:
             return TestSelectionStrategy.ALL
 
         if impact_graph.total_affected_methods > 20:
-            # 大量变更，使用影响范围选择
+            # 大量变更，使用STARTS算法进行智能选择
+            return TestSelectionStrategy.STARTS
+
+        if impact_graph.total_affected_methods > 10:
+            # 中等变更，使用影响范围选择
             return TestSelectionStrategy.IMPACT_BASED
 
+        # 小规模变更，使用混合策略
         return TestSelectionStrategy.HYBRID
 
     @property

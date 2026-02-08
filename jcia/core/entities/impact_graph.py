@@ -29,7 +29,7 @@ class ImpactNode:
     """影响图节点.
 
     Attributes:
-        method_name: 方法全限定名
+        method_name: 方法全限定名（类名.方法名，不包含签名）
         class_name: 类名
         impact_type: 影响类型
         severity: 严重程度
@@ -65,7 +65,11 @@ class ImpactNode:
 
     @property
     def full_name(self) -> str:
-        """获取方法全限定名."""
+        """获取方法全限定名.
+
+        注意：此属性返回的方法名不包含方法签名，与 MethodChange.full_name_with_signature
+        保持一致。如果需要包含签名的完整方法名，请使用 method_name 属性本身。
+        """
         return self.method_name
 
 

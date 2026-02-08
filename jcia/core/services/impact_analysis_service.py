@@ -233,13 +233,54 @@ class ImpactAnalysisService:
         """
         class_name_lower = class_name.lower()
 
-        # 核心类标记
-        core_keywords = ["core", "kernel", "kernel", "manager", "handler"]
-        if any(keyword in class_name_lower for keyword in core_keywords):
+        # 高严重程度：核心业务类
+        high_keywords = [
+            "core",
+            "kernel",
+            "manager",
+            "handler",
+            "service",
+            "controller",
+            "business",
+            "domain",
+            "entity",
+            "repository",
+            "dao",
+            "mapper",
+            "adapter",
+        ]
+        if any(keyword in class_name_lower for keyword in high_keywords):
             return ImpactSeverity.HIGH
 
-        # 工具类或配置类
-        if "util" in class_name_lower or "config" in class_name_lower:
+        # 中严重程度：一般业务类
+        medium_keywords = [
+            "component",
+            "processor",
+            "builder",
+            "factory",
+            "provider",
+            "helper",
+            "util",
+            "helper",
+        ]
+        if any(keyword in class_name_lower for keyword in medium_keywords):
+            return ImpactSeverity.MEDIUM
+
+        # 低严重程度：配置、工具、常量类
+        low_keywords = [
+            "config",
+            "constant",
+            "enum",
+            "dto",
+            "vo",
+            "pojo",
+            "model",
+            "exception",
+            "error",
+            "exception",
+        ]
+        if any(keyword in class_name_lower for keyword in low_keywords):
             return ImpactSeverity.LOW
 
+        # 默认中等严重程度
         return ImpactSeverity.MEDIUM
