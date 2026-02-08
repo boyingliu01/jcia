@@ -147,7 +147,9 @@ class HTMLReporter(BaseReporter):
             padding: 0;
         }}
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family:
+                -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                Roboto, Oxygen, Ubuntu, sans-serif;
             line-height: 1.6;
             color: var(--text-color);
             background-color: var(--bg-color);
@@ -311,7 +313,7 @@ class HTMLReporter(BaseReporter):
 
         # 计算成功率
         success_rate_str = test_run.get("success_rate", "0.00%")
-        if isinstance(success_rate_str, (int, float)):
+        if isinstance(success_rate_str, int | float):
             success_rate = success_rate_str * 100 if success_rate_str <= 1 else success_rate_str
         else:
             success_rate = float(success_rate_str.replace("%", "")) if success_rate_str else 0
@@ -457,7 +459,9 @@ class HTMLReporter(BaseReporter):
                     <div class="stat-label">间接影响</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value failed">{impact_graph.get("high_severity_count", 0)}</div>
+                    <div class="stat-value failed">
+                        {impact_graph.get("high_severity_count", 0)}
+                    </div>
                     <div class="stat-label">高风险</div>
                 </div>
             </div>
@@ -473,8 +477,8 @@ class HTMLReporter(BaseReporter):
                 html += f"""
                 <li class="{severity}">
                     <strong>{node.get("method_name", "Unknown")}</strong>
-                    <br><small>类: {node.get("class_name", "Unknown")} | 
-                    影响类型: {node.get("impact_type", "unknown")} | 
+                    <br><small>类: {node.get("class_name", "Unknown")} |
+                    影响类型: {node.get("impact_type", "unknown")} |
                     深度: {node.get("depth", 0)}</small>
                 </li>
 """

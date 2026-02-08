@@ -3,16 +3,31 @@
 Java Code Impact Analyzer 命令行工具。
 """
 
-import click
 import os
+
+import click
 
 from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
 from jcia.adapters.tools.mock_call_chain_analyzer import MockCallChainAnalyzer
-from jcia.core.use_cases.analyze_impact import AnalyzeImpactUseCase, AnalyzeImpactRequest
-from jcia.core.use_cases.generate_tests import GenerateTestsUseCase, GenerateTestsRequest
+from jcia.core.use_cases.analyze_impact import AnalyzeImpactRequest, AnalyzeImpactUseCase
+from jcia.core.use_cases.generate_tests import GenerateTestsRequest, GenerateTestsUseCase
 
 # Click 8.1.1+ supports Path with path_type=click.Path(exists=True, dir_okay=True)
 # We'll use string paths for now to avoid type issues
+
+
+def _generate_mock_tests(target_classes: list[str], min_confidence: float) -> None:
+    """生成模拟测试用例.
+
+    Args:
+        target_classes: 目标类列表
+        min_confidence: 最小置信度
+    """
+    click.echo("\n模拟测试用例:")
+    for target_class in target_classes:
+        click.echo(f"  - {target_class}Test.test{target_class.split('.')[-1]}")
+        click.echo(f"    置信度: {min_confidence + 0.1:.1f}")
+        click.echo("    优先级: HIGH")
 
 
 @click.group()
@@ -98,7 +113,7 @@ def analyze(
 
     except Exception as e:
         click.echo(f"\n错误: {e}", err=True)
-        raise click.ClickException(str(e))
+        raise click.ClickException(str(e)) from e
 
 
 @cli.command()
@@ -145,7 +160,7 @@ def test(
             click.echo("  VOLCENGINE_SECRET_KEY")
             click.echo("  VOLCENGINE_APP_ID")
             click.echo("\n当前使用Mock模式生成测试用例")
-            _generate_mock_tests(target_class, min_confidence)
+            _generate_mock_tests(list(target_class), min_confidence)
             return
 
         # 创建AI适配器
@@ -196,24 +211,7 @@ def test(
 
     except Exception as e:
         click.echo(f"\n错误: {e}", err=True)
-        raise click.ClickException(str(e))
-
-
-def _generate_mock_tests(target_class: tuple[str, ...], min_confidence: float) -> None:
-    """生成Mock测试用例.
-
-    Args:
-        target_class: 目标类列表
-        min_confidence: 最低置信度
-    """
-    click.echo("\nMock模式生成的测试用例:")
-    for cls in target_class:
-        confidence = min(0.9, min_confidence + 0.1)
-        if confidence >= min_confidence:
-            click.echo(f"  - {cls}Test.testGeneratedTest")
-            click.echo(f"    目标类: {cls}")
-            click.echo(f"    置信度: {confidence:.2f}")
-    click.echo("\n提示: 配置VOLCENGINE环境变量以使用AI服务生成真实的测试用例")
+        raise click.ClickException(str(e)) from e
 
 
 @cli.command()
@@ -243,7 +241,7 @@ def report(output_dir: str, format: str, include_details: bool) -> None:
 @cli.command()
 @click.option("--show", is_flag=True, help="显示配置项")
 @click.option("--set", type=str, help="设置设置项（格式：key=value）")
-def config(show: bool, set: str | None) -> None:
+def config(show: bool, set: str | None) -> None:  # noqa: C901
     """配置管理.
 
     查看、设置或管理配置。
@@ -326,4 +324,4 @@ def config(show: bool, set: str | None) -> None:
 
     except Exception as e:
         click.echo(f"\n错误: {e}", err=True)
-        raise click.ClickException(str(e))
+        raise click.ClickException(str(e)) from e

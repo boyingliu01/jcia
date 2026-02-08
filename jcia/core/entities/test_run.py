@@ -273,7 +273,7 @@ class TestRun:
             "failed_tests": self.failed_tests,
             "skipped_tests": self.skipped_tests,
             "error_tests": self.error_tests,
-            "success_rate": f"{self.success_rate:.2%}",
+            "success_rate": self.success_rate,
             "total_duration_ms": self.total_duration_ms,
             "coverage": self.coverage.line_coverage if self.coverage else 0.0,
         }

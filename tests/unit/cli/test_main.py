@@ -145,7 +145,7 @@ class TestCLI:
 
         assert result.exit_code == 0
         assert str(tmp_path) in result.output
-        assert "Mock模式生成的测试用例" in result.output
+        assert "当前使用Mock模式生成测试用例" in result.output
 
     def test_test_command_with_target_class(self, runner: CliRunner, tmp_path: Path) -> None:
         """测试test命令使用目标类."""

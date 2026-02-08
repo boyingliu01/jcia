@@ -7,7 +7,13 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from jcia.core.entities.change_set import ChangeSet, ChangeType, CommitInfo, FileChange
+from jcia.core.entities.change_set import (
+    ChangeSet,
+    ChangeType,
+    CommitInfo,
+    FileChange,
+    MethodChange,
+)
 from jcia.core.entities.impact_graph import (
     ImpactGraph,
     ImpactNode,
@@ -183,9 +189,53 @@ class TestAnalyzeImpactUseCase:
 
         # Assert
         assert isinstance(response, AnalyzeImpactResponse)
-        assert response.change_set.is_empty
+        assert response.change_set.is_empty() is True
         assert response.impact_graph.total_affected_methods == 0
         assert response.summary["status"] == "no_changes"
+
+    def test_execute_with_missing_call_chain_analyzer(
+        self, mock_analyzer: Mock, valid_repo_path: Path
+    ) -> None:
+        """测试当call_chain_analyzer未配置时抛出ValueError."""
+        # Arrange
+        request = AnalyzeImpactRequest(
+            repo_path=valid_repo_path, from_commit="abc123", to_commit="def456"
+        )
+
+        # 设置模拟返回值 - 返回一个非测试文件的变更集（以确保不会被过滤掉）
+        file_change = FileChange(
+            file_path="com/example/Service.java",  # 非测试文件
+            change_type=ChangeType.MODIFY,
+        )
+        file_change.method_changes.append(
+            MethodChange(
+                class_name="com.example.Service",
+                method_name="serviceMethod",
+                signature="()",
+            )
+        )
+        mock_change_set = ChangeSet(
+            from_commit="abc123",
+            to_commit="def456",
+            commits=[
+                CommitInfo(
+                    hash="abc123",
+                    author="Test Author",
+                    email="test@example.com",
+                    message="Test commit",
+                    timestamp=datetime.now(),
+                )
+            ],
+            file_changes=[file_change],
+        )
+        mock_analyzer.analyze_commits.return_value = mock_change_set
+
+        # 创建没有call_chain_analyzer的用例实例
+        use_case = AnalyzeImpactUseCase(change_analyzer=mock_analyzer)
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="调用链分析器未配置"):
+            use_case.execute(request)
 
     def test_validate_request_invalid_path(self, use_case: AnalyzeImpactUseCase) -> None:
         """测试验证请求：无效路径."""

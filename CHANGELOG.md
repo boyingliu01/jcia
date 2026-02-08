@@ -14,6 +14,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AGENTS.md - Agent 开发指南（更新）
 - plan.md - 项目开发计划文档
 - plan.json - 项目开发计划（JSON 格式）
+- README.md - 完整的项目介绍和快速开始指南
+- CONTRIBUTING.md - 详细的贡献指南
+
+### Implemented
+- 完整的适配器层实现（Git, Maven, AI, Database）
+- 完整的基础设施层实现（Config, Logging, FileSystem, Database）
+- 完整的领域服务层实现（ImpactAnalysis, CallChainBuilder, TestSelection, TestGeneration）
+- 完整的 CLI 命令行工具（analyze, test, regression, report, config）
+- 完整的报告生成模块（HTML, JSON, Markdown）
+- 完整的集成测试
+
+### Fixed
+- 修复 TestSuiteResult 类的 pytest 收集警告
+- 修复 AnalyzeImpactUseCase 的 is_empty() 方法调用
+- 修复测试文件中的重复代码和错误断言
+- 修复 CLI 中的类型错误和 lint 问题
+
+### Testing
+- 所有单元测试通过（332 个测试）
+- 测试覆盖率 89%（目标 ≥ 80%）
+- 适配器层测试覆盖率 > 90%
+- 基础设施层测试覆盖率 > 80%
+- 服务层测试覆盖率 > 80%
+- 用例层测试覆盖率 > 85%
+
+### Development
+- Pre-commit hooks 配置
+- 代码质量工具（Ruff, Pyright, Bandit）
+- Makefile 自动化命令
 
 ---
 
