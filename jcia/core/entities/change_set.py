@@ -51,9 +51,17 @@ class MethodChange:
 
     @property
     def full_name(self) -> str:
-        """返回方法全限定名."""
+        """返回方法全限定名（包含签名）."""
         if self.signature:
             return f"{self.class_name}.{self.method_name}{self.signature}"
+        return f"{self.class_name}.{self.method_name}"
+
+    @property
+    def full_name_without_signature(self) -> str:
+        """返回方法全限定名（不包含签名）.
+
+        此属性与 ImpactNode.full_name 保持一致，用于方法匹配和影响分析。
+        """
         return f"{self.class_name}.{self.method_name}"
 
     @property

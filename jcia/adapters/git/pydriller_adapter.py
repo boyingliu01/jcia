@@ -191,21 +191,36 @@ class PyDrillerAdapter(ChangeAnalyzer):
             MethodChange: 方法变更实体
         """
         long_name = getattr(pydriller_method, "long_name", "")
-        # 简单的类名和签名提取逻辑
+        # 改进的类名和签名提取逻辑
         class_name = ""
         method_name = getattr(pydriller_method, "name", "")
         signature = None
 
         if "(" in long_name:
             # 分离方法名部分和签名部分
-            name_part = long_name.split("(", 1)[0]
-            signature = "(" + long_name.split("(", 1)[1]
+            parts = long_name.split("(", 1)
+            name_part = parts[0]
+            signature = "(" + parts[1]
 
             # 提取类名（去掉方法名后的剩余部分）
             if "." in name_part:
-                class_name = ".".join(name_part.split(".")[:-1])
+                # 处理 com.example.Class.method 的情况
+                class_parts = name_part.split(".")
+                # 最后一个部分是方法名
+                if method_name and class_parts[-1] == method_name:
+                    class_name = ".".join(class_parts[:-1])
+                elif len(class_parts) >= 2:
+                    # 如果无法匹配，假设倒数第二个是类名
+                    class_name = ".".join(class_parts[:-1])
         elif "." in long_name:
-            class_name = ".".join(long_name.split(".")[:-1])
+            # 没有签名，只有类名和方法名
+            class_parts = long_name.split(".")
+            if (method_name and class_parts[-1] == method_name) or len(class_parts) >= 2:
+                class_name = ".".join(class_parts[:-1])
+
+        # 验证并清理签名
+        if signature and not signature.endswith(")"):
+            signature = signature.rstrip(",") + ")"
 
         return MethodChange(
             class_name=class_name,
