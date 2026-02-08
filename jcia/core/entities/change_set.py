@@ -226,8 +226,43 @@ class ChangeSet:
             "from_commit": self.from_commit,
             "to_commit": self.to_commit,
             "commit_count": self.commit_count,
+            "commits": [
+                {
+                    "hash": c.hash,
+                    "short_hash": c.short_hash,
+                    "message": c.message,
+                    "author": c.author,
+                    "email": c.email,
+                    "timestamp": c.timestamp.isoformat() if c.timestamp else None,
+                    "parents": c.parents,
+                }
+                for c in self.commits
+            ],
             "changed_files": self.changed_files,
             "changed_methods": self.changed_methods,
             "total_insertions": self.total_insertions,
             "total_deletions": self.total_deletions,
+            "file_changes": [
+                {
+                    "file_path": fc.file_path,
+                    "change_type": fc.change_type.value,
+                    "old_path": fc.old_path,
+                    "insertions": fc.insertions,
+                    "deletions": fc.deletions,
+                    "method_changes": [
+                        {
+                            "class_name": mc.class_name,
+                            "method_name": mc.method_name,
+                            "signature": mc.signature,
+                            "change_type": mc.change_type.value,
+                            "old_content": mc.old_content,
+                            "new_content": mc.new_content,
+                            "line_start": mc.line_start,
+                            "line_end": mc.line_end,
+                        }
+                        for mc in fc.method_changes
+                    ],
+                }
+                for fc in self.file_changes
+            ],
         }

@@ -96,7 +96,7 @@ class AnalyzeImpactUseCase:
         change_set = self._analyze_changes(request)
 
         # 如果没有变更，返回空结果
-        if change_set.is_empty:
+        if change_set.is_empty():
             return self._create_empty_response(change_set)
 
         # 分析影响
@@ -145,6 +145,7 @@ class AnalyzeImpactUseCase:
         Returns:
             ChangeSet: 变更集合
         """
+        # 获取变更集
         if request.commit_range:
             change_set = self._analyzer.analyze_commit_range(request.commit_range)
         else:
@@ -152,6 +153,11 @@ class AnalyzeImpactUseCase:
                 request.from_commit or "",
                 request.to_commit,
             )
+
+        # 根据include_test_files参数过滤测试文件
+        if not request.include_test_files:
+            # 过滤掉测试文件，只保留非测试文件的变更
+            change_set.file_changes = [fc for fc in change_set.file_changes if not fc.is_test_file]
 
         return change_set
 
@@ -167,9 +173,12 @@ class AnalyzeImpactUseCase:
 
         Raises:
             ValueError: 调用链分析器未配置
+            Exception: 分析过程中发生错误
         """
-        # 导入ImpactAnalysisService避免循环依赖
-        from jcia.core.interfaces.call_chain_analyzer import CallChainAnalyzer
+        # 导入ImpactAnalysisService避免和循环依赖
+        from jcia.core.interfaces.call_chain_analyzer import (  # noqa: TCH001
+            CallChainAnalyzer,
+        )
         from jcia.core.services.impact_analysis_service import ImpactAnalysisService
 
         # 使用提供的调用链分析器
@@ -180,9 +189,11 @@ class AnalyzeImpactUseCase:
             msg = "调用链分析器未配置，无法进行影响分析"
             raise ValueError(msg)
 
-        impact_service = ImpactAnalysisService(call_chain_analyzer=analyzer)
-
-        return impact_service.analyze(change_set, max_depth=max_depth)
+        try:
+            impact_service = ImpactAnalysisService(call_chain_analyzer=analyzer)
+            return impact_service.analyze(change_set, max_depth=max_depth)
+        except Exception as e:
+            raise Exception(f"影响分析失败: {e}") from e
 
     def _generate_summary(self, change_set: "ChangeSet", impact_graph: "ImpactGraph") -> dict:
         """生成摘要.

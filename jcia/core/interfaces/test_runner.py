@@ -28,17 +28,10 @@ class TestSelectionStrategy(Enum):
 @dataclass
 class TestExecutionResult:
     """测试执行结果.
-
-    Attributes:
-        test_class: 测试类名
-        test_method: 测试方法名
-        status: 测试状态
-        duration_ms: 执行时长（毫秒）
-        error_message: 错误信息
-        stack_trace: 堆栈跟踪
-        coverage_percent: 覆盖率百分比
+    测试运行器返回的详细结果。
     """
 
+    __test__ = False
     test_class: str
     test_method: str
     status: "TestStatus"
@@ -51,6 +44,8 @@ class TestExecutionResult:
 @dataclass
 class TestSuiteResult:
     """测试套件执行结果."""
+
+    __test__ = False  # 避免被 pytest 收集
 
     total_tests: int = 0
     passed_tests: int = 0

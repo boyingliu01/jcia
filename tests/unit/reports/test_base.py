@@ -60,18 +60,19 @@ class TestReportResult:
         assert result.size_bytes == 0
         assert result.error_message is None
 
-    def test_init_success(self) -> None:
+    def test_init_success(self, tmp_path: Path) -> None:
         """测试成功结果初始化."""
+        output_path = tmp_path / "report.json"
         result = ReportResult(
             success=True,
-            output_path=Path("/tmp/report.json"),
+            output_path=output_path,
             content='{"test": "data"}',
             format="json",
             size_bytes=16,
         )
 
         assert result.success is True
-        assert result.output_path == Path("/tmp/report.json")
+        assert result.output_path == output_path
         assert result.content == '{"test": "data"}'
         assert result.format == "json"
         assert result.size_bytes == 16

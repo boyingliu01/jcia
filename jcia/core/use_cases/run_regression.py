@@ -232,7 +232,9 @@ class RunRegressionUseCase:
             TestRun,
             TestStatus,
         )
-        from jcia.core.interfaces.test_runner import TestSuiteResult
+        from jcia.core.interfaces.test_runner import (  # noqa: TCH001
+            TestSuiteResult,
+        )
 
         # 执行测试
         if request.execute_coverage:
