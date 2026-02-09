@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jenkins 代码变更影响分析报告（详细版）</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .card h3 {
+            color: #764ba2;
+            margin: 20px 0 10px 0;
+            border-left: 4px solid #764ba2;
+            padding-left: 10px;
+        }
+        .diff-container {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .diff-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .diff-header {
+            grid-column: 1 / -1;
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px 5px 0 0;
+            font-weight: bold;
+        }
+        .diff-left, .diff-right {
+            padding: 15px;
+        }
+        .diff-left { border-right: 2px solid #dee2e6; }
+        .diff-add { background: #e6ffed; }
+        .diff-remove { background: #ffe6e6; }
+        .diff-line-number {
+            color: #999;
+            width: 50px;
+            display: inline-block;
+            text-align: right;
+            padding-right: 10px;
+            border-right: 1px solid #dee2e6;
+            margin-right: 10px;
+        }
+        .impact-node {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .impact-node.high { border-color: #dc3545; }
+        .impact-node.medium { border-color: #ffc107; }
+        .impact-node.low { border-color: #28a745; }
+        .impact-method {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+        .call-chain {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .call-chain-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 3px solid #667eea;
+            padding-left: 15px;
+        }
+        .call-chain-item.depth-1 { border-left-color: #667eea; }
+        .call-chain-item.depth-2 { border-left-color: #764ba2; }
+        .call-chain-item.depth-3 { border-left-color: #f093fb; }
+        .call-chain-item.depth-4 { border-left-color: #4facfe; }
+        .call-chain-item.depth-5 { border-left-color: #00f2fe; }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        .badge.direct { background: #667eea; color: white; }
+        .badge.indirect { background: #764ba2; color: white; }
+        .badge.high { background: #dc3545; color: white; }
+        .badge.medium { background: #ffc107; color: #333; }
+        .badge.low { background: #28a745; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Jenkins 代码变更影响分析报告（详细版）</h1>
+            <p>包含代码对比、调用链分析和多层级影响传播</p>
+        </div>
+<div class="card"><h2>📝 提交信息</h2><div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #667eea;"><h3 style="margin-top: 0;"><span class="badge" style="background: #667eea; color: white;">68f5885</span> Fix "Zeno’s paradox" like logic of the progress calculation. (#26235)
+
+* Fix "Zeno’s paradox" like logic of the progress calculation
+
+* Add ability to limit RunListProgressiveRendering records to return
+
+* Set default RunListProgressiveRendering limit to 1000 records
+
+---------
+
+Co-authored-by: Dmytro Ukhlov <dukhlov@csod.com>
+Co-authored-by: Tim Jacomb <21194782+timja@users.noreply.github.com>
+Co-authored-by: Mark Waite <mark.earl.waite@gmail.com></h3><p style="margin: 5px 0;"><strong>👤 作者:</strong> Dmitriy Ukhlov</p><p style="margin: 5px 0;"><strong>📅 时间:</strong> 2026-02-08 04:00:42</p><p style="margin: 5px 0;"><strong>📄 变更文件 (1):</strong></p><div style="margin-left: 20px;"><code style="display: block; margin: 2px 0; padding: 4px; background: white; border-radius: 4px;">📁 RunListProgressiveRendering.java</code></div></div><div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #667eea;"><h3 style="margin-top: 0;"><span class="badge" style="background: #667eea; color: white;">52fa585</span> Replace dependency on jenkins.io with a local mock server for testing (#26258)
+
+* Remove dependency on www.jenkins.io from testUrlCheck()
+
+* Fix Check style violation
+
+* Address Copilot review feedback
+
+---------
+
+Co-authored-by: Mark Waite <mark.earl.waite@gmail.com></h3><p style="margin: 5px 0;"><strong>👤 作者:</strong> Adham Ahmed</p><p style="margin: 5px 0;"><strong>📅 时间:</strong> 2026-02-08 04:01:06</p><p style="margin: 5px 0;"><strong>📄 变更文件 (1):</strong></p><div style="margin-left: 20px;"><code style="display: block; margin: 2px 0; padding: 4px; background: white; border-radius: 4px;">📁 FormValidationTest.java</code></div></div></div>
+        <div class="card">
+            <h2>📊 变更概览</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; color: #1976d2;">2</div>
+                    <div>变更提交数</div>
+                </div>
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; color: #388e3c;">2</div>
+                    <div>变更文件数</div>
+                </div>
+                <div style="background: #fff3e0; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; color: #f57c00;">0</div>
+                    <div>Java文件数</div>
+                </div>
+                <div style="background: #f3e5f5; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; color: #7b1fa2;">3</div>
+                    <div>变更方法数</div>
+                </div>
+                <div style="background: #fce4ec; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; color: #c2185b;">56</div>
+                    <div>新增行数</div>
+                </div>
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; color: #388e3c;">21</div>
+                    <div>删除行数</div>
+                </div>
+            </div>
+        </div>
+<div class="card"><h2>📝 代码变更详情及影响分析</h2><div style="margin: 20px 0; border: 2px solid #667eea; border-radius: 10px; overflow: hidden;"><div style="background: #667eea; color: white; padding: 15px;"><h3 style="margin: 0;">📄 RunListProgressiveRendering.java</h3><p style="margin: 5px 0 0 0;"><span class="badge" style="background: white; color: #667eea;">modify</span> +10 / -8</p></div><div style="padding: 15px; background: #f8f9fa;"><h4 style="margin-top: 0;">🔧 变更的方法及影响</h4><div style="margin: 15px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #667eea;"><h5 style="margin-top: 0; color: #667eea;">public::compute</h5><p><span class="badge direct">modify</span> 行 61-74</p><div style="margin-top: 10px;"><p><span class="badge medium">medium</span> 影响类型: direct</p></div></div></div></div><div style="margin: 20px 0; border: 2px solid #667eea; border-radius: 10px; overflow: hidden;"><div style="background: #667eea; color: white; padding: 15px;"><h3 style="margin: 0;">📄 FormValidationTest.java</h3><p style="margin: 5px 0 0 0;"><span class="badge" style="background: white; color: #667eea;">modify</span> +46 / -13</p></div><div style="padding: 15px; background: #f8f9fa;"><h4 style="margin-top: 0;">🔧 变更的方法及影响</h4><div style="margin: 15px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #667eea;"><h5 style="margin-top: 0; color: #667eea;">FormValidationTest::createAndStartMockServer</h5><p><span class="badge direct">modify</span> 行 157-174</p><div style="margin-top: 10px;"><p><span class="badge medium">medium</span> 影响类型: direct</p></div></div><div style="margin: 15px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #667eea;"><h5 style="margin-top: 0; color: #667eea;">FormValidationTest::testUrlCheck</h5><p><span class="badge direct">modify</span> 行 129-154</p><div style="margin-top: 10px;"><p><span class="badge medium">medium</span> 影响类型: direct</p></div></div></div></div></div><div class="card"><h2>🎯 影响分析详情</h2><p>共分析 3 个受影响的方法，0 个调用关系</p><h3>🟡 中等风险影响</h3><div class="impact-node medium"><h4>.public::compute()</h4><p><span class="badge direct">direct</span><span class="badge medium">medium</span>深度: 0</p></div><div class="impact-node medium"><h4>.FormValidationTest::createAndStartMockServer()</h4><p><span class="badge direct">direct</span><span class="badge medium">medium</span>深度: 0</p></div><div class="impact-node medium"><h4>.FormValidationTest::testUrlCheck()</h4><p><span class="badge direct">direct</span><span class="badge medium">medium</span>深度: 0</p></div></div><div class="card"><h2>🔗 调用链分析</h2><p>以下是从变更方法开始的完整调用链：</p><div class="call-chain"><h3>📍 从 <code>.public::compute()</code> 开始的调用链</h3><div class="call-chain-item depth-1"><strong>Depth 1:</strong> <code>.public::compute()</code><br>类型: direct | 严重程度: medium</div></div><div class="call-chain"><h3>📍 从 <code>.FormValidationTest::createAndStartMockServer()</code> 开始的调用链</h3><div class="call-chain-item depth-1"><strong>Depth 1:</strong> <code>.FormValidationTest::createAndStartMockServer()</code><br>类型: direct | 严重程度: medium</div></div><div class="call-chain"><h3>📍 从 <code>.FormValidationTest::testUrlCheck()</code> 开始的调用链</h3><div class="call-chain-item depth-1"><strong>Depth 1:</strong> <code>.FormValidationTest::testUrlCheck()</code><br>类型: direct | 严重程度: medium</div></div></div>
+        <div class="card">
+            <p style="text-align: center; color: #666;">
+                由 JCIA (Java Code Impact Analyzer) 生成<br>
+                报告包含代码变更详情、影响分析和调用链推导过程
+            </p>
+        </div>
+    </div>
+</body>
+</html>

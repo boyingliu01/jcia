@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jenkins 代码变更影响分析报告（完整版）</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --danger-color: #f44336;
+            --warning-color: #ff9800;
+            --info-color: #2196F3;
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family:
+                -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .header .timestamp {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .stat-item {
+            background: var(--bg-color);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .stat-value.passed { color: var(--primary-color); }
+        .stat-value.failed { color: var(--danger-color); }
+        .stat-value.skipped { color: var(--warning-color); }
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #45a049);
+            transition: width 0.3s ease;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        th {
+            background: var(--bg-color);
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        tr:hover {
+            background: var(--bg-color);
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        .badge.passed { background: #e8f5e9; color: var(--primary-color); }
+        .badge.failed { background: #ffebee; color: var(--danger-color); }
+        .badge.new { background: #e3f2fd; color: var(--info-color); }
+        .badge.removed { background: #fff3e0; color: var(--warning-color); }
+        .impact-list {
+            list-style: none;
+        }
+        .impact-list li {
+            padding: 10px;
+            margin: 5px 0;
+            background: var(--bg-color);
+            border-radius: 5px;
+            border-left: 4px solid var(--primary-color);
+        }
+        .impact-list li.high { border-left-color: var(--danger-color); }
+        .impact-list li.medium { border-left-color: var(--warning-color); }
+        .impact-list li.low { border-left-color: var(--info-color); }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Jenkins 代码变更影响分析报告（完整版）</h1>
+            <p class="timestamp">生成时间: 2026-02-08T15:24:01.391981</p>
+        </div>
+
+        <div class="card">
+            <h2>影响分析</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">受影响方法</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">直接影响</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">间接影响</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value failed">
+                        0
+                    </div>
+                    <div class="stat-label">高风险</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 20px;">受影响的方法</h3>
+            <ul class="impact-list">
+
+                <li class="medium">
+                    <strong>.public::compute()</strong>
+                    <br><small>类:  |
+                    影响类型: direct |
+                    深度: 0</small>
+                </li>
+
+                <li class="medium">
+                    <strong>.FormValidationTest::createAndStartMockServer()</strong>
+                    <br><small>类:  |
+                    影响类型: direct |
+                    深度: 0</small>
+                </li>
+
+                <li class="medium">
+                    <strong>.FormValidationTest::testUrlCheck()</strong>
+                    <br><small>类:  |
+                    影响类型: direct |
+                    深度: 0</small>
+                </li>
+</ul></div>
+        <div class="card">
+            <h2>代码变更</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">变更文件</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">变更方法</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value passed">+56</div>
+                    <div class="stat-label">新增行</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value failed">-21</div>
+                    <div class="stat-label">删除行</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 20px;">变更文件列表</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>文件路径</th>
+                    </tr>
+                </thead>
+                <tbody>
+<tr><td>RunListProgressiveRendering.java</td></tr><tr><td>FormValidationTest.java</td></tr>
+                </tbody>
+            </table>
+</div>
+        <div class="footer">
+            <p>由 JCIA (Java Code Impact Analyzer) 生成</p>
+        </div>
+    </div>
+</body>
+</html>

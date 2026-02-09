@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(gh pr list:*)"
+      "Bash(gh pr list:*)",
+      "Bash(python run_jenkins_validation.py:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)"
     ]
   }
 }
