@@ -7,7 +7,7 @@ import logging
 import re
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from jcia.core.entities.test_case import TestCase, TestPriority, TestType
 from jcia.core.interfaces.ai_service import (
@@ -209,7 +209,8 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
             all_explanations.extend(response.explanations)
 
         confidence = (
-            sum(tc.confidence for tc in all_test_cases) / len(all_test_cases)
+            sum(tc.metadata.get("confidence", 0.5) for tc in all_test_cases)
+            / len(all_test_cases)
             if all_test_cases
             else 0.0
         )
@@ -489,7 +490,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
                     )
                     time.sleep(RETRY_DELAY * (attempt + 1))
                 else:
-                    raise RuntimeError("OpenAI API request timed out")
+                    raise RuntimeError("OpenAI API request timed out") from None
 
             except openai.RateLimitError as e:
                 if attempt < MAX_RETRIES - 1:

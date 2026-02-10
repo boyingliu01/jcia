@@ -126,7 +126,7 @@ class TestResult:
         """是否失败."""
         return self.status == TestStatus.FAILED
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典."""
         return {
             "id": self.id,
@@ -257,7 +257,7 @@ class TestRun:
                 return result
         return None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典."""
         return {
             "id": self.id,
@@ -336,7 +336,7 @@ class TestDiff:
             TestStatus.ERROR,
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典."""
         return {
             "id": self.id,
@@ -383,7 +383,7 @@ class TestComparison:
         """是否有回归问题."""
         return len(self.regression_issues) > 0
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典."""
         return {
             "baseline": self.baseline_run.to_dict() if self.baseline_run else None,

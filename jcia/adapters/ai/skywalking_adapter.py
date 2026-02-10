@@ -191,7 +191,7 @@ class SkyWalkingAdapter:
             return []
 
     def _process_endpoint_stats(
-        self, stats_data: list, endpoint_ids: list[str]
+        self, stats_data: list[dict[str, Any]], endpoint_ids: list[str]
     ) -> list[dict[str, Any]]:
         """处理 endpoint 统计数据.
 
@@ -255,7 +255,7 @@ class SkyWalkingAdapter:
 
         return processed
 
-    def _suggest_tests_for_endpoint(self, endpoint_stat: dict) -> list[str]:
+    def _suggest_tests_for_endpoint(self, endpoint_stat: dict[str, Any]) -> list[str]:
         """为 endpoint 建议测试.
 
         Args:
@@ -358,7 +358,7 @@ class SkyWalkingAdapter:
             logger.error(f"Failed to analyze exceptions: {e}")
             return []
 
-    def _process_exception_logs(self, logs: list) -> list[dict[str, Any]]:
+    def _process_exception_logs(self, logs: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """处理异常日志.
 
         Args:
@@ -390,7 +390,7 @@ class SkyWalkingAdapter:
 
         return exceptions
 
-    def _format_stack_trace(self, stack_trace: list) -> str:
+    def _format_stack_trace(self, stack_trace: list[str]) -> str:
         """格式化堆栈跟踪.
 
         Args:
@@ -512,7 +512,7 @@ class SkyWalkingAdapter:
             logger.error(f"Failed to analyze performance trends: {e}")
             return {"service_name": service_name, "metrics": []}
 
-    def _execute_graphql(self, query: str, variables: dict) -> dict:
+    def _execute_graphql(self, query: str, variables: dict[str, Any]) -> dict[Any, Any]:
         """执行 GraphQL 查询.
 
         Args:
@@ -564,7 +564,7 @@ class SkyWalkingAdapter:
             raise RuntimeError(f"Failed to execute GraphQL query: {e}") from e
 
     def export_test_recommendations(
-        self, recommendations: list[dict], output_file: Path
+        self, recommendations: list[dict[str, Any]], output_file: Path
     ) -> None:
         """导出测试推荐到文件.
 

@@ -2,15 +2,17 @@
 
 基于 STARTS (Static Test Assignment for Regression Test Selection) 算法的测试选择器。
 """
+# ruff: noqa: N817  # defusedxml.ElementTree is official import style
 
 import json
 import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from defusedxml import ElementTree as ET
+
 from jcia.adapters.maven.maven_adapter import MavenAdapter
 from jcia.core.entities.test_case import TestCase, TestPriority, TestType
 from jcia.core.interfaces.test_runner import TestSelectionStrategy

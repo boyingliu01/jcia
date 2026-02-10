@@ -1,13 +1,11 @@
 """生成详细的 Jenkins 影响分析报告（包含代码对比和调用链）."""
 from pathlib import Path
-from typing import Any
 
 from pydriller import Repository
 
 from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
 from jcia.adapters.tools.mock_call_chain_analyzer import MockCallChainAnalyzer
 from jcia.core.use_cases.analyze_impact import AnalyzeImpactRequest, AnalyzeImpactUseCase
-from jcia.core.services.impact_analysis_service import ImpactAnalysisService
 from jcia.reports.base import ReportData
 
 
@@ -20,13 +18,13 @@ class EnhancedHTMLReporter:
     def generate(self, data: ReportData):
         """生成报告."""
         self._ensure_output_dir()
-        
+
         html = self._render_html(data)
-        
+
         filename = self._get_output_filename("html")
         output_path = self.output_dir / filename
         output_path.write_text(html, encoding="utf-8")
-        
+
         return type('ReportResult', (), {'success': True, 'output_path': output_path, 'content': html, 'size_bytes': len(html.encode("utf-8"))})
 
     def _ensure_output_dir(self):
@@ -44,24 +42,24 @@ class EnhancedHTMLReporter:
         change_set = report_dict.get("change_set", {})
         impact_graph = report_dict.get("impact_graph", {})
         metadata = report_dict.get("metadata", {})
-        
+
         html = self._get_header()
-        
+
         # 提交信息
         html += self._render_commit_info(metadata)
-        
+
         # 变更概览
         html += self._render_change_overview(change_set)
-        
+
         # 代码变更详情及影响分析
         html += self._render_code_changes(change_set, metadata.get("diff_results", []), impact_graph)
-        
+
         # 影响分析详情
         html += self._render_impact_analysis(impact_graph, change_set)
-        
+
         # 调用链详情
         html += self._render_call_chain(impact_graph)
-        
+
         html += self._get_footer()
         return html
 
@@ -221,14 +219,14 @@ class EnhancedHTMLReporter:
     def _render_commit_info(self, metadata):
         """渲染提交信息."""
         commit_details = metadata.get("commit_details", [])
-        
+
         html = '<div class="card"><h2>📝 提交信息</h2>'
-        
+
         if not commit_details:
             html += '<p>未获取到提交详情</p>'
         else:
             for commit in commit_details:
-                html += f'<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #667eea;">'
+                html += '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #667eea;">'
                 html += f'<h3 style="margin-top: 0;"><span class="badge" style="background: #667eea; color: white;">{commit["short_hash"]}</span> {commit["msg"]}</h3>'
                 html += f'<p style="margin: 5px 0;"><strong>👤 作者:</strong> {commit["author"]}</p>'
                 html += f'<p style="margin: 5px 0;"><strong>📅 时间:</strong> {commit["date"]}</p>'
@@ -237,7 +235,7 @@ class EnhancedHTMLReporter:
                 for file in commit["files"]:
                     html += f'<code style="display: block; margin: 2px 0; padding: 4px; background: white; border-radius: 4px;">📁 {file}</code>'
                 html += '</div></div>'
-        
+
         html += '</div>'
         return html
 
@@ -278,10 +276,10 @@ class EnhancedHTMLReporter:
     def _render_code_changes(self, change_set, diff_results, impact_graph):
         """渲染代码变更详情，按 commit 和文件分组."""
         html = '<div class="card"><h2>📝 代码变更详情及影响分析</h2>'
-        
+
         # 获取节点列表以便查找影响
         nodes = impact_graph.get("nodes", [])
-        
+
         # 构建文件到影响的映射
         file_impacts = {}
         for node in nodes:
@@ -298,58 +296,58 @@ class EnhancedHTMLReporter:
                         "upstream": node.get("upstream", []),
                         "downstream": node.get("downstream", []),
                     }
-        
+
         for file_change in change_set.get("file_changes", []):
             if file_change["file_path"].endswith(".java"):
                 file_name = file_change["file_path"].split("/")[-1]
-                
-                html += f'<div style="margin: 20px 0; border: 2px solid #667eea; border-radius: 10px; overflow: hidden;">'
-                html += f'<div style="background: #667eea; color: white; padding: 15px;">'
+
+                html += '<div style="margin: 20px 0; border: 2px solid #667eea; border-radius: 10px; overflow: hidden;">'
+                html += '<div style="background: #667eea; color: white; padding: 15px;">'
                 html += f'<h3 style="margin: 0;">📄 {file_name}</h3>'
-                html += f'<p style="margin: 5px 0 0 0;">'
+                html += '<p style="margin: 5px 0 0 0;">'
                 html += f'<span class="badge" style="background: white; color: #667eea;">{file_change["change_type"]}</span>'
                 html += f' +{file_change.get("insertions", 0)} / -{file_change.get("deletions", 0)}'
                 html += '</p></div>'
-                
+
                 # 查找对应的差异
                 diff_text = None
                 for diff in diff_results:
                     if diff["file"] == file_change["file_path"]:
                         diff_text = diff["diff"]
                         break
-                
+
                 if diff_text:
-                    html += f'<div style="padding: 15px;">'
+                    html += '<div style="padding: 15px;">'
                     html += self._render_diff_view(diff_text)
                     html += '</div>'
-                
+
                 # 显示方法变更及影响
                 method_changes = file_change.get("method_changes", [])
                 if method_changes:
-                    html += f'<div style="padding: 15px; background: #f8f9fa;">'
+                    html += '<div style="padding: 15px; background: #f8f9fa;">'
                     html += '<h4 style="margin-top: 0;">🔧 变更的方法及影响</h4>'
-                    
+
                     for method in method_changes:
                         method_name = method.get("full_name", method.get("method_name", "Unknown"))
-                        
+
                         # 查找影响
                         impact = None
                         for mn, imp in file_impacts.items():
                             if method_name in mn or mn in method_name:
                                 impact = imp
                                 break
-                        
-                        html += f'<div style="margin: 15px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">'
+
+                        html += '<div style="margin: 15px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">'
                         html += f'<h5 style="margin-top: 0; color: #667eea;">{method_name}</h5>'
                         html += f'<p><span class="badge direct">{method.get("change_type", "modify")}</span>'
                         html += f' 行 {method.get("line_start", 0)}-{method.get("line_end", 0)}</p>'
-                        
+
                         # 显示影响
                         if impact:
                             html += '<div style="margin-top: 10px;">'
                             html += f'<p><span class="badge {impact["severity"]}">{impact["severity"]}</span>'
                             html += f' 影响类型: {impact["impact_type"]}</p>'
-                            
+
                             # 上游影响（被调用）
                             if impact["upstream"]:
                                 html += '<p><strong>📤 被以下函数调用（需要回归测试）:</strong></p>'
@@ -357,7 +355,7 @@ class EnhancedHTMLReporter:
                                 for caller in impact["upstream"]:
                                     html += f'<code style="display: block; margin: 3px 0;">→ {caller}</code>'
                                 html += '</div>'
-                            
+
                             # 下游影响（调用）
                             if impact["downstream"]:
                                 html += '<p style="margin-top: 10px;"><strong>📥 调用了以下函数:</strong></p>'
@@ -365,17 +363,17 @@ class EnhancedHTMLReporter:
                                 for callee in impact["downstream"]:
                                     html += f'<code style="display: block; margin: 3px 0;">← {callee}</code>'
                                 html += '</div>'
-                            
+
                             html += '</div>'
                         else:
                             html += '<p style="color: #666; font-style: italic;">未检测到影响传播</p>'
-                        
+
                         html += '</div>'
-                    
+
                     html += '</div>'
-                
+
                 html += '</div>'
-        
+
         html += '</div>'
         return html
 
@@ -386,7 +384,7 @@ class EnhancedHTMLReporter:
         right_lines = []
         current_left = 1
         current_right = 1
-        
+
         for line in lines:
             if line.startswith('@@'):
                 # 差异头部
@@ -414,7 +412,7 @@ class EnhancedHTMLReporter:
                 right_lines.append(f'<span class="diff-line-number">{current_right}</span> {line}')
                 current_left += 1
                 current_right += 1
-        
+
         # 添加剩余的行
         if left_lines or right_lines:
             html += '<div class="diff-view">'
@@ -423,29 +421,29 @@ class EnhancedHTMLReporter:
             if right_lines:
                 html += '<div class="diff-right">' + '\n'.join(right_lines) + '</div>'
             html += '</div>'
-        
+
         return html
 
     def _render_impact_analysis(self, impact_graph, change_set):
         """渲染影响分析详情."""
         html = '<div class="card"><h2>🎯 影响分析详情</h2>'
-        
+
         nodes = impact_graph.get("nodes", [])
         edges = impact_graph.get("edges", [])
-        
+
         # 将节点列表转换为字典方便查找
         nodes_dict = {node["method_name"]: node for node in nodes}
-        
+
         if not nodes:
             html += '<p>未检测到影响传播</p>'
         else:
             html += f'<p>共分析 {len(nodes)} 个受影响的方法，{len(edges)} 个调用关系</p>'
-            
+
             # 按严重程度分组
             high_severity = []
             medium_severity = []
             low_severity = []
-            
+
             for node in nodes:
                 if node.get("severity") == "high":
                     high_severity.append((node["method_name"], node))
@@ -453,25 +451,25 @@ class EnhancedHTMLReporter:
                     medium_severity.append((node["method_name"], node))
                 else:
                     low_severity.append((node["method_name"], node))
-            
+
             # 显示高风险影响
             if high_severity:
                 html += '<h3>🔴 高风险影响 (需要优先回归测试)</h3>'
                 for method_name, node in high_severity:
                     html += self._render_impact_node(method_name, node, edges)
-            
+
             # 显示中等风险影响
             if medium_severity:
                 html += '<h3>🟡 中等风险影响</h3>'
                 for method_name, node in medium_severity:
                     html += self._render_impact_node(method_name, node, edges)
-            
+
             # 显示低风险影响
             if low_severity:
                 html += '<h3>🟢 低风险影响</h3>'
                 for method_name, node in low_severity:
                     html += self._render_impact_node(method_name, node, edges)
-        
+
         html += '</div>'
         return html
 
@@ -482,45 +480,45 @@ class EnhancedHTMLReporter:
         html += f'<p><span class="badge direct">{node.get("impact_type", "direct")}</span>'
         html += f'<span class="badge {node.get("severity", "medium")}">{node.get("severity", "medium")}</span>'
         html += f'深度: {node.get("depth", 0)}</p>'
-        
+
         # 查找上游和下游
         upstream = node.get("upstream", [])
         downstream = node.get("downstream", [])
-        
+
         if upstream:
             html += '<p><strong>📤 被以下函数调用（上游）:</strong></p>'
             for caller in upstream:
                 html += f'<code>{caller}</code> → '
-        
+
         if downstream:
             html += '<p><strong>📥 调用了以下函数（下游）:</strong></p>'
             for callee in downstream:
                 html += f'→ <code>{callee}</code><br>'
-        
+
         html += '</div>'
         return html
 
     def _render_call_chain(self, impact_graph):
         """渲染调用链详情."""
         html = '<div class="card"><h2>🔗 调用链分析</h2>'
-        
+
         nodes = impact_graph.get("nodes", [])
         root_methods = impact_graph.get("root_methods", [])
-        
+
         # 将节点列表转换为字典
         nodes_dict = {node["method_name"]: node for node in nodes}
-        
+
         if not root_methods:
             html += '<p>未检测到调用链</p>'
         else:
             html += '<p>以下是从变更方法开始的完整调用链：</p>'
-            
+
             for root_method in root_methods:
-                html += f'<div class="call-chain">'
+                html += '<div class="call-chain">'
                 html += f'<h3>📍 从 <code>{root_method}</code> 开始的调用链</h3>'
                 html += self._render_call_chain_recursive(root_method, nodes_dict, 1)
                 html += '</div>'
-        
+
         html += '</div>'
         return html
 
@@ -528,26 +526,26 @@ class EnhancedHTMLReporter:
         """递归渲染调用链."""
         if visited is None:
             visited = set()
-        
+
         if method_name in visited or depth > 5:
             return ''
-        
+
         visited.add(method_name)
-        
+
         node = nodes.get(method_name)
         if not node:
             return ''
-        
+
         html = f'<div class="call-chain-item depth-{depth}">'
         html += f'<strong>Depth {depth}:</strong> <code>{method_name}</code><br>'
         html += f'类型: {node.get("impact_type", "direct")} | 严重程度: {node.get("severity", "medium")}'
-        
+
         # 递归显示下游
         downstream = node.get("downstream", [])
         if downstream:
             for callee in downstream:
                 html += self._render_call_chain_recursive(callee, nodes, depth + 1, visited)
-        
+
         html += '</div>'
         return html
 
@@ -655,7 +653,7 @@ data = ReportData(
 result = reporter.generate(data)
 
 if result.success:
-    print(f"✓ 详细报告已生成")
+    print("✓ 详细报告已生成")
     print(f"  路径: {result.output_path}")
     print(f"  大小: {result.size_bytes} 字节")
 else:

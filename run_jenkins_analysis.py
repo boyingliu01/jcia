@@ -5,11 +5,16 @@ from pathlib import Path
 
 from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
 from jcia.adapters.tools.mock_call_chain_analyzer import MockCallChainAnalyzer
-from jcia.core.entities.change_set import ChangeSet, CommitInfo, ChangeStatus, FileChange, ChangeType
-from jcia.core.use_cases.analyze_impact import AnalyzeImpactUseCase
+from jcia.core.entities.change_set import (
+    ChangeSet,
+    ChangeStatus,
+    ChangeType,
+    CommitInfo,
+    FileChange,
+)
 from jcia.core.services.impact_analysis_service import ImpactAnalysisService
-from jcia.reports.html_reporter import HTMLReporter
 from jcia.reports.base import ReportData
+from jcia.reports.html_reporter import HTMLReporter
 
 # 配置
 repo_path = str(Path(r"E:\Study\LLM\Java代码变更影响分析\jenkins-full"))
@@ -35,15 +40,15 @@ try:
         text=True,
         check=True,
     )
-    
+
     parts = result_from.stdout.strip().split("|")
     from_full_hash, from_author_name, from_author_email, from_author_date, from_commit_message = parts
-    
-    print(f"  ✓ 起始提交信息获取成功")
+
+    print("  ✓ 起始提交信息获取成功")
     print(f"    作者: {from_author_name}")
     print(f"    时间: {from_author_date}")
     print(f"    消息: {from_commit_message[:60]}...")
-    
+
     # 获取结束提交信息
     result_to = subprocess.run(
         ["git", "show", "--no-patch", "--format=%H|%an|%ae|%ai|%s", to_commit],
@@ -52,15 +57,15 @@ try:
         text=True,
         check=True,
     )
-    
+
     parts = result_to.stdout.strip().split("|")
     to_full_hash, to_author_name, to_author_email, to_author_date, to_commit_message = parts
-    
-    print(f"  ✓ 结束提交信息获取成功")
+
+    print("  ✓ 结束提交信息获取成功")
     print(f"    作者: {to_author_name}")
     print(f"    时间: {to_author_date}")
     print(f"    消息: {to_commit_message[:60]}...")
-    
+
 except Exception as e:
     print(f"  ✗ 获取提交信息失败: {e}")
     exit(1)
@@ -75,10 +80,10 @@ try:
         text=True,
         check=True,
     )
-    
+
     file_paths = [f.strip() for f in result.stdout.strip().split("\n") if f.strip()]
     print(f"  ✓ 找到 {len(file_paths)} 个变更文件")
-    
+
 except Exception as e:
     print(f"  ✗ 获取文件变更失败: {e}")
     exit(1)
@@ -101,7 +106,7 @@ try:
         timestamp=datetime.fromisoformat(from_author_date.replace(" +", "+")),
         parents=[],
     )
-    
+
     # 为结束提交创建 CommitInfo
     to_commit_info = CommitInfo(
         hash=to_full_hash,
@@ -111,7 +116,7 @@ try:
         timestamp=datetime.fromisoformat(to_author_date.replace(" +", "+")),
         parents=[from_full_hash],
     )
-    
+
     change_set = ChangeSet(
         from_commit=from_full_hash,
         to_commit=to_full_hash,
@@ -119,7 +124,7 @@ try:
         file_changes=[],
         status=ChangeStatus.COMMITTED,
     )
-    
+
     # 添加文件变更
     for file_path in file_paths:
         if file_path.endswith(".java"):
@@ -130,11 +135,11 @@ try:
                 deletions=0,
             )
             change_set.add_file_change(file_change)
-    
-    print(f"  ✓ 变更集合构建成功")
+
+    print("  ✓ 变更集合构建成功")
     print(f"    - 文件数: {len(change_set.changed_files)}")
     print(f"    - Java文件数: {len(change_set.changed_java_files)}")
-    
+
 except Exception as e:
     print(f"  ✗ 构建变更集合失败: {e}")
     import traceback
@@ -146,14 +151,14 @@ print("\n5. 执行影响分析...")
 try:
     impact_service = ImpactAnalysisService(call_chain_analyzer=call_chain_analyzer)
     impact_graph = impact_service.analyze(change_set, max_depth=5)
-    
-    print(f"  ✓ 影响分析完成")
+
+    print("  ✓ 影响分析完成")
     print(f"    - 受影响方法数: {impact_graph.total_affected_methods}")
     print(f"    - 直接影响数: {impact_graph.direct_impact_count}")
     print(f"    - 间接影响数: {impact_graph.indirect_impact_count}")
     print(f"    - 高风险变更数: {impact_graph.high_severity_count}")
     print(f"    - 受影响类数: {len(impact_graph.affected_classes)}")
-    
+
 except Exception as e:
     print(f"  ✗ 影响分析失败: {e}")
     import traceback
@@ -187,7 +192,7 @@ if impact_graph and impact_graph.nodes:
 print("\n6. 生成HTML报告...")
 try:
     reporter = HTMLReporter(output_dir=Path(r"E:\Study\LLM\Java代码变更影响分析\report"))
-    
+
     data = ReportData(
         title="Jenkins 代码变更影响分析报告",
         test_run=None,
@@ -205,16 +210,16 @@ try:
             "to_author": f"{to_author_name} <{to_author_email}>",
         },
     )
-    
+
     result = reporter.generate(data)
-    
+
     if result.success:
-        print(f"  ✓ HTML报告已生成")
+        print("  ✓ HTML报告已生成")
         print(f"    路径: {result.output_path}")
         print(f"    大小: {result.size_bytes} 字节")
     else:
         print(f"  ✗ 报告生成失败: {result.error_message}")
-        
+
 except Exception as e:
     print(f"  ✗ 生成报告失败: {e}")
     import traceback

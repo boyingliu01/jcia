@@ -1,6 +1,5 @@
-import re
 
-with open("jcia/adapters/ai/openai_adapter.py", "r", encoding="utf-8") as f:
+with open("jcia/adapters/ai/openai_adapter.py", encoding="utf-8") as f:
     content = f.read()
 
 # 修复 tokens_used 计算的语法错误
