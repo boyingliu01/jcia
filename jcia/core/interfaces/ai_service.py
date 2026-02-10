@@ -7,10 +7,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-if TYPE_CHECKING:
-    from jcia.core.entities.test_case import TestCase
+from jcia.core.entities.test_case import TestCase
 
 
 class AIProvider(Enum):

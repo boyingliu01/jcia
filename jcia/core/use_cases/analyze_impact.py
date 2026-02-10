@@ -7,9 +7,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from jcia.core.entities.change_set import ChangeSet
+from jcia.core.entities.impact_graph import ImpactGraph
+
 if TYPE_CHECKING:
-    from jcia.core.entities.change_set import ChangeSet
-    from jcia.core.entities.impact_graph import ImpactGraph
     from jcia.core.interfaces.analyzer import ChangeAnalyzer
     from jcia.core.interfaces.call_chain_analyzer import CallChainAnalyzer
 
