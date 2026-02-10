@@ -6,14 +6,12 @@
 import hashlib
 import json
 import logging
-import os
 import re
 import subprocess
-import tempfile
 import urllib.request
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from jcia.core.interfaces.call_chain_analyzer import (
     AnalyzerType,
@@ -22,9 +20,6 @@ from jcia.core.interfaces.call_chain_analyzer import (
     CallChainGraph,
     CallChainNode,
 )
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 
@@ -264,7 +259,8 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         class_name, method_name = self._parse_method(method)
 
         # 创建输出文件
-        output_file = self._output_dir / f"{direction}_{hashlib.md5(method.encode()).hexdigest()}.json"
+        method_hash = hashlib.md5(method.encode()).hexdigest()
+        output_file = self._output_dir / f"{direction}_{method_hash}.json"
 
         cmd = [
             "java",
@@ -563,7 +559,10 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             annotations.append({"type": f"@{ann_type}", "level": "class"})
 
         # 匹配方法级注解
-        method_pattern = r"(?:public|private|protected)\s+(?:[\w<>[\]]+)\s+(\w+)\s*\([^)]*\)[^{;]*?@\s*(\w+(?:\.\w+)*)"
+        method_pattern = (
+            r"(?:public|private|protected)\s+(?:[\w<>[\]]+)\s+(\w+)\s*\([^)]*\)"
+            r"[^{;]*?@\s*(\w+(?:\.\w+)*)"
+        )
         for match in re.finditer(method_pattern, content):
             ann_type = match.group(2)
             annotations.append({"type": f"@{ann_type}", "level": "method"})
@@ -675,7 +674,9 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
 
         return None
 
-    def _identify_feign_call(self, annotations: list[dict], class_name: str) -> RemoteCallInfo | None:
+    def _identify_feign_call(
+        self, annotations: list[dict], class_name: str
+    ) -> RemoteCallInfo | None:
         """识别 Feign 调用.
 
         Args:
@@ -814,7 +815,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
                 logger.warning(f"Failed to analyze {java_file}: {e}")
 
         # 分析服务依赖
-        for service_name, service_info in topology["services"].items():
+        for service_name in topology["services"]:
             dependencies = self._analyze_service_dependencies(
                 service_name, topology["services"]
             )

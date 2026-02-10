@@ -4,10 +4,10 @@
 """
 
 import logging
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import TYPE_CHECKING, Any
-from dataclasses import dataclass, field as dc_field
+from dataclasses import dataclass
+from dataclasses import field as dc_field
+from datetime import datetime
+from typing import Any
 
 from jcia.core.interfaces.call_chain_analyzer import (
     AnalyzerType,
@@ -16,9 +16,6 @@ from jcia.core.interfaces.call_chain_analyzer import (
     CallChainGraph,
     CallChainNode,
 )
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 
@@ -275,8 +272,6 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
 
         try:
             response = self._execute_graphql(query, {})
-
-            services = response.get("services", [])
             topology = response.get("topology", {})
 
             return self._build_full_graph_from_topology(topology)
@@ -383,7 +378,6 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
             segments = trace.get("segments", [])
 
             for segment in segments:
-                service_name = segment.get("serviceCode", "")
                 spans = segment.get("spans", [])
 
                 for span in spans:
@@ -508,7 +502,6 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
             segments = trace.get("segments", [])
 
             for segment in segments:
-                service_name = segment.get("serviceCode", "")
                 spans = segment.get("spans", [])
 
                 for span in spans:
