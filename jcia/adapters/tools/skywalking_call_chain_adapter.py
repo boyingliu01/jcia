@@ -44,7 +44,7 @@ class ServiceEndpoint:
     service_name: str
     endpoint_name: str
     type: str
-    tags: dict = dc_field(default_factory=dict)
+    tags: dict[str, str] = dc_field(default_factory=dict)
 
 
 class SkyWalkingCallChainAdapter(CallChainAnalyzer):
@@ -298,7 +298,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
 
         return method, method
 
-    def _execute_graphql(self, query: str, variables: dict) -> dict:
+    def _execute_graphql(self, query: str, variables: dict[str, Any]) -> dict[Any, Any]:
         """执行 GraphQL 查询.
 
         Args:
@@ -350,7 +350,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
             raise RuntimeError(f"Failed to execute GraphQL query: {e}") from e
 
     def _build_upstream_graph(
-        self, traces_data: dict, root_method: str, max_depth: int
+        self, traces_data: dict[str, Any], root_method: str, max_depth: int
     ) -> CallChainGraph:
         """从追踪数据构建上游调用图.
 
@@ -426,7 +426,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
         self,
         root: CallChainNode,
         current: CallChainNode,
-        spans: list,
+        spans: list[dict[str, Any]],
         parent_span_id: str,
         depth: int,
         max_depth: int,
@@ -474,7 +474,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
                 )
 
     def _build_downstream_graph(
-        self, traces_data: dict, root_method: str, max_depth: int
+        self, traces_data: dict[str, Any], root_method: str, max_depth: int
     ) -> CallChainGraph:
         """从追踪数据构建下游调用图.
 
@@ -540,7 +540,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
             total_nodes=total_nodes,
         )
 
-    def _build_full_graph_from_topology(self, topology: dict) -> CallChainGraph:
+    def _build_full_graph_from_topology(self, topology: dict[str, Any]) -> CallChainGraph:
         """从拓扑数据构建完整调用图.
 
         Args:
@@ -581,7 +581,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
             total_nodes=len(links),
         )
 
-    def _identify_call_type_from_span(self, span: dict) -> tuple[str, str]:
+    def _identify_call_type_from_span(self, span: dict[str, Any]) -> tuple[str, str]:
         """从 span 识别调用类型.
 
         Args:
@@ -622,9 +622,9 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
             return ("message_queue", mq_type)
 
         # 默认为本地调用
-        return ("local", peer)
+        return ("local", peer or "")
 
-    def _identify_dubbo_calls(self, traces_data: dict) -> dict[str, DubboCall]:
+    def _identify_dubbo_calls(self, traces_data: dict[str, Any]) -> dict[str, Any]:
         """识别 Dubbo 调用.
 
         Args:

@@ -6,7 +6,6 @@
 import argparse
 import json
 import logging
-import subprocess
 import sys
 import time
 from datetime import datetime
@@ -15,18 +14,17 @@ from pathlib import Path
 # 添加项目根目录到 Python 路径
 sys.path.insert(0, str(Path(__file__).parent))
 
-from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
+from jcia.adapters.ai.openai_adapter import OpenAIAdapter
+from jcia.adapters.ai.skywalking_adapter import SkyWalkingAdapter
 from jcia.adapters.maven.maven_adapter import MavenAdapter
-from jcia.adapters.tools.java_all_call_graph_adapter import JavaAllCallGraphAdapter
 from jcia.adapters.test_runners.maven_surefire_test_executor import (
     MavenSurefireTestExecutor,
 )
-from jcia.adapters.tools.starts_test_selector_adapter import STARTSTestSelectorAdapter
+from jcia.adapters.tools.java_all_call_graph_adapter import JavaAllCallGraphAdapter
 from jcia.adapters.tools.skywalking_call_chain_adapter import (
     SkyWalkingCallChainAdapter,
 )
-from jcia.adapters.ai.openai_adapter import OpenAIAdapter
-from jcia.adapters.ai.skywalking_adapter import SkyWalkingAdapter
+from jcia.adapters.tools.starts_test_selector_adapter import STARTSTestSelectorAdapter
 
 # 配置日志
 logging.basicConfig(

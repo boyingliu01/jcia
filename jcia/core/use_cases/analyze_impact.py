@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from jcia.core.entities.change_set import ChangeSet
@@ -45,9 +45,9 @@ class AnalyzeImpactResponse:
         summary: 影响摘要
     """
 
-    change_set: "ChangeSet"
-    impact_graph: "ImpactGraph"
-    summary: dict = field(default_factory=dict)
+    change_set: ChangeSet
+    impact_graph: ImpactGraph
+    summary: dict[str, Any] = field(default_factory=dict)
 
 
 class AnalyzeImpactUseCase:
@@ -195,7 +195,7 @@ class AnalyzeImpactUseCase:
         except Exception as e:
             raise Exception(f"影响分析失败: {e}") from e
 
-    def _generate_summary(self, change_set: "ChangeSet", impact_graph: "ImpactGraph") -> dict:
+    def _generate_summary(self, change_set: ChangeSet, impact_graph: ImpactGraph) -> dict[str, Any]:
         """生成摘要.
 
         Args:

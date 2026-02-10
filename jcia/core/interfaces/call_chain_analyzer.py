@@ -6,6 +6,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 
 class AnalyzerType(Enum):
@@ -45,6 +46,7 @@ class CallChainNode:
     timestamp: float | None = None
     trace_id: str | None = None
     children: list["CallChainNode"] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def full_name(self) -> str:
@@ -65,7 +67,7 @@ class CallChainGraph:
 
     def get_all_methods(self) -> list[str]:
         """获取图中所有方法名."""
-        methods = []
+        methods: list[str] = []
         self._traverse(self.root, methods)
         return methods
 

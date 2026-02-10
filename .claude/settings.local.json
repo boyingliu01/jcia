@@ -4,7 +4,10 @@
       "Bash(gh pr list:*)",
       "Bash(python run_jenkins_validation.py:*)",
       "Bash(python:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(pip install:*)",
+      "Bash(ruff check:*)",
+      "Bash(make lint:*)"
     ]
   }
 }

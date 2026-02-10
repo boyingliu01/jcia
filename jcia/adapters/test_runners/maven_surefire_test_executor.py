@@ -2,14 +2,15 @@
 
 基于 Maven Surefire Plugin 的测试执行器，支持选择性测试执行和覆盖率收集。
 """
+# ruff: noqa: N817  # defusedxml.ElementTree is official import style
 
 import logging
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from defusedxml import ElementTree as ET
+
 from jcia.adapters.maven.maven_adapter import MavenAdapter
 from jcia.core.entities.test_case import TestCase, TestType
 from jcia.core.entities.test_run import TestStatus

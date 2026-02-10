@@ -2,6 +2,7 @@
 
 基于字节码的 Java 静态调用链分析器，支持远程调用识别。
 """
+# ruff: noqa: S324,S310  # md5 for cache keys, file: URLs for local files
 
 import hashlib
 import json

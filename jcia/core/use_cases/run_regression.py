@@ -53,10 +53,10 @@ class RunRegressionResponse:
         metadata: 额外元数据
     """
 
-    baseline_run: "TestRun | None" = None
-    regression_run: "TestRun | None" = None
+    baseline_run: TestRun | None = None
+    regression_run: TestRun | None = None
     comparison: Any | None = None
-    summary: dict = field(default_factory=dict)
+    summary: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -303,10 +303,10 @@ class RunRegressionUseCase:
 
     def _generate_summary(
         self,
-        baseline_run: "TestRun | None",
-        regression_run: "TestRun | None",
+        baseline_run: TestRun | None,
+        regression_run: TestRun | None,
         comparison: Any,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """生成摘要.
 
         Args:
@@ -331,7 +331,7 @@ class RunRegressionUseCase:
 
         return summary
 
-    def _generate_regression_only_summary(self, regression_run: "TestRun") -> dict:
+    def _generate_regression_only_summary(self, regression_run: TestRun) -> dict[str, Any]:
         """生成仅回归测试摘要.
 
         Args:

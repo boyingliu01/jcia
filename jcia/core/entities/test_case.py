@@ -83,7 +83,7 @@ class TestCase:
         """转换为Maven测试格式."""
         return f"{self.class_name}#{self.method_name}"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典."""
         return {
             "class_name": self.class_name,
@@ -146,7 +146,7 @@ class TestSuite:
         """转换为Maven测试列表."""
         return [tc.to_maven_test() for tc in self.test_cases]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典."""
         return {
             "name": self.name,

@@ -55,7 +55,7 @@ class TestGenerationResponse:
         tokens_used: 使用的 token 数量
     """
 
-    test_cases: list["TestCase"]
+    test_cases: list[TestCase]
     explanations: list[str]
     confidence: float = 0.0
     tokens_used: int = 0

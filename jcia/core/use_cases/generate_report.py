@@ -29,9 +29,9 @@ class GenerateReportRequest:
 
     output_dir: Path
     format: str = "json"
-    test_run: "TestRun | None" = None
-    impact_graph: "ImpactGraph | None" = None
-    change_set: "ChangeSet | None" = None
+    test_run: TestRun | None = None
+    impact_graph: ImpactGraph | None = None
+    change_set: ChangeSet | None = None
     include_details: bool = True
     include_charts: bool = False
 
@@ -130,7 +130,7 @@ class GenerateReportUseCase:
         Returns:
             Dict[str, Any]: 报告数据
         """
-        report_data = {
+        report_data: dict[str, Any] = {
             "timestamp": self._get_timestamp(),
             "test_run": None,
             "impact_graph": None,
