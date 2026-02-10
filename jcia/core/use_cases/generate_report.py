@@ -5,12 +5,11 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-if TYPE_CHECKING:
-    from jcia.core.entities.change_set import ChangeSet
-    from jcia.core.entities.impact_graph import ImpactGraph
-    from jcia.core.entities.test_run import TestRun
+from jcia.core.entities.change_set import ChangeSet
+from jcia.core.entities.impact_graph import ImpactGraph
+from jcia.core.entities.test_run import TestRun
 
 
 @dataclass

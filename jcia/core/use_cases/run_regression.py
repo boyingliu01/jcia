@@ -7,9 +7,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from jcia.core.entities.test_case import TestCase
+from jcia.core.entities.test_run import TestRun
+
 if TYPE_CHECKING:
-    from jcia.core.entities.test_case import TestCase
-    from jcia.core.entities.test_run import TestRun
     from jcia.core.interfaces.repository import (
         TestDiffRepository,
         TestResultRepository,
@@ -33,7 +34,7 @@ class RunRegressionRequest:
     """
 
     project_path: Path
-    test_cases: list["TestCase"] | None = None
+    test_cases: list[TestCase] | None = None
     baseline_commit: str | None = None
     regression_commit: str | None = None
     run_type: str = "regression"
