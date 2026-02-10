@@ -20,9 +20,6 @@ from jcia.core.interfaces.ai_service import (
     TestGenerationResponse,
 )
 
-if TYPE_CHECKING:
-    from jcia.core.entities.test_case import TestCase
-
 logger = logging.getLogger(__name__)
 
 # 常量定义
@@ -259,15 +256,13 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
 输出格式：使用 ```java``` 代码块包裹优化后的测试代码。
 """
 
+        system_msg = (
+            "你是一个专业的测试代码优化助手。请根据反馈意见改进测试用例，"
+            "确保代码质量和覆盖率。"
+        )
         messages = [
-            {
-                "role": "system",
-                "content": "你是一个专业的测试代码优化助手。请根据反馈意见改进测试用例，确保代码质量和覆盖率。",
-            },
-            {
-                "role": "user",
-                "content": prompt,
-            },
+            {"role": "system", "content": system_msg},
+            {"role": "user", "content": prompt},
         ]
 
         try:
@@ -407,12 +402,12 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
         messages = [
             {
                 "role": "system",
-                "content": "你是一个专业的代码影响分析助手。请详细分析代码变更的影响范围和测试建议。",
+                "content": (
+                    "你是一个专业的代码影响分析助手。"
+                    "请详细分析代码变更的影响范围和测试建议。"
+                ),
             },
-            {
-                "role": "user",
-                "content": prompt,
-            },
+            {"role": "user", "content": prompt},
         ]
 
         try:
@@ -503,13 +498,15 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
                     )
                     time.sleep(RETRY_DELAY * (attempt + 1) * 2)
                 else:
-                    raise RuntimeError(f"OpenAI API rate limit: {e}")
+                    raise RuntimeError(
+                        f"OpenAI API rate limit: {e}"
+                    ) from e
 
             except openai.APIError as e:
                 logger.error(f"OpenAI API error: {e}")
-                raise RuntimeError(f"OpenAI API error: {e}")
+                raise RuntimeError(f"OpenAI API error: {e}") from e
 
-        raise RuntimeError("Max retries exceeded")
+        raise RuntimeError("Max retries exceeded") from None
 
     def _build_generation_context(
         self, request: TestGenerationRequest, project_path: Path

@@ -3,22 +3,17 @@
 基于 STARTS (Static Test Assignment for Regression Test Selection) 算法的测试选择器。
 """
 
-import hashlib
 import json
 import logging
 import re
-import subprocess
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from defusedxml import ElementTree as ET
 from jcia.adapters.maven.maven_adapter import MavenAdapter
 from jcia.core.entities.test_case import TestCase, TestPriority, TestType
 from jcia.core.interfaces.test_runner import TestSelectionStrategy
-
-if TYPE_CHECKING:
-    from jcia.core.entities.test_case import TestCase
 
 logger = logging.getLogger(__name__)
 
@@ -132,8 +127,6 @@ class STARTSTestSelectorAdapter:
         jacoco_xml = self._project_path / "target" / "site" / "jacoco" / "jacoco.xml"
 
         if jacoco_xml.exists():
-            import xml.etree.ElementTree as ET
-
             tree = ET.parse(jacoco_xml)
             root = tree.getroot()
 

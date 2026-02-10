@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from defusedxml import ElementTree as ET
 from jcia.adapters.maven.maven_adapter import MavenAdapter
 from jcia.core.entities.test_case import TestCase, TestType
 from jcia.core.entities.test_run import TestStatus
@@ -17,9 +18,6 @@ from jcia.core.interfaces.test_runner import (
     TestExecutor,
     TestSuiteResult,
 )
-
-if TYPE_CHECKING:
-    from jcia.core.entities.test_case import TestCase
 
 logger = logging.getLogger(__name__)
 
