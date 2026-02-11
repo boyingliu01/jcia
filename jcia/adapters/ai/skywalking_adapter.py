@@ -76,10 +76,7 @@ class SkyWalkingAdapter:
                 recommendation = {
                     "endpoint": stat["endpoint"],
                     "test_priority": "HIGH",
-                    "reason": (
-                        f"错误率 {stat['error_rate']:.2%} "
-                        f"或慢调用 {stat['slow_calls']} 次"
-                    ),
+                    "reason": (f"错误率 {stat['error_rate']:.2%} 或慢调用 {stat['slow_calls']} 次"),
                     "suggested_tests": self._suggest_tests_for_endpoint(stat),
                     "metrics": {
                         "sla": stat["sla"],
@@ -275,32 +272,22 @@ class SkyWalkingAdapter:
             method_name = parts[-1]
 
             # 正常流程测试
-            suggestions.append(
-                f"测试 {service_name}.{method_name} 的正常调用流程"
-            )
+            suggestions.append(f"测试 {service_name}.{method_name} 的正常调用流程")
 
             # 错误处理测试
-            suggestions.append(
-                f"测试 {service_name}.{method_name} 的异常情况处理"
-            )
+            suggestions.append(f"测试 {service_name}.{method_name} 的异常情况处理")
 
         # 性能测试
         if endpoint_stat.get("response_time_p95", 0) > 500:
-            suggestions.append(
-                f"对 {endpoint} 进行性能测试，响应时间应 < 500ms"
-            )
+            suggestions.append(f"对 {endpoint} 进行性能测试，响应时间应 < 500ms")
 
         # 并发测试
         if endpoint_stat.get("throughput", 0) > 100:
-            suggestions.append(
-                f"对 {endpoint} 进行并发测试，验证高负载下的稳定性"
-            )
+            suggestions.append(f"对 {endpoint} 进行并发测试，验证高负载下的稳定性")
 
         return suggestions
 
-    def analyze_exceptions(
-        self, service_name: str, time_range: int = 7
-    ) -> list[dict[str, Any]]:
+    def analyze_exceptions(self, service_name: str, time_range: int = 7) -> list[dict[str, Any]]:
         """分析服务异常.
 
         Args:
@@ -379,9 +366,7 @@ class SkyWalkingAdapter:
                 "trace_id": log.get("traceId", ""),
                 "exception_type": exception_info.get("exceptionType", ""),
                 "message": exception_info.get("message", ""),
-                "stack_trace": self._format_stack_trace(
-                    exception_info.get("stackTrace", [])
-                ),
+                "stack_trace": self._format_stack_trace(exception_info.get("stackTrace", [])),
             }
 
             exceptions.append(exception)
@@ -390,7 +375,7 @@ class SkyWalkingAdapter:
 
         return exceptions
 
-    def _format_stack_trace(self, stack_trace: list[str]) -> str:
+    def _format_stack_trace(self, stack_trace: list[dict[str, Any]]) -> str:
         """格式化堆栈跟踪.
 
         Args:
@@ -446,11 +431,7 @@ class SkyWalkingAdapter:
             services_data = response.get("services", [])
 
             # 过滤指定服务
-            filtered_services = [
-                svc
-                for svc in services_data
-                if svc["label"] in service_names
-            ]
+            filtered_services = [svc for svc in services_data if svc["label"] in service_names]
 
             return {"services": filtered_services}
 
@@ -458,9 +439,7 @@ class SkyWalkingAdapter:
             logger.error(f"Failed to get service health: {e}")
             return {"services": []}
 
-    def analyze_performance_trends(
-        self, service_name: str, time_range: int = 30
-    ) -> dict[str, Any]:
+    def analyze_performance_trends(self, service_name: str, time_range: int = 30) -> dict[str, Any]:
         """分析性能趋势.
 
         Args:
@@ -552,9 +531,7 @@ class SkyWalkingAdapter:
             data = response.json()
 
             if "errors" in data:
-                error_msg = "; ".join(
-                    err.get("message", "Unknown error") for err in data["errors"]
-                )
+                error_msg = "; ".join(err.get("message", "Unknown error") for err in data["errors"])
                 raise RuntimeError(f"GraphQL error: {error_msg}")
 
             return data.get("data", {})

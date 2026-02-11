@@ -65,9 +65,7 @@ class STARTSTestSelectorAdapter:
         self._test_code_mapping: dict[str, set[str]] = {}
         self._class_cache: dict[str, list[str]] = {}
 
-        logger.info(
-            f"STARTSTestSelectorAdapter initialized for project: {self._project_path}"
-        )
+        logger.info(f"STARTSTestSelectorAdapter initialized for project: {self._project_path}")
 
     @property
     def get_selection_strategy(self) -> TestSelectionStrategy:
@@ -103,9 +101,7 @@ class STARTSTestSelectorAdapter:
         all_affected = self._propagate_changes(changed_methods)
 
         # 4. 选择受影响的测试
-        selected_tests = self._select_affected_tests(
-            all_affected, affected_classes
-        )
+        selected_tests = self._select_affected_tests(all_affected, affected_classes)
 
         logger.info(f"Selected {len(selected_tests)} affected tests")
 
@@ -133,11 +129,12 @@ class STARTSTestSelectorAdapter:
             root = tree.getroot()
 
             # 遍历所有包和类
-            for package in root.findall(".//package"):
-                package_name = package.get("name")
+            for package in root.findall(".//package"):  # type: ignore[arg-type]
+                package_name = package.get("name") or ""
 
-                for class_elem in package.findall(".//class"):
-                    class_name = class_elem.get("name").replace("/", ".")
+                for class_elem in package.findall(".//class"):  # type: ignore[arg-type]
+                    class_name_raw = class_elem.get("name") or ""
+                    class_name = class_name_raw.replace("/", ".")
 
                     # 找到覆盖这个类的测试
                     for method in class_elem.findall(".//method"):
@@ -152,9 +149,7 @@ class STARTSTestSelectorAdapter:
                         method_full = f"{class_name}.{method.get('name')}"
                         self._test_code_mapping[test_name].add(method_full)
 
-            logger.info(
-                f"Built mapping for {len(self._test_code_mapping)} test classes"
-            )
+            logger.info(f"Built mapping for {len(self._test_code_mapping)} test classes")
 
         return self._test_code_mapping
 
@@ -299,15 +294,21 @@ class STARTSTestSelectorAdapter:
         # 匹配方法调用模式
         # 简化的正则表达式，实际应用可能需要更复杂的解析
         patterns = [
-            r'(\w+)\.(\w+)\s*\(',  # object.method()
-            r'\bnew\s+(\w+)\s*\(',  # new Constructor()
-            r'\b(\w+)\s*\(',  # method()
+            r"(\w+)\.(\w+)\s*\(",  # object.method()
+            r"\bnew\s+(\w+)\s*\(",  # new Constructor()
+            r"\b(\w+)\s*\(",  # method()
         ]
 
         for pattern in patterns:
             for match in re.finditer(pattern, content):
-                object_name = match.group(1) if match.lastindex >= 1 else ""
-                method_name = match.group(2) if match.lastindex >= 2 else match.group(1)
+                object_name = (
+                    match.group(1) if (match.lastindex is not None and match.lastindex >= 1) else ""
+                )
+                method_name = (
+                    match.group(2)
+                    if (match.lastindex is not None and match.lastindex >= 2)
+                    else match.group(1)
+                )
 
                 # 忽略内置类和this调用
                 if object_name in ["this", "super"]:
@@ -362,7 +363,7 @@ class STARTSTestSelectorAdapter:
 
                 test_case = TestCase(
                     class_name=test_class,
-                    method_name=None,  # 不指定方法名，运行整个测试类
+                    method_name="",  # 不指定方法名，运行整个测试类
                     test_type=TestType.UNIT,
                     priority=TestPriority.HIGH,
                     target_class=target_class,
@@ -412,9 +413,7 @@ class STARTSTestSelectorAdapter:
             for dep in dependencies:
                 dep_class = self._extract_class_name(dep)
                 if dep_class:
-                    graph["edges"].append(
-                        {"source": class_name, "target": dep_class}
-                    )
+                    graph["edges"].append({"source": class_name, "target": dep_class})
 
         # 写入文件
         with open(output_path, "w") as f:
@@ -422,9 +421,7 @@ class STARTSTestSelectorAdapter:
 
         logger.info(f"Dependency graph exported to {output_path}")
 
-    def analyze_test_impact(
-        self, test_class: str, changed_methods: list[str]
-    ) -> dict[str, Any]:
+    def analyze_test_impact(self, test_class: str, changed_methods: list[str]) -> dict[str, Any]:
         """分析测试对变更的影响.
 
         Args:
@@ -451,9 +448,7 @@ class STARTSTestSelectorAdapter:
             "coverage_count": len(covered_methods),
             "affected_count": len(intersection),
             "impact_percentage": (
-                len(intersection) / len(covered_methods) * 100
-                if covered_methods
-                else 0.0
+                len(intersection) / len(covered_methods) * 100 if covered_methods else 0.0
             ),
         }
 

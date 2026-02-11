@@ -77,9 +77,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
         self._timeout = timeout
         self._graphql_endpoint = f"{self._oap_server}/graphql"
 
-        logger.info(
-            f"SkyWalkingCallChainAdapter initialized: {self._graphql_endpoint}"
-        )
+        logger.info(f"SkyWalkingCallChainAdapter initialized: {self._graphql_endpoint}")
 
     @property
     def analyzer_type(self) -> AnalyzerType:
@@ -338,9 +336,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
             data = response.json()
 
             if "errors" in data:
-                error_msg = "; ".join(
-                    err.get("message", "Unknown error") for err in data["errors"]
-                )
+                error_msg = "; ".join(err.get("message", "Unknown error") for err in data["errors"])
                 raise RuntimeError(f"GraphQL error: {error_msg}")
 
             return data.get("data", {})
@@ -386,6 +382,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
 
                     # 只处理上游调用（有父节点的）
                     if parent_span_id and span_type != "Entry":
+                        parent_span_id_str = str(parent_span_id)  # type: ignore[arg-type]
                         peer = span.get("peer", "")
                         operation_name = span.get("operationName", "")
 
@@ -412,7 +409,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
 
                         # 递归添加上游调用
                         self._add_upstream_nodes(
-                            root, node, spans, parent_span_id, depth=1, max_depth=max_depth
+                            root, node, spans, parent_span_id_str, depth=1, max_depth=max_depth
                         )
 
         return CallChainGraph(
@@ -469,9 +466,9 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
                 current.children.append(child)
 
                 # 递归处理
-                self._add_upstream_nodes(
-                    root, child, spans, span.get("spanId"), depth + 1, max_depth
-                )
+                span_id = span.get("spanId")
+                if span_id:
+                    self._add_upstream_nodes(root, child, spans, str(span_id), depth + 1, max_depth)
 
     def _build_downstream_graph(
         self, traces_data: dict[str, Any], root_method: str, max_depth: int
@@ -612,13 +609,13 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
             return ("rest", url)
 
         # 检查数据库
-        if tag_dict.get("db.type"):
-            db_type = tag_dict.get("db.type")
+        db_type = tag_dict.get("db.type")
+        if db_type:
             return ("database", db_type)
 
         # 检查消息队列
-        if tag_dict.get("mq.type"):
-            mq_type = tag_dict.get("mq.type")
+        mq_type = tag_dict.get("mq.type")
+        if mq_type:
             return ("message_queue", mq_type)
 
         # 默认为本地调用

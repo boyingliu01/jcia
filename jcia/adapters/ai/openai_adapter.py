@@ -61,7 +61,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
         """
         self._api_key = api_key
         self._model = model
-        self._base_url = base_url or "https://api.openai.com/v1"
+        self._base_url = base_url or "https://api.openai.com/v1"  # type: ignore[assignment]
         self._temperature = temperature
         self._max_tokens = max_tokens
         self._timeout = timeout
@@ -94,9 +94,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
         Returns:
             TestGenerationResponse: 生成响应
         """
-        logger.info(
-            f"Generating tests for {len(request.target_classes)} target classes"
-        )
+        logger.info(f"Generating tests for {len(request.target_classes)} target classes")
 
         # 构建上下文
         context = self._build_generation_context(request, project_path)
@@ -129,13 +127,9 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
             )
 
             # 解析响应
-            test_cases = self._parse_test_generation_response(
-                response, request.target_classes
-            )
+            test_cases = self._parse_test_generation_response(response, request.target_classes)
 
-            explanations = [
-                f"为 {cls} 生成测试用例" for cls in request.target_classes
-            ]
+            explanations = [f"为 {cls} 生成测试用例" for cls in request.target_classes]
 
             confidence = self._estimate_confidence(response)
 
@@ -174,9 +168,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
         logger.info("Generating tests for uncovered code")
 
         # 提取未覆盖的代码段
-        uncovered_segments = self._extract_uncovered_segments(
-            coverage_data, project_path
-        )
+        uncovered_segments = self._extract_uncovered_segments(coverage_data, project_path)
 
         if not uncovered_segments:
             return TestGenerationResponse(
@@ -198,7 +190,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
                     "uncovered_lines": segment["lines"],
                     "branch_coverage": segment.get("branch", 0),
                 },
-                requirements=f"""请为以下代码生成测试，以覆盖第 {segment['lines']} 行：
+                requirements=f"""请为以下代码生成测试，以覆盖第 {segment["lines"]} 行：
 重点覆盖未覆盖的分支和条件。
 确保测试代码可以直接编译运行。
 """,
@@ -209,8 +201,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
             all_explanations.extend(response.explanations)
 
         confidence = (
-            sum(tc.metadata.get("confidence", 0.5) for tc in all_test_cases)
-            / len(all_test_cases)
+            sum(tc.metadata.get("confidence", 0.5) for tc in all_test_cases) / len(all_test_cases)
             if all_test_cases
             else 0.0
         )
@@ -258,8 +249,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
 """
 
         system_msg = (
-            "你是一个专业的测试代码优化助手。请根据反馈意见改进测试用例，"
-            "确保代码质量和覆盖率。"
+            "你是一个专业的测试代码优化助手。请根据反馈意见改进测试用例，确保代码质量和覆盖率。"
         )
         messages = [
             {"role": "system", "content": system_msg},
@@ -339,9 +329,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
             )
 
             # 解析响应
-            analysis = response.get("choices", [{}])[0].get("message", {}).get(
-                "content", ""
-            )
+            analysis = response.get("choices", [{}])[0].get("message", {}).get("content", "")
 
             findings = self._parse_code_findings(analysis)
             suggestions = self._parse_code_suggestions(analysis)
@@ -404,8 +392,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
             {
                 "role": "system",
                 "content": (
-                    "你是一个专业的代码影响分析助手。"
-                    "请详细分析代码变更的影响范围和测试建议。"
+                    "你是一个专业的代码影响分析助手。请详细分析代码变更的影响范围和测试建议。"
                 ),
             },
             {"role": "user", "content": prompt},
@@ -417,8 +404,8 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
                 temperature=kwargs.get("temperature", 0.3),
             )
 
-            impact_explanation = response.get("choices", [{}])[0].get("message", {}).get(
-                "content", ""
+            impact_explanation = (
+                response.get("choices", [{}])[0].get("message", {}).get("content", "")
             )
 
             return impact_explanation
@@ -427,9 +414,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
             logger.error(f"Failed to explain change impact: {e}")
             return f"影响分析失败: {str(e)}"
 
-    def _call_openai_api(
-        self, messages: list[dict], **kwargs: Any
-    ) -> dict[str, Any]:
+    def _call_openai_api(self, messages: list[dict], **kwargs: Any) -> dict[str, Any]:
         """调用 OpenAI API.
 
         Args:
@@ -444,7 +429,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
         """
         # 检查是否安装了 openai 库
         try:
-            import openai
+            import openai  # type: ignore[import-not-found]
         except ImportError:
             logger.warning("OpenAI library not installed, using mock implementation")
             return {
@@ -452,7 +437,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
                 "usage": {"total_tokens": 100},
             }
 
-        client = openai.OpenAI(
+        client = openai.OpenAI(  # type: ignore[attr-defined]
             api_key=self._api_key,
             base_url=self._base_url,
             timeout=self._timeout,
@@ -469,13 +454,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
                 )
 
                 return {
-                    "choices": [
-                        {
-                            "message": {
-                                "content": response.choices[0].message.content
-                            }
-                        }
-                    ],
+                    "choices": [{"message": {"content": response.choices[0].message.content}}],
                     "usage": {
                         "prompt_tokens": response.usage.prompt_tokens,
                         "completion_tokens": response.usage.completion_tokens,
@@ -483,27 +462,21 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
                     },
                 }
 
-            except openai.APITimeoutError:
+            except openai.APITimeoutError:  # type: ignore[attr-defined]
                 if attempt < MAX_RETRIES - 1:
-                    logger.warning(
-                        f"OpenAI API timeout, retrying ({attempt + 1}/{MAX_RETRIES})"
-                    )
+                    logger.warning(f"OpenAI API timeout, retrying ({attempt + 1}/{MAX_RETRIES})")
                     time.sleep(RETRY_DELAY * (attempt + 1))
                 else:
                     raise RuntimeError("OpenAI API request timed out") from None
 
-            except openai.RateLimitError as e:
+            except openai.RateLimitError as e:  # type: ignore[attr-defined]
                 if attempt < MAX_RETRIES - 1:
-                    logger.warning(
-                        f"OpenAI API rate limit, retrying ({attempt + 1}/{MAX_RETRIES})"
-                    )
+                    logger.warning(f"OpenAI API rate limit, retrying ({attempt + 1}/{MAX_RETRIES})")
                     time.sleep(RETRY_DELAY * (attempt + 1) * 2)
                 else:
-                    raise RuntimeError(
-                        f"OpenAI API rate limit: {e}"
-                    ) from e
+                    raise RuntimeError(f"OpenAI API rate limit: {e}") from e
 
-            except openai.APIError as e:
+            except openai.APIError as e:  # type: ignore[attr-defined]
                 logger.error(f"OpenAI API error: {e}")
                 raise RuntimeError(f"OpenAI API error: {e}") from e
 
@@ -531,9 +504,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
 
         return context
 
-    def _build_test_generation_prompt(
-        self, request: TestGenerationRequest, context: dict
-    ) -> str:
+    def _build_test_generation_prompt(self, request: TestGenerationRequest, context: dict) -> str:
         """构建测试生成 prompt.
 
         Args:
@@ -673,9 +644,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
 
         return matches
 
-    def _extract_uncovered_segments(
-        self, coverage_data: dict, project_path: Path
-    ) -> list[dict]:
+    def _extract_uncovered_segments(self, coverage_data: dict, project_path: Path) -> list[dict]:
         """提取未覆盖的代码段.
 
         Args:
@@ -777,9 +746,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
         # 解析潜在问题
         issues_pattern = r"(?:潜在问题|问题|bug|issue)[:：:]\s*([^\n]+)"
         for match in re.finditer(issues_pattern, content, re.IGNORECASE):
-            findings.append(
-                {"content": match.group(1).strip(), "severity": "INFO"}
-            )
+            findings.append({"content": match.group(1).strip(), "severity": "INFO"})
 
         # 如果没有明确的问题，将整个内容作为finding
         if not findings:

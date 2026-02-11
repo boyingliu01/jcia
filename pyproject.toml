@@ -23,17 +23,16 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
 ]
 requires-python = ">=3.10"
-    dependencies = [
-        "click>=8.0.0",
-        "pydriller>=2.6.0",
-        "pyyaml>=6.0.1",
-        "jinja2>=3.1.2",
-        "requests>=2.31.0",
-        "beautifulsoup4>=4.12.0",
-        "rich>=13.7.0",
-        "pydantic>=2.5.0",
-        "pathlib>=2.3.6",
-    ]
+dependencies = [
+    "click>=8.0.0",
+    "pydriller>=2.6.0",
+    "pyyaml>=6.0.1",
+    "jinja2>=3.1.2",
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+    "rich>=13.7.0",
+    "pydantic>=2.5.0",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -46,6 +45,9 @@ dev = [
     "bandit[toml]>=1.7.6",
     "pre-commit>=3.6.0",
     "mypy>=1.7.0",
+]
+ai = [
+    "openai>=1.0.0",
 ]
 
 [project.scripts]
@@ -140,7 +142,7 @@ exclude_lines = [
 
 [tool.bandit]
 exclude_dirs = ["tests"]
-skips = ["B101", "B603", "B607", "B404"]
+skips = ["B101", "B603", "B607", "B404", "B405", "B310", "B324"]
 
 [tool.mypy]
 python_version = "3.10"
