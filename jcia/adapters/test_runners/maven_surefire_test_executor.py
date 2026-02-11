@@ -7,9 +7,13 @@
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from defusedxml import ElementTree as ET
+import defusedxml.ElementTree as ET
+
+if TYPE_CHECKING:
+    # Use Any for Element type since defusedxml.ElementTree.Element is not exported
+    Element: Any  # type: ignore[misc]
 
 from jcia.adapters.maven.maven_adapter import MavenAdapter
 from jcia.core.entities.test_case import TestCase, TestType
@@ -71,9 +75,7 @@ class MavenSurefireTestExecutor(TestExecutor):
         self._failsafe_reports = self._project_path / "target" / "failsafe-reports"
         self._jacoco_reports = self._project_path / "target" / "site" / "jacoco"
 
-        logger.info(
-            f"MavenSurefireTestExecutor initialized for project: {self._project_path}"
-        )
+        logger.info(f"MavenSurefireTestExecutor initialized for project: {self._project_path}")
 
     def execute_tests(
         self,
@@ -132,9 +134,7 @@ class MavenSurefireTestExecutor(TestExecutor):
 
         return result
 
-    def get_coverage_report(
-        self, project_path: Path, report_format: str = "xml"
-    ) -> dict[str, Any]:
+    def get_coverage_report(self, project_path: Path, report_format: str = "xml") -> dict[str, Any]:
         """获取覆盖率报告.
 
         Args:
@@ -304,26 +304,26 @@ class MavenSurefireTestExecutor(TestExecutor):
             root = tree.getroot()
 
             test_suite = {
-                "total": int(root.get("tests", 0)),
+                "total": int(root.get("tests", 0) or 0) if root is not None else 0,
                 "passed": 0,
                 "failed": 0,
                 "skipped": 0,
                 "errors": 0,
-                "duration": int(float(root.get("time", 0)) * 1000),
+                "duration": int(float(root.get("time", 0) or 0) * 1000) if root is not None else 0,
                 "cases": [],
             }
 
-            for test_case in root.findall("testcase"):
+            for test_case in root.findall("testcase"):  # type: ignore[arg-type]
                 case = self._parse_test_case(test_case)
                 test_suite["cases"].append(case)
 
-                if case["status"] == TestStatus.PASSED:
+                if case.status == TestStatus.PASSED:
                     test_suite["passed"] += 1
-                elif case["status"] == TestStatus.FAILED:
+                elif case.status == TestStatus.FAILED:
                     test_suite["failed"] += 1
-                elif case["status"] == TestStatus.SKIPPED:
+                elif case.status == TestStatus.SKIPPED:
                     test_suite["skipped"] += 1
-                elif case["status"] == TestStatus.ERROR:
+                elif case.status == TestStatus.ERROR:
                     test_suite["errors"] += 1
 
             return test_suite
@@ -340,14 +340,14 @@ class MavenSurefireTestExecutor(TestExecutor):
                 "cases": [],
             }
 
-    def _parse_test_case(self, element) -> dict:
+    def _parse_test_case(self, element: Any) -> TestExecutionResult:  # ruff: noqa: ANN401
         """解析单个测试用例.
 
         Args:
             element: XML 元素
 
         Returns:
-            Dict[str, Any]: 测试用例数据
+            TestExecutionResult: 测试用例数据
         """
         class_name = element.get("classname", "")
         method_name = element.get("name", "")
@@ -400,28 +400,36 @@ class MavenSurefireTestExecutor(TestExecutor):
             root = tree.getroot()
 
             # 定义 JaCoCo 插件配置
-            jacoco_plugin = ET.Element("plugin")
-            ET.SubElement(jacoco_plugin, "groupId").text = "org.jacoco"
-            ET.SubElement(jacoco_plugin, "artifactId").text = "jacoco-maven-plugin"
-            ET.SubElement(jacoco_plugin, "version").text = self._jacoco_version
+            jacoco_plugin = ET.Element("plugin")  # type: ignore[attr-defined]
+            group_id = ET.SubElement(jacoco_plugin, "groupId")  # type: ignore[attr-defined]
+            group_id.text = "org.jacoco"
+            artifact_id = ET.SubElement(jacoco_plugin, "artifactId")  # type: ignore[attr-defined]
+            artifact_id.text = "jacoco-maven-plugin"
+            version = ET.SubElement(jacoco_plugin, "version")  # type: ignore[attr-defined]
+            version.text = self._jacoco_version
 
-            executions = ET.SubElement(jacoco_plugin, "executions")
+            executions = ET.SubElement(jacoco_plugin, "executions")  # type: ignore[attr-defined]
 
             # prepare-agent execution
-            execution1 = ET.SubElement(executions, "execution")
-            ET.SubElement(execution1, "id").text = "prepare-agent"
-            ET.SubElement(execution1, "goals")
-            ET.SubElement(execution1, "goals", "goal").text = "prepare-agent"
+            execution1 = ET.SubElement(executions, "execution")  # type: ignore[attr-defined]
+            exec1_id = ET.SubElement(execution1, "id")  # type: ignore[attr-defined]
+            exec1_id.text = "prepare-agent"
+            exec1_goals = ET.SubElement(execution1, "goals")  # type: ignore[attr-defined]
+            exec1_goal = ET.SubElement(exec1_goals, "goal")  # type: ignore[attr-defined]
+            exec1_goal.text = "prepare-agent"
 
             # report execution
-            execution2 = ET.SubElement(executions, "execution")
-            ET.SubElement(execution2, "id").text = "report"
-            ET.SubElement(execution2, "phase").text = "test"
-            ET.SubElement(execution2, "goals")
-            ET.SubElement(execution2, "goals", "goal").text = "report"
+            execution2 = ET.SubElement(executions, "execution")  # type: ignore[attr-defined]
+            exec2_id = ET.SubElement(execution2, "id")  # type: ignore[attr-defined]
+            exec2_id.text = "report"
+            exec2_phase = ET.SubElement(execution2, "phase")  # type: ignore[attr-defined]
+            exec2_phase.text = "test"
+            exec2_goals = ET.SubElement(execution2, "goals")  # type: ignore[attr-defined]
+            exec2_goal = ET.SubElement(exec2_goals, "goal")  # type: ignore[attr-defined]
+            exec2_goal.text = "report"
 
             # 检查是否已存在 JaCoCo 插件
-            plugins = root.find(".//{*}artifactId[text()='jacoco-maven-plugin']")
+            plugins = root.find(".//{*}artifactId[text()='jacoco-maven-plugin']")  # type: ignore[arg-type]
             if plugins is None:
                 logger.info("JaCoCo plugin not found, would add (implementation note)")
 
@@ -453,11 +461,14 @@ class MavenSurefireTestExecutor(TestExecutor):
             covered_lines = 0
 
             # 遍历所有 counter 元素
-            for counter in root.findall(".//counter"):
-                if counter.get("type") == "LINE":
-                    total_lines += int(counter.get("missed"))
-                    total_lines += int(counter.get("covered"))
-                    covered_lines += int(counter.get("covered"))
+            for counter in root.findall(".//counter"):  # type: ignore[arg-type]
+                counter_type = counter.get("type")
+                if counter_type == "LINE":
+                    missed = counter.get("missed")
+                    covered = counter.get("covered")
+                    total_lines += int(missed) if missed else 0
+                    total_lines += int(covered) if covered else 0
+                    covered_lines += int(covered) if covered else 0
 
             line_coverage = (covered_lines / total_lines * 100) if total_lines > 0 else 0.0
 
@@ -476,10 +487,7 @@ class MavenSurefireTestExecutor(TestExecutor):
             return {"line_coverage": 0.0, "total_lines": 0, "covered_lines": 0}
 
     def execute_incremental_tests(
-        self,
-        baseline_file: Path,
-        changed_methods: list[str],
-        **kwargs: Any
+        self, baseline_file: Path, changed_methods: list[str], **kwargs: Any
     ) -> TestSuiteResult:
         """增量测试执行（仅运行受影响的测试）.
 
@@ -495,16 +503,14 @@ class MavenSurefireTestExecutor(TestExecutor):
         baseline = self._load_baseline(baseline_file)
 
         # 选择受影响的测试
-        affected_tests = self._select_affected_tests(
-            changed_methods, baseline["test_results"]
-        )
+        affected_tests = self._select_affected_tests(changed_methods, baseline["test_results"])
 
         logger.info(f"Running {len(affected_tests)} affected tests (incremental)")
 
         # 执行受影响的测试
         return self.execute_tests(affected_tests, **kwargs)
 
-    def _load_baseline(self, baseline_file: Path) -> dict:
+    def _load_baseline(self, baseline_file: Path) -> dict[str, Any]:
         """加载基线测试结果.
 
         Args:
@@ -517,7 +523,7 @@ class MavenSurefireTestExecutor(TestExecutor):
 
         try:
             with open(baseline_file) as f:
-                return json.load(f)
+                return json.load(f)  # type: ignore[return-value]
         except Exception as e:
             logger.error(f"Failed to load baseline: {e}")
             return {"test_results": []}
@@ -549,9 +555,7 @@ class MavenSurefireTestExecutor(TestExecutor):
 
         return affected
 
-    def _is_test_affected(
-        self, test: TestExecutionResult, changed_methods: list[str]
-    ) -> bool:
+    def _is_test_affected(self, test: TestExecutionResult, changed_methods: list[str]) -> bool:
         """判断测试是否受影响.
 
         Args:

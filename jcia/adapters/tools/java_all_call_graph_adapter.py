@@ -52,6 +52,7 @@ class RemoteCallInfo:
     interface: str | None = None
     endpoint: str | None = None
     method: str | None = None
+    url: str | None = None
 
 
 class JavaAllCallGraphAdapter(CallChainAnalyzer):
@@ -202,9 +203,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         ]
 
         try:
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=600, check=False
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=600, check=False)
 
             if result.returncode != 0:
                 logger.error(f"JACG full graph failed: {result.stderr}")
@@ -260,7 +259,8 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         class_name, method_name = self._parse_method(method)
 
         # 创建输出文件
-        method_hash = hashlib.md5(method.encode()).hexdigest()
+        # MD5 用于生成文件名哈希，不涉及安全用途
+        method_hash = hashlib.md5(method.encode(), usedforsecurity=False).hexdigest()
         output_file = self._output_dir / f"{direction}_{method_hash}.json"
 
         cmd = [
@@ -284,9 +284,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         ]
 
         try:
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=300, check=False
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300, check=False)
 
             if result.returncode != 0:
                 logger.error(f"JACG analysis failed: {result.stderr}")
@@ -342,8 +340,6 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             total_nodes += self._count_nodes(child_node)
 
         # 识别远程调用
-        self._identify_remote_calls(root)
-
         # 确定方向
         call_direction = (
             CallChainDirection.UPSTREAM
@@ -351,9 +347,12 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             else CallChainDirection.DOWNSTREAM
         )
 
-        return CallChainGraph(
+        graph = CallChainGraph(
             root=root, direction=call_direction, max_depth=max_depth, total_nodes=total_nodes
         )
+        self._identify_remote_calls(graph)
+
+        return graph
 
     def _parse_full_graph(self, data: dict) -> CallChainGraph:
         """解析完整调用图.
@@ -377,11 +376,12 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             root.children.append(node)
 
         # 识别远程调用
-        self._identify_remote_calls(root)
-
-        return CallChainGraph(
+        graph = CallChainGraph(
             root=root, direction=CallChainDirection.BOTH, max_depth=10, total_nodes=total_nodes
         )
+        self._identify_remote_calls(graph)
+
+        return graph
 
     def _build_call_node(self, node_data: dict, depth: int) -> CallChainNode:
         """构建调用节点.
@@ -464,9 +464,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             node.metadata = {"call_type": "grpc", "service": grpc_info}
 
         # 识别 REST 调用
-        rest_info = self._identify_rest_call(
-            annotations, node.class_name, node.method_name
-        )
+        rest_info = self._identify_rest_call(annotations, node.class_name, node.method_name)
         if rest_info:
             node.service = rest_info.endpoint or rest_info.service_name
             node.metadata = {
@@ -589,16 +587,12 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             if "Reference" in ann_type or "Reference" in ann_type:
                 # 解析接口信息
                 interface = self._extract_dubbo_interface(class_name)
-                return DubboServiceInfo(
-                    interface=interface, is_consumer=True
-                )
+                return DubboServiceInfo(interface=interface, is_consumer=True)
 
             # Dubbo 服务提供者
             if "Service" in ann_type and "Dubbo" in ann_type:
                 interface = self._extract_dubbo_interface(class_name)
-                return DubboServiceInfo(
-                    interface=interface, is_provider=True
-                )
+                return DubboServiceInfo(interface=interface, is_provider=True)
 
         return None
 
@@ -665,9 +659,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         # Feign 客户端
         if "FeignClient" in str(annotations):
             service_name = self._extract_feign_service(annotations)
-            return RemoteCallInfo(
-                call_type="feign", service_name=service_name
-            )
+            return RemoteCallInfo(call_type="feign", service_name=service_name)
 
         # HTTP 调用
         if any(x in method_name for x in [".exchange(", ".getFor", ".postFor"]):
@@ -691,9 +683,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             if "FeignClient" in ann.get("type", ""):
                 service_name = self._extract_feign_service(annotations)
                 url = self._extract_feign_url(ann.get("type", ""))
-                return RemoteCallInfo(
-                    call_type="feign", service_name=service_name, url=url
-                )
+                return RemoteCallInfo(call_type="feign", service_name=service_name, url=url)
 
         return None
 
@@ -736,9 +726,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         """
         class_name, method_name = self._parse_method(method)
 
-        root = CallChainNode(
-            class_name=class_name, method_name=method_name, signature=None
-        )
+        root = CallChainNode(class_name=class_name, method_name=method_name, signature=None)
 
         return CallChainGraph(
             root=root,
@@ -817,16 +805,12 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
 
         # 分析服务依赖
         for service_name in topology["services"]:
-            dependencies = self._analyze_service_dependencies(
-                service_name, topology["services"]
-            )
+            dependencies = self._analyze_service_dependencies(service_name, topology["services"])
             topology["dependencies"][service_name] = dependencies
 
         return topology
 
-    def _parse_dubbo_service(
-        self, content: str, java_file: Path
-    ) -> DubboServiceInfo | None:
+    def _parse_dubbo_service(self, content: str, java_file: Path) -> DubboServiceInfo | None:
         """解析 Dubbo 服务提供者.
 
         Args:
@@ -866,9 +850,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             is_provider=True,
         )
 
-    def _parse_dubbo_consumer(
-        self, content: str, java_file: Path
-    ) -> DubboServiceInfo | None:
+    def _parse_dubbo_consumer(self, content: str, java_file: Path) -> DubboServiceInfo | None:
         """解析 Dubbo 服务消费者.
 
         Args:
@@ -880,7 +862,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         """
         # 解析 @Reference 注解
         reference_match = re.search(
-            r'@Reference\s*(?:\([^)]*\))?\s*(?:private|public|protected)?\s+([\w<>[\]]+)',
+            r"@Reference\s*(?:\([^)]*\))?\s*(?:private|public|protected)?\s+([\w<>[\]]+)",
             content,
         )
         if not reference_match:
@@ -892,7 +874,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         version = None
         group = None
 
-        annotation_match = re.search(r'@Reference\s*\(([^)]+)\)', content)
+        annotation_match = re.search(r"@Reference\s*\(([^)]+)\)", content)
         if annotation_match:
             annotation_content = annotation_match.group(1)
             version_match = re.search(r'version\s*=\s*"([^"]+)"', annotation_content)
@@ -906,13 +888,9 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         # 提取接口名
         interface = interface_type.split("<")[0].strip()
 
-        return DubboServiceInfo(
-            interface=interface, version=version, group=group, is_consumer=True
-        )
+        return DubboServiceInfo(interface=interface, version=version, group=group, is_consumer=True)
 
-    def _analyze_service_dependencies(
-        self, service_name: str, all_services: dict
-    ) -> list[str]:
+    def _analyze_service_dependencies(self, service_name: str, all_services: dict) -> list[str]:
         """分析服务依赖.
 
         Args:
