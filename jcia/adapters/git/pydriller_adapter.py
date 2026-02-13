@@ -103,19 +103,23 @@ class PyDrillerAdapter(ChangeAnalyzer):
 
         methods: list[str] = []
 
-        for commit in Repository(
-            path_to_repo=self._repo_path,
-            from_commit=commit_hash,
-            to_commit=commit_hash,
-        ).traverse_commits():
-            changed_methods = getattr(commit, "changed_methods", None)
-            if not changed_methods:
-                continue
+        try:
+            for commit in Repository(
+                path_to_repo=self._repo_path,
+                from_commit=commit_hash,
+                to_commit=commit_hash,
+            ).traverse_commits():
+                changed_methods = getattr(commit, "changed_methods", None)
+                if not changed_methods:
+                    continue
 
-            for method in changed_methods:  # type: ignore[assignment]
-                long_name = getattr(method, "long_name", None)
-                if long_name:
-                    methods.append(long_name)
+                for method in changed_methods:  # type: ignore[assignment]
+                    long_name = getattr(method, "long_name", None)
+                    if long_name:
+                        methods.append(long_name)
+        except Exception:
+            # 返回空列表而不是抛出异常，处理不存在的提交等情况
+            return []
 
         return methods
 

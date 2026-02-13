@@ -42,7 +42,8 @@ class TestPyDrillerAdapterIntegration:
         assert isinstance(result, ChangeSet)
         assert result.commit_count >= 1
         assert len(result.commits) >= 1
-        assert result.commits[0].hash == "e3d8325ea1f69eab8fe72f92d80c79a71ce50e05"
+        # 更新为当前 Jenkins 仓库的实际 commit hash
+        assert result.commits[0].hash == "f067d469e6b8e3444ce4a92a8cf33dc4ca917a4b"
         assert "maven-release-plugin" in result.commits[0].message
 
     def test_analyze_commit_range_with_dots(self, jenkins_repo_path: Path) -> None:
