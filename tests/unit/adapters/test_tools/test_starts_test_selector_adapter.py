@@ -1,9 +1,7 @@
 """STARTS 测试选择器适配器单元测试."""
 
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
@@ -11,7 +9,7 @@ from jcia.adapters.maven.maven_adapter import MavenAdapter
 from jcia.adapters.tools.starts_test_selector_adapter import (
     STARTSTestSelectorAdapter,
 )
-from jcia.core.entities.test_case import TestCase, TestPriority, TestType
+from jcia.core.entities.test_case import TestPriority
 from jcia.core.interfaces.test_runner import TestSelectionStrategy
 
 
@@ -165,7 +163,9 @@ class TestSTARTSTestSelectorAdapter:
 
         assert result is None
 
-    def test_find_java_file_existing(self, mock_maven_adapter: MagicMock, temp_project_dir: Path) -> None:
+    def test_find_java_file_existing(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
         """测试查找存在的 Java 文件."""
         adapter = STARTSTestSelectorAdapter(
             project_path=temp_project_dir,
@@ -177,7 +177,9 @@ class TestSTARTSTestSelectorAdapter:
         assert result is not None
         assert result.name == "Service.java"
 
-    def test_find_java_file_not_found(self, mock_maven_adapter: MagicMock, temp_project_dir: Path) -> None:
+    def test_find_java_file_not_found(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
         """测试查找不存在的 Java 文件."""
         adapter = STARTSTestSelectorAdapter(
             project_path=temp_project_dir,

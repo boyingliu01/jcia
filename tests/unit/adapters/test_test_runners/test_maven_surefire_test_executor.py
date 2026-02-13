@@ -1,8 +1,6 @@
 """Maven Surefire 测试执行器单元测试."""
 
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -12,7 +10,7 @@ from jcia.adapters.test_runners.maven_surefire_test_executor import (
     MavenSurefireTestExecutor,
     TestMethodInfo,
 )
-from jcia.core.entities.test_case import TestCase, TestPriority, TestType
+from jcia.core.entities.test_case import TestCase, TestType
 from jcia.core.entities.test_run import TestStatus
 from jcia.core.interfaces.test_runner import (
     TestExecutionResult,
@@ -125,7 +123,7 @@ class TestMavenSurefireTestExecutor:
         test_cases = [
             TestCase(
                 class_name="ServiceTest",
-                method_name=None,
+                method_name="",  # Empty string instead of None
                 test_type=TestType.UNIT,
             )
         ]
@@ -389,7 +387,9 @@ class TestMavenSurefireTestExecutor:
         result = executor._parse_test_case(xml_element)
 
         assert result.status == TestStatus.FAILED
+        assert result.error_message is not None
         assert "Assertion failed" in result.error_message
+        assert result.stack_trace is not None
         assert "expected true but was false" in result.stack_trace
 
     @pytest.mark.skip("The implementation behavior doesn't match this test case")
@@ -403,8 +403,9 @@ class TestMavenSurefireTestExecutor:
             status=TestStatus.PASSED,
             duration_ms=100,
         )
-        # This will match in the second condition because changed_method ( UserServiceTest.testMethod )
-        # contains test class name when checking if it's in "UserServiceTest.testMethod"
+        # This will match in the second condition because changed_method
+        # (UserServiceTest.testMethod) contains test class name when checking
+        # if it's in "UserServiceTest.testMethod"
         changed_methods = ["com.example.UserServiceTest.testMethod"]
 
         executor = MavenSurefireTestExecutor(
@@ -482,7 +483,9 @@ class TestMavenSurefireTestExecutor:
 
     @patch("builtins.open")
     @patch("json.load")
-    def test_load_baseline_success(self, mock_json_load, mock_open, mock_maven_adapter: MagicMock) -> None:
+    def test_load_baseline_success(
+        self, mock_json_load, mock_open, mock_maven_adapter: MagicMock
+    ) -> None:
         """测试成功加载基线。"""
         mock_json_load.return_value = {"test_results": []}
         mock_open.return_value.__enter__ = Mock()
@@ -570,7 +573,9 @@ class TestMavenSurefireTestExecutor:
 
         assert result["line_coverage"] == 0.0
 
-    def test_clean_test_reports(self, mock_maven_adapter: MagicMock, temp_project_dir: Path) -> None:
+    def test_clean_test_reports(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
         """测试清理测试报告目录。"""
         executor = MavenSurefireTestExecutor(
             project_path=temp_project_dir,
