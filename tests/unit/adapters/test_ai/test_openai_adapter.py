@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -14,7 +14,6 @@ from jcia.core.interfaces.ai_service import (
     CodeAnalysisRequest,
     CodeAnalysisResponse,
     TestGenerationRequest,
-    TestGenerationResponse,
 )
 
 TEST_API_KEY = "test-key"
@@ -99,7 +98,11 @@ class TestOpenAIAdapter:
             },
             context={"project_path": "/fake/project"},
         )
-        stub_call_api(adapter, content="```java\npublic class ServiceTest {\n    @Test\n    public void testMethod() {}\n}\n```", tokens=120)
+        test_code = (
+            "```java\npublic class ServiceTest {\n"
+            "    @Test\n    public void testMethod() {}\n}\n```"
+        )
+        stub_call_api(adapter, content=test_code, tokens=120)
 
         # Act
         response = adapter.generate_tests(request, Path("/fake/project"))

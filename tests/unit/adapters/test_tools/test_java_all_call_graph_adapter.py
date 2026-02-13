@@ -1,8 +1,6 @@
 """Java All Call Graph 适配器单元测试."""
 
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -88,7 +86,7 @@ class TestJavaAllCallGraphAdapter:
         """测试初始化解析仓库路径."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path / "repo"),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         assert adapter._repo_path.is_absolute()
@@ -97,7 +95,7 @@ class TestJavaAllCallGraphAdapter:
         """测试分析器类型返回 STATIC."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         assert adapter.analyzer_type == AnalyzerType.STATIC
@@ -106,7 +104,7 @@ class TestJavaAllCallGraphAdapter:
         """测试跨服务支持返回 False."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         assert adapter.supports_cross_service is False
@@ -115,7 +113,7 @@ class TestJavaAllCallGraphAdapter:
         """测试解析有效方法名."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         class_name, method_name = adapter._parse_method("com.example.Service.method1")
@@ -127,7 +125,7 @@ class TestJavaAllCallGraphAdapter:
         """测试解析无效方法名."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         class_name, method_name = adapter._parse_method("method1")
@@ -139,7 +137,7 @@ class TestJavaAllCallGraphAdapter:
         """测试创建空调用链图."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         graph = adapter._create_empty_graph("com.example.Service.method1", 5)
@@ -158,8 +156,8 @@ class TestJavaAllCallGraphAdapter:
         java_file.write_text("public class Service {}")
 
         adapter = JavaAllCallGraphAdapter(
-            repo_path=tmp_path,
-            jacg_jar=tmp_path / "test.jar",
+            repo_path=str(tmp_path),
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         result = adapter._find_java_file("com.example.Service")
@@ -170,8 +168,8 @@ class TestJavaAllCallGraphAdapter:
     def test_find_java_file_not_found(self, tmp_path: Path) -> None:
         """测试查找不存在的 Java 文件."""
         adapter = JavaAllCallGraphAdapter(
-            repo_path=tmp_path,
-            jacg_jar=tmp_path / "test.jar",
+            repo_path=str(tmp_path),
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         result = adapter._find_java_file("com.example.NonExistent")
@@ -182,7 +180,7 @@ class TestJavaAllCallGraphAdapter:
         """测试从源代码解析注解."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         content = """
@@ -203,7 +201,7 @@ public class Service {
         """测试识别 Dubbo 调用（@Reference）。"""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         annotations = [{"type": "@Reference", "level": "field"}]
@@ -218,7 +216,7 @@ public class Service {
         """测试识别 Dubbo 调用（@DubboService）。"""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         annotations = [{"type": "@DubboService", "level": "class"}]
@@ -232,7 +230,7 @@ public class Service {
         """测试不识别非 Dubbo 调用."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         annotations = [{"type": "@Component", "level": "class"}]
@@ -245,7 +243,7 @@ public class Service {
         """测试识别 gRPC 调用（Stub）。"""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         result = adapter._identify_grpc_call("com.example.ServiceStub", "newFutureStub")
@@ -257,7 +255,7 @@ public class Service {
         """测试不识别非 gRPC 调用."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         result = adapter._identify_grpc_call("com.example.Service", "regularMethod")
@@ -268,7 +266,7 @@ public class Service {
         """测试识别 REST 调用（RestTemplate）。"""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         # RestTemplate is checked with exact match
@@ -283,7 +281,7 @@ public class Service {
         """测试识别 REST 调用（WebClient）。"""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         # WebClient is also checked
@@ -298,7 +296,7 @@ public class Service {
         """测试识别 REST 调用（.exchange）。"""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         # .exchange( is checked as part of method name
@@ -313,7 +311,7 @@ public class Service {
         """测试不识别非 REST 调用."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         result = adapter._identify_rest_call([], "com.example.Client", "regularMethod")
@@ -324,7 +322,7 @@ public class Service {
         """测试提取 Feign URL."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         annotation = '@FeignClient(url="http://example.com/api")'
@@ -336,7 +334,7 @@ public class Service {
         """测试提取 Feign URL（无 URL）。"""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         annotation = "@FeignClient"
@@ -348,7 +346,7 @@ public class Service {
         """测试构建调用节点."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         node_data = {
@@ -377,7 +375,7 @@ public class Service {
         """测试计算节点数."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         root = CallChainNode(
@@ -419,7 +417,7 @@ public class Service {
 
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         graph = adapter.build_full_graph()
@@ -439,7 +437,7 @@ public class Service {
 
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         graph = adapter.build_full_graph()
@@ -455,7 +453,7 @@ public class Service {
         """测试分析上游（使用缓存）。"""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         # Set up cache
@@ -501,7 +499,7 @@ public class Service {
 
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         result = adapter.analyze_downstream("Service.method1", 5)
@@ -512,7 +510,7 @@ public class Service {
         """测试同时分析上下游."""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
-            jacg_jar=tmp_path / "test.jar",
+            jacg_jar=str(tmp_path / "test.jar"),
         )
 
         # Mock analyze methods
