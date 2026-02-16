@@ -54,6 +54,8 @@ class TestGenerationResponse:
         tokens_used: 使用的 token 数量
     """
 
+    __test__ = False  # 避免被 pytest 收集
+
     test_cases: list[TestCase]
     explanations: list[str]
     confidence: float = 0.0

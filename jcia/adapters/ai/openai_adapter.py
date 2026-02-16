@@ -414,7 +414,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
             logger.error(f"Failed to explain change impact: {e}")
             return f"影响分析失败: {str(e)}"
 
-    def _call_openai_api(self, messages: list[dict], **kwargs: Any) -> dict[str, Any]:
+    def _call_openai_api(self, messages: list[dict[str, Any]], **kwargs: Any) -> dict[str, Any]:
         """调用 OpenAI API.
 
         Args:
@@ -644,7 +644,9 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
 
         return matches
 
-    def _extract_uncovered_segments(self, coverage_data: dict, project_path: Path) -> list[dict]:
+    def _extract_uncovered_segments(
+        self, coverage_data: dict[str, Any], project_path: Path
+    ) -> list[dict[str, Any]]:
         """提取未覆盖的代码段.
 
         Args:
