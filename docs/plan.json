@@ -1,0 +1,639 @@
+{
+  "project": {
+    "name": "JCIA",
+    "fullName": "Java Code Impact Analyzer",
+    "description": "A Python tool for analyzing Java code change impact with Maven project support, call chain analysis, test generation, and regression testing",
+    "version": "0.1.0",
+    "language": "Python 3.10+",
+    "architecture": "Clean Architecture"
+  },
+  "objectives": {
+    "coreGoal": "开发一个自动化工具，帮助开发团队在代码变更后快速识别影响范围，智能选择需要运行的测试用例，并提供回归分析能力",
+    "problems": [
+      {
+        "id": 1,
+        "name": "变更影响识别困难",
+        "description": "开发者难以准确判断代码修改影响了哪些模块，缺乏自动化的影响范围分析工具，容易遗漏受影响的测试用例"
+      },
+      {
+        "id": 2,
+        "name": "测试选择效率低",
+        "description": "运行全部测试耗时过长，缺乏基于变更的智能测试选择策略，无法精确识别需要回归测试的用例"
+      },
+      {
+        "id": 3,
+        "name": "回归分析不充分",
+        "description": "难以判断测试失败是否是真正的回归问题，缺乏基线测试和回归测试的对比分析，无法自动识别意外的测试失败"
+      },
+      {
+        "id": 4,
+        "name": "覆盖数据利用不足",
+        "description": "覆盖率数据未被有效利用，缺乏基于覆盖率的测试生成建议，无法自动为未覆盖代码生成测试"
+      }
+    ],
+    "expectedValue": [
+      {
+        "category": "提升开发效率",
+        "benefits": [
+          "减少30-50%的测试执行时间（通过智能测试选择）",
+          "自动化影响分析，节省人工评估时间",
+          "快速定位受影响的代码模块"
+        ]
+      },
+      {
+        "category": "提高代码质量",
+        "benefits": [
+          "确保变更影响的代码都有测试覆盖",
+          "自动识别回归问题",
+          "提供测试生成建议"
+        ]
+      },
+      {
+        "category": "降低维护成本",
+        "benefits": [
+          "减少因变更导致的意外缺陷",
+          "提供清晰的变更影响报告",
+          "支持持续集成流水线集成"
+        ]
+      }
+    ]
+  },
+  "design": {
+    "architecture": "Clean Architecture",
+    "layers": [
+      {
+        "name": "Adapters Layer",
+        "responsibility": "外部系统集成（Git, Maven, AI Services, Database）",
+        "components": ["PyDriller Git适配器", "Maven适配器", "AI服务适配器", "数据库适配器"]
+      },
+      {
+        "name": "Infrastructure Layer",
+        "responsibility": "基础设施实现（仓储实现、配置、日志）",
+        "components": ["Repository实现", "配置管理服务", "日志服务", "文件系统服务"]
+      },
+      {
+        "name": "Use Cases Layer",
+        "responsibility": "应用层逻辑（业务编排、事务边界）",
+        "components": ["分析变更影响用例", "生成测试用例", "执行回归测试用例", "生成测试报告用例"]
+      },
+      {
+        "name": "Services Layer",
+        "responsibility": "领域服务（不自然放入实体的业务逻辑）",
+        "components": ["变更影响分析服务", "调用链构建服务", "测试选择服务（STARTS算法）", "测试生成服务"]
+      },
+      {
+        "name": "Entities Layer",
+        "responsibility": "领域模型（纯业务对象，不依赖外部系统）",
+        "components": ["ChangeSet模块", "ImpactGraph模块", "TestCase模块", "TestRun模块"]
+      }
+    ],
+    "principles": [
+      {
+        "name": "依赖倒置原则（DIP）",
+        "description": "高层模块不依赖低层模块，都依赖抽象；接口定义在核心层，实现在基础设施层；便于单元测试和依赖注入"
+      },
+      {
+        "name": "单一职责原则（SRP）",
+        "description": "每个类/模块只负责一个职责；实体只包含业务逻辑；用例负责编排和协调"
+      },
+      {
+        "name": "开闭原则（OCP）",
+        "description": "通过接口扩展功能，无需修改核心代码；适配器模式支持多种外部系统集成；策略模式支持不同的测试选择算法"
+      }
+    ],
+    "workflow": [
+      {
+        "stage": "变更分析阶段",
+        "steps": ["获取Git提交差异", "识别变更的文件和方法", "生成变更集合（ChangeSet）"]
+      },
+      {
+        "stage": "影响分析阶段",
+        "steps": ["构建调用链图", "识别上游和下游依赖", "评估影响严重程度", "生成影响图（ImpactGraph）"]
+      },
+      {
+        "stage": "测试选择阶段",
+        "steps": ["STARTS算法选择优先测试", "基于覆盖率补充测试", "基于影响范围选择测试", "生成测试用例列表"]
+      },
+      {
+        "stage": "测试执行阶段",
+        "steps": ["执行基线测试（如有）", "执行回归测试", "收集测试结果和覆盖率", "生成测试运行报告"]
+      },
+      {
+        "stage": "回归分析阶段",
+        "steps": ["对比基线和回归测试结果", "识别新增失败和新增通过", "判断是否为回归问题", "生成对比报告"]
+      }
+    ]
+  },
+  "techSelection": {
+    "language": {
+      "name": "Python 3.10+",
+      "reasons": [
+        "丰富的生态和第三方库",
+        "清晰的语法和强大的类型系统",
+        "优秀的测试和代码质量工具",
+        "AI/LLM集成便利"
+      ],
+      "dependencies": [
+        {"name": "pydriller", "purpose": "Git仓库分析（提取提交差异）"},
+        {"name": "networkx", "purpose": "调用链图构建和分析"},
+        {"name": "pyyaml", "purpose": "配置文件解析"},
+        {"name": "click", "purpose": "命令行界面框架"},
+        {"name": "pydantic", "purpose": "数据验证和序列化"},
+        {"name": "rich", "purpose": "美观的终端输出"},
+        {"name": "pytest", "purpose": "测试框架"},
+        {"name": "ruff", "purpose": "代码质量工具"},
+        {"name": "pyright", "purpose": "静态类型检查"}
+      ]
+    },
+    "testing": {
+      "name": "pytest",
+      "reasons": ["成熟稳定，社区活跃", "强大的fixture系统", "丰富的插件生态", "内置覆盖率支持", "清晰的测试报告"]
+    },
+    "codeQuality": {
+      "tools": ["ruff", "pyright", "bandit"],
+      "reasons": [
+        "ruff: 快速、现代化的linter，替代多个工具",
+        "pyright: 微软开发的类型检查器，严格模式",
+        "bandit: Python安全漏洞扫描"
+      ]
+    },
+    "database": {
+      "options": ["SQLite", "PostgreSQL"],
+      "reasons": [
+        "SQLite: 开发和小规模部署，无服务器",
+        "PostgreSQL: 生产环境，支持高并发和复杂查询",
+        "通过仓储抽象，支持灵活切换"
+      ]
+    },
+    "architecturePattern": {
+      "name": "Clean Architecture + Repository Pattern",
+      "reasons": ["业务逻辑与外部依赖解耦", "便于单元测试（mock接口）", "支持多种实现（适配器）", "符合SOLID原则"]
+    }
+  },
+  "coreFeatures": [
+    {
+      "id": 1,
+      "name": "变更影响分析",
+      "description": "分析Git提交，识别变更的代码及其影响范围",
+      "implementation": [
+        "使用PyDriller解析Git仓库",
+        "识别文件级和方法级变更",
+        "构建调用链图",
+        "计算影响深度和严重程度"
+      ],
+      "outputs": ["变更的文件列表", "变更的方法列表", "影响的方法图（上游/下游）", "严重程度评估（HIGH/MEDIUM/LOW）"]
+    },
+    {
+      "id": 2,
+      "name": "智能测试选择",
+      "description": "基于变更影响范围，智能选择需要运行的测试用例",
+      "implementation": [
+        "STARTS算法（Static Test Assignment for Regression Test Selection）",
+        "基于调用链优先级排序",
+        "结合覆盖率数据补充测试",
+        "支持多种选择策略"
+      ],
+      "outputs": ["优先级排序的测试用例列表", "选择理由说明", "预估执行时间"]
+    },
+    {
+      "id": 3,
+      "name": "回归分析",
+      "description": "对比基线测试和回归测试结果，识别回归问题",
+      "implementation": [
+        "保存基线测试结果",
+        "执行回归测试",
+        "对比测试状态变化",
+        "识别意外失败"
+      ],
+      "outputs": ["测试差异列表", "回归问题标识", "分析结果和建议"]
+    },
+    {
+      "id": 4,
+      "name": "测试生成",
+      "description": "基于变更和覆盖率，生成测试用例建议",
+      "implementation": [
+        "集成AI服务（LLM）",
+        "分析未覆盖的代码",
+        "生成测试代码框架",
+        "基于变更点生成测试"
+      ],
+      "outputs": ["生成的测试代码", "覆盖率改进建议", "测试优先级建议"]
+    },
+    {
+      "id": 5,
+      "name": "多格式报告",
+      "description": "生成多种格式的测试和影响分析报告",
+      "implementation": [
+        "HTML报告（可视化图表）",
+        "JSON报告（机器可读）",
+        "Markdown报告（文档集成）",
+        "控制台输出（实时反馈）"
+      ],
+      "outputs": ["详细的测试执行报告", "变更影响可视化", "覆盖率统计", "回归问题汇总"]
+    }
+  ],
+  "targetUsers": [
+    {
+      "role": "后端开发工程师",
+      "needs": ["评估代码变更影响范围", "快速验证变更是否破坏现有功能", "关注回归测试效率"]
+    },
+    {
+      "role": "测试工程师",
+      "needs": ["选择回归测试用例", "关注测试覆盖率提升", "需要生成测试用例"]
+    },
+    {
+      "role": "DevOps工程师",
+      "needs": ["集成到CI/CD流水线", "需要自动化测试选择", "关注测试报告生成"]
+    },
+    {
+      "role": "技术负责人",
+      "needs": ["关注代码质量和变更影响", "需要团队协作工具", "需要可视化报告"]
+    }
+  ],
+  "useCases": [
+    {
+      "name": "代码提交后的快速验证",
+      "steps": [
+        "开发者提交代码",
+        "自动分析变更影响范围",
+        "智能选择需要运行的测试",
+        "执行测试并生成报告",
+        "快速发现回归问题"
+      ]
+    },
+    {
+      "name": "大规模重构前的风险评估",
+      "steps": [
+        "开发者规划重构",
+        "分析重构影响范围",
+        "生成完整的影响图",
+        "评估风险和制定测试计划",
+        "重构后全面验证"
+      ]
+    },
+    {
+      "name": "持续集成流水线",
+      "steps": [
+        "代码提交到main分支",
+        "CI触发JCIA分析",
+        "运行选择性回归测试",
+        "生成报告并通知团队",
+        "失败则阻止合并"
+      ]
+    },
+    {
+      "name": "测试覆盖率提升",
+      "steps": [
+        "运行测试并收集覆盖率",
+        "识别未覆盖的代码",
+        "使用AI生成测试建议",
+        "开发者补充测试用例",
+        "提升整体覆盖率"
+      ]
+    }
+  ],
+  "nonFunctionalRequirements": {
+    "performance": {
+      "analysis": {
+        "singleCommit": "< 10秒",
+        "impactGraph": "< 5秒",
+        "testSelection": "< 3秒"
+      },
+      "execution": {
+        "supportedTests": "1000+测试用例",
+        "speedup": "选择性测试比全量测试快50%+"
+      }
+    },
+    "reliability": {
+      "accuracy": {
+        "changeIdentification": "> 99%",
+        "impactAnalysis": "> 95%",
+        "regressionIdentification": "> 90%"
+      },
+      "stability": [
+        "支持大规模Git仓库（100万+行代码）",
+        "处理并发CI任务",
+        "错误恢复和重试机制"
+      ]
+    },
+    "scalability": {
+      "architecture": [
+        "支持新的Git托管平台（GitLab, Bitbucket等）",
+        "支持多种构建工具（Gradle等）",
+        "支持自定义测试选择策略"
+      ],
+      "performance": [
+        "分布式测试执行",
+        "缓存机制优化",
+        "并行分析能力"
+      ]
+    },
+    "usability": {
+      "easeOfUse": [
+        "清晰的命令行界面",
+        "详细的错误提示",
+        "丰富的文档和示例"
+      ],
+      "maintainability": [
+        "模块化设计",
+        "完整的单元测试",
+        "代码覆盖率 > 80%"
+      ],
+      "integrability": [
+        "支持CI/CD集成",
+        "提供REST API（未来）",
+        "支持插件扩展（未来）"
+      ]
+    }
+  },
+  "progress": {
+    "totalPhases": 13,
+    "completedPhases": 4,
+    "currentPhase": 5,
+    "completionPercentage": 30.8
+  },
+  "phases": [
+    {
+      "id": 1,
+      "name": "项目初始化",
+      "status": "completed",
+      "deliverables": [
+        "项目目录结构",
+        "配置文件（pyproject.toml, Makefile等）",
+        "开发环境设置（虚拟环境、依赖管理）",
+        "代码质量工具配置（ruff, pyright, pytest, bandit）",
+        "Pre-commit hooks配置"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "代码质量工具配置",
+      "status": "completed",
+      "deliverables": [
+        "Ruff配置（linting和formatting）",
+        "Pyright类型检查配置",
+        "Pytest测试框架配置",
+        "Bandit安全扫描配置",
+        "Pre-commit hooks集成",
+        "Makefile自动化命令"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "核心接口定义",
+      "status": "completed",
+      "deliverables": [
+        "变更分析器接口（ChangeAnalyzer）",
+        "调用链分析器接口（CallChainAnalyzer）",
+        "工具包装器接口（ToolWrapper）",
+        "仓储接口（TestRunRepository, TestResultRepository等）",
+        "测试运行器接口（TestSelector, TestGenerator, TestExecutor）"
+      ],
+      "files": [
+        "jcia/core/interfaces/analyzer.py",
+        "jcia/core/interfaces/call_chain_analyzer.py",
+        "jcia/core/interfaces/repository.py",
+        "jcia/core/interfaces/test_runner.py",
+        "jcia/core/interfaces/tool_wrapper.py"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "领域实体实现",
+      "status": "completed",
+      "testStats": {
+        "totalTests": 56,
+        "passedTests": 56,
+        "failedTests": 0,
+        "coverage": "100%"
+      },
+      "deliverables": [
+        "ChangeSet模块（变更集合实体、文件变更、方法变更、提交信息）",
+        "ImpactGraph模块（影响图、影响节点、影响边）",
+        "TestCase模块（测试用例、测试套件）",
+        "TestRun模块（测试运行、测试结果、测试差异、覆盖率数据）"
+      ],
+      "files": [
+        "jcia/core/entities/change_set.py",
+        "jcia/core/entities/impact_graph.py",
+        "jcia/core/entities/test_case.py",
+        "jcia/core/entities/test_run.py"
+      ],
+      "testFiles": [
+        "tests/unit/core/test_change_set.py",
+        "tests/unit/core/test_impact_graph.py",
+        "tests/unit/core/test_test_case.py",
+        "tests/unit/core/test_test_run.py"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "适配器层实现",
+      "status": "pending",
+      "deliverables": [
+        "PyDriller适配器（Git仓库分析）",
+        "Maven适配器（Maven项目处理）",
+        "AI服务适配器（LLM集成）",
+        "数据库适配器（SQLite/PostgreSQL）"
+      ],
+      "files": [
+        "jcia/adapters/git/",
+        "jcia/adapters/maven/",
+        "jcia/adapters/ai/",
+        "jcia/adapters/database/"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "基础设施层实现",
+      "status": "pending",
+      "deliverables": [
+        "仓储实现（基于数据库）",
+        "配置管理服务",
+        "日志服务",
+        "文件系统服务"
+      ],
+      "files": [
+        "jcia/infrastructure/database/",
+        "jcia/infrastructure/config/",
+        "jcia/infrastructure/logging/"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "领域服务实现",
+      "status": "pending",
+      "deliverables": [
+        "变更影响分析服务",
+        "调用链构建服务",
+        "测试选择服务（STARTS算法）",
+        "测试生成服务"
+      ],
+      "files": [
+        "jcia/core/services/impact_analyzer.py",
+        "jcia/core/services/call_chain_builder.py",
+        "jcia/core/services/test_selector.py",
+        "jcia/core/services/test_generator.py"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "应用用例实现",
+      "status": "pending",
+      "deliverables": [
+        "分析变更影响用例",
+        "生成测试用例",
+        "执行回归测试用例",
+        "生成测试报告用例"
+      ],
+      "files": [
+        "jcia/core/use_cases/analyze_impact.py",
+        "jcia/core/use_cases/generate_tests.py",
+        "jcia/core/use_cases/run_regression.py",
+        "jcia/core/use_cases/generate_report.py"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "CLI命令行工具",
+      "status": "pending",
+      "deliverables": [
+        "analyze命令（分析变更影响）",
+        "test命令（生成和运行测试）",
+        "report命令（生成报告）",
+        "config命令（配置管理）"
+      ],
+      "files": [
+        "jcia/cli/"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "报告生成模块",
+      "status": "pending",
+      "deliverables": [
+        "HTML报告生成器",
+        "JSON报告生成器",
+        "Markdown报告生成器",
+        "控制台输出格式化"
+      ],
+      "files": [
+        "jcia/reports/html.py",
+        "jcia/reports/json.py",
+        "jcia/reports/markdown.py",
+        "jcia/reports/console.py"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "集成测试",
+      "status": "pending",
+      "deliverables": [
+        "完整工作流测试",
+        "与真实Git仓库集成测试",
+        "与Maven项目集成测试",
+        "性能测试"
+      ],
+      "files": [
+        "tests/integration/"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "文档完善",
+      "status": "pending",
+      "deliverables": [
+        "用户手册（使用指南）",
+        "API文档",
+        "开发者指南（贡献指南）",
+        "架构文档"
+      ],
+      "files": [
+        "docs/user_guide.md",
+        "docs/api.md",
+        "docs/developer_guide.md",
+        "docs/architecture.md"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "CI/CD和部署",
+      "status": "pending",
+      "deliverables": [
+        "GitHub Actions CI/CD配置",
+        "Docker镜像构建",
+        "PyPI包发布",
+        "版本发布流程"
+      ],
+      "files": [
+        ".github/workflows/",
+        "Dockerfile",
+        "docker-compose.yml"
+      ]
+    }
+  ],
+  "techStack": {
+    "language": "Python 3.10+",
+    "testing": "pytest",
+    "codeQuality": ["ruff", "pyright", "bandit"],
+    "dependencyManagement": ["pip", "pyproject.toml"],
+    "externalDependencies": [
+      "pydriller",
+      "pyyaml",
+      "click",
+      "pydantic",
+      "rich"
+    ]
+  },
+  "developmentStandards": {
+    "methodology": "TDD (测试驱动开发)",
+    "preCommitCheck": true,
+    "virtualEnvironment": true,
+    "testingEnvironment": "PowerShell (Windows)",
+    "coverageRequirement": "80%+ (接口层除外)"
+  },
+  "nextActions": [
+    "开始阶段5：适配器层实现",
+    "优先实现PyDriller Git适配器（核心功能）",
+    "编写适配器单元测试",
+    "验证适配器与实体的集成"
+  ],
+  "architectureLayers": [
+    {
+      "name": "Adapters",
+      "description": "外部系统集成",
+      "responsibility": "从外部系统接收原始数据，转换为领域实体"
+    },
+    {
+      "name": "Infrastructure",
+      "description": "基础设施实现",
+      "responsibility": "实现接口层定义的仓储模式、数据持久化"
+    },
+    {
+      "name": "Core - Use Cases",
+      "description": "应用层逻辑",
+      "responsibility": "编排业务操作，协调实体和基础设施"
+    },
+    {
+      "name": "Core - Services",
+      "description": "领域服务",
+      "responsibility": "封装不适合放入实体的业务逻辑"
+    },
+    {
+      "name": "Core - Entities",
+      "description": "领域模型",
+      "responsibility": "纯业务对象，不依赖外部系统"
+    }
+  ],
+  "metrics": {
+    "loc": {
+      "total": 2067,
+      "tests": 804
+    },
+    "testCoverage": {
+      "entities": "100%",
+      "interfaces": "0%",
+      "overall": "49.44%"
+    }
+  }
+}
