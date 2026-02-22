@@ -94,7 +94,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
 
         # 缓存
         self._call_cache: dict[str, CallChainGraph] = {}
-        self._annotation_cache: dict[str, list[dict]] = {}
+        self._annotation_cache: dict[str, list[dict[str, Any]]] = {}
         self._remote_calls_cache: dict[str, list[RemoteCallInfo]] = {}
 
         logger.info(f"JavaAllCallGraphAdapter initialized with repo: {self._repo_path}")
@@ -307,7 +307,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             return self._create_empty_graph(method, max_depth)
 
     def _parse_jacg_output(
-        self, data: dict, root_method: str, direction: str, max_depth: int
+        self, data: dict[str, Any], root_method: str, direction: str, max_depth: int
     ) -> CallChainGraph:
         """解析 JACG 输出.
 
@@ -354,7 +354,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
 
         return graph
 
-    def _parse_full_graph(self, data: dict) -> CallChainGraph:
+    def _parse_full_graph(self, data: dict[str, Any]) -> CallChainGraph:
         """解析完整调用图.
 
         Args:
@@ -383,7 +383,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
 
         return graph
 
-    def _build_call_node(self, node_data: dict, depth: int) -> CallChainNode:
+    def _build_call_node(self, node_data: dict[str, Any], depth: int) -> CallChainNode:
         """构建调用节点.
 
         Args:
@@ -487,7 +487,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         for child in node.children:
             self._traverse_and_identify(child)
 
-    def _extract_annotations(self, class_name: str, method_name: str) -> list[dict]:
+    def _extract_annotations(self, class_name: str, method_name: str) -> list[dict[str, Any]]:
         """提取类和方法的注解.
 
         Args:

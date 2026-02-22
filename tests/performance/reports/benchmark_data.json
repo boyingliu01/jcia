@@ -1,0 +1,47 @@
+{
+  "test_timestamp": "2025-01-22T14:45:00",
+  "test_environment": {
+    "platform": "Windows",
+    "python_version": "3.11",
+    "cpu_cores": "8"
+  },
+  "benchmark_results": [
+    {
+      "test_path": "jenkins",
+      "success": true,
+      "duration_ms": 28367.70,
+      "cpu_time_ms": 17515.62,
+      "java_files": 1887,
+      "classes_cached": 2347,
+      "methods_cached": 181513,
+      "files_per_second": 66.52,
+      "repo_size_category": "large"
+    },
+    {
+      "test_path": "tests\\test_data\\jenkins_test_repo",
+      "success": true,
+      "duration_ms": 4.84,
+      "cpu_time_ms": 0.00,
+      "java_files": 2,
+      "classes_cached": 2,
+      "methods_cached": 17,
+      "files_per_second": 413.01,
+      "repo_size_category": "small"
+    },
+    {
+      "test_path": ".",
+      "success": true,
+      "duration_ms": 27697.54,
+      "cpu_time_ms": 15281.25,
+      "java_files": 1889,
+      "classes_cached": 3469,
+      "methods_cached": 250546,
+      "files_per_second": 68.20,
+      "repo_size_category": "large"
+    }
+  ],
+  "performance_requirements": {
+    "max_analysis_time_ms": 600000,
+    "target_analysis_time_ms": 300000
+  }
+}

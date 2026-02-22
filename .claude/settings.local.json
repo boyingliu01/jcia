@@ -7,7 +7,32 @@
       "Bash(git add:*)",
       "Bash(pip install:*)",
       "Bash(ruff check:*)",
-      "Bash(make lint:*)"
+      "Bash(make lint:*)",
+      "Bash(git stash:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\ntest: add comprehensive unit tests for adapters\n\n- Add tests for OpenAI adapter \\(28 test methods\\)\n- Add tests for Maven Surefire test executor \\(29 test methods\\)\n- Add tests for STARTS test selector adapter \\(28 test methods\\)\n- Add tests for Java All Call Graph adapter \\(33 test methods\\)\n- Add shared conftest.py for test fixtures\n- Improve test coverage from ~60% to 75%\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit --no-verify -m \"$\\(cat <<''EOF''\ntest: add comprehensive unit tests for adapters\n\n- Add tests for OpenAI adapter \\(28 test methods\\)\n- Add tests for Maven Surefire test executor \\(29 test methods\\)\n- Add tests for STARTS test selector adapter \\(28 test methods\\)\n- Add tests for Java All Call Graph adapter \\(33 test methods\\)\n- Add shared conftest.py for test fixtures\n- Improve test coverage from ~60% to 75%\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit --no-verify -m \"docs: update test and check status report with fixes\n\n- Document all fixes applied in commit 3920dde\n- Update status: all static checks now pass\n- Clarify remaining integration test issues\n- Add verification commands and recommendations\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\")",
+      "Bash(dir:*)",
+      "Bash(pip show:*)",
+      "Bash(java -version:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(gh release view:*)",
+      "Bash(curl:*)",
+      "Bash(git commit --no-verify -m \"$\\(cat <<''EOF''\nfeat: add SourceCodeCallGraphAnalyzer for local static analysis\n\n- Add new adapter that performs static code analysis directly on Java source files\n- No external dependencies required \\(unlike JACG which has download issues\\)\n- Features:\n  - Method call analysis\n  - Class dependency analysis  \n  - Upstream/downstream caller analysis\n  - Test class discovery\n  - Full call graph building\n- Successfully analyzes Jenkins project: 2347 classes, 710 with method calls\n- Fix integration test for non-existent commits\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git show:*)",
+      "Bash(git commit:*)",
+      "Bash(.venvScriptspython.exe -m pytest tests/unit -v --tb=short)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit -v --tb=short)",
+      "Bash(.venv/Scripts/python.exe -m pytest:*)",
+      "Bash(git checkout:*)",
+      "Bash(Get-Content C:UsersthinkAppDataLocalTempclaudeE--Study-LLM-JavaCodeImpactAnalyzetasksba2d627.output -TotalCount 300)",
+      "Bash(python3:*)",
+      "Bash(py:*)",
+      "Bash(timeout:*)",
+      "Bash(findstr:*)",
+      "Bash(ls:*)",
+      "Bash(git mv:*)"
     ]
   }
 }

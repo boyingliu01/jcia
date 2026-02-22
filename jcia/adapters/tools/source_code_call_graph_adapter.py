@@ -78,7 +78,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
         ]
 
         # 查找所有 Java 文件
-        java_files = []
+        java_files: list[Path] = []
         for src_dir in src_dirs:
             if src_dir.exists():
                 java_files.extend(src_dir.rglob("*.java"))
@@ -329,7 +329,9 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
             return parts[0], parts[1]
         return "", method
 
-    def analyze_both_directions(self, method: str, max_depth: int = 10) -> CallChainGraph:
+    def analyze_both_directions(
+        self, method: str, max_depth: int = 10
+    ) -> tuple[CallChainGraph, CallChainGraph]:
         """双向分析（上游 + 下游）.
 
         Args:
@@ -337,31 +339,12 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
             max_depth: 最大追溯深度
 
         Returns:
-            CallChainGraph: 双向调用链图
+            tuple[CallChainGraph, CallChainGraph]: (上游图, 下游图)
         """
         upstream = self.analyze_upstream(method, max_depth)
         downstream = self.analyze_downstream(method, max_depth)
 
-        # 合并图 - 创建根节点
-        class_name, method_name = self._parse_method(method)
-        root_node = CallChainNode(
-            class_name=class_name,
-            method_name=method_name,
-        )
-        root_node.metadata["call_depth"] = 0
-        root_node.metadata["severity"] = "HIGH"
-
-        combined = CallChainGraph(
-            root=root_node,
-            direction=CallChainDirection.BOTH,
-            max_depth=max_depth,
-        )
-
-        # 合并子节点
-        root_node.children.extend(upstream.root.children)
-        root_node.children.extend(downstream.root.children)
-
-        return combined
+        return upstream, downstream
 
     def build_full_graph(self) -> CallChainGraph:
         """构建完整的调用图.
@@ -412,7 +395,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
 
         # 查找该类的依赖（它依赖哪些类）
         if class_name in self._method_calls_cache:
-            calls = self._method_calls_cache[class_name]
+            calls: set[str] = self._method_calls_cache[class_name]
             for target_class in self._class_methods_cache:
                 for called_method in calls:
                     # noqa: SIM102
@@ -424,6 +407,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
         for other_class, calls in self._method_calls_cache.items():
             if other_class == class_name:
                 continue
+            calls: set[str] = calls
             for called_method in calls:
                 # noqa: SIM102
                 class_methods = self._class_methods_cache.get(class_name, {})

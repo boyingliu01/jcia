@@ -1,0 +1,131 @@
+{
+  "generated_at": "2026-02-22T15:06:31.460857",
+  "summary": {
+    "total_tests": 6,
+    "successful": 6,
+    "failed": 0,
+    "total_duration_ms": 106983.518,
+    "avg_duration_ms": 17830.586333333333
+  },
+  "results": [
+    {
+      "operation": "repo_size_simulation",
+      "repo_size": "small",
+      "start_time": "2026-02-22T15:04:44.465812",
+      "end_time": "2026-02-22T15:04:44.716206",
+      "duration_ms": 250.394,
+      "cpu_time_ms": 0.0,
+      "peak_memory_mb": 0.0,
+      "success": true,
+      "error_message": "",
+      "additional_data": {
+        "simulated_files": 50,
+        "simulated_duration_ms": 250
+      }
+    },
+    {
+      "operation": "repo_size_simulation",
+      "repo_size": "medium",
+      "start_time": "2026-02-22T15:04:44.716249",
+      "end_time": "2026-02-22T15:04:47.216761",
+      "duration_ms": 2500.512,
+      "cpu_time_ms": 0.0,
+      "peak_memory_mb": 0.0,
+      "success": true,
+      "error_message": "",
+      "additional_data": {
+        "simulated_files": 500,
+        "simulated_duration_ms": 2500
+      }
+    },
+    {
+      "operation": "repo_size_simulation",
+      "repo_size": "large",
+      "start_time": "2026-02-22T15:04:47.216787",
+      "end_time": "2026-02-22T15:04:57.217493",
+      "duration_ms": 10000.705999999998,
+      "cpu_time_ms": 0.0,
+      "peak_memory_mb": 0.0,
+      "success": true,
+      "error_message": "",
+      "additional_data": {
+        "simulated_files": 2000,
+        "simulated_duration_ms": 10000
+      }
+    },
+    {
+      "operation": "git_analysis",
+      "repo_size": "real",
+      "start_time": "2026-02-22T15:04:57.218038",
+      "end_time": "2026-02-22T15:05:13.892304",
+      "duration_ms": 16674.266,
+      "cpu_time_ms": 0.0,
+      "peak_memory_mb": 0.0,
+      "success": true,
+      "error_message": "",
+      "additional_data": {
+        "commits_analyzed": 5,
+        "files_changed": 23,
+        "methods_changed": 8
+      }
+    },
+    {
+      "operation": "call_chain_analysis",
+      "repo_size": "real",
+      "start_time": "2026-02-22T15:05:13.892449",
+      "end_time": "2026-02-22T15:05:43.854898",
+      "duration_ms": 29962.449,
+      "cpu_time_ms": 0.0,
+      "peak_memory_mb": 0.0,
+      "success": true,
+      "error_message": "",
+      "additional_data": {
+        "java_files_scanned": 1887,
+        "classes_cached": 2347,
+        "methods_cached": 181513
+      }
+    },
+    {
+      "operation": "full_analysis",
+      "repo_size": "real",
+      "start_time": "2026-02-22T15:05:43.858764",
+      "end_time": "2026-02-22T15:06:31.453955",
+      "duration_ms": 47595.191,
+      "cpu_time_ms": 0.0,
+      "peak_memory_mb": 0.0,
+      "success": true,
+      "error_message": "",
+      "additional_data": {
+        "commits_analyzed": 2,
+        "files_changed": 2,
+        "methods_changed": 0,
+        "total_affected_methods": 0,
+        "direct_impacts": 0,
+        "indirect_impacts": 0
+      }
+    }
+  ],
+  "bottlenecks": [
+    {
+      "operation": "full_analysis",
+      "severity": "HIGH",
+      "avg_duration_ms": 47595.191,
+      "max_duration_ms": 47595.191,
+      "sample_count": 1
+    },
+    {
+      "operation": "call_chain_analysis",
+      "severity": "HIGH",
+      "avg_duration_ms": 29962.449,
+      "max_duration_ms": 29962.449,
+      "sample_count": 1
+    },
+    {
+      "operation": "git_analysis",
+      "severity": "HIGH",
+      "avg_duration_ms": 16674.266,
+      "max_duration_ms": 16674.266,
+      "sample_count": 1
+    }
+  ]
+}

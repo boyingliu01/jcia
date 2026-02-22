@@ -35,6 +35,8 @@ DEFAULT_JACOCO_VERSION = "0.8.11"
 class TestMethodInfo:
     """测试方法信息."""
 
+    __test__ = False  # 防止 pytest 收集为测试类
+
     class_name: str
     method_name: str
     full_name: str
