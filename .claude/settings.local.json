@@ -32,7 +32,13 @@
       "Bash(timeout:*)",
       "Bash(findstr:*)",
       "Bash(ls:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(for commit in \"33b3b3b\" \"c2fd9da8\" \"11acb48bb\" \"2acba5d6\" \"d6e2c7ca\")",
+      "Bash(do)",
+      "Bash(echo:*)",
+      "Bash(done)",
+      "Bash(git diff-tree:*)",
+      "Bash(do echo:*)"
     ]
   }
 }
