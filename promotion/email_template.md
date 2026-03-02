@@ -1,4 +1,4 @@
-# JCIA 内部推广邮件模板
+# JCIA 项目推广邮件模板
 
 ---
 
@@ -13,7 +13,7 @@
 
 **各位开发、测试同事，大家好！**
 
-很高兴向大家介绍一款由我们团队自主研发的全新工具 —— **JCIA（Java Code Impact Analyzer）**。
+很高兴向大家介绍一款开源工具 —— **JCIA（Java Code Impact Analyzer）**。
 
 ## 它能解决什么问题？
 
@@ -65,7 +65,7 @@ jcia config --show
 
 ### 方式二：源码运行
 ```bash
-git clone [内部仓库地址]
+git clone https://github.com/your-org/jcia.git
 cd jcia
 pip install -r requirements.txt
 python -m jcia analyze --repo-path /your/repo --from-commit abc123 --to-commit def456
@@ -73,18 +73,16 @@ python -m jcia analyze --repo-path /your/repo --from-commit abc123 --to-commit d
 
 ## 详细文档
 
-- 使用指南：[内部Wiki链接]
-- API文档：[内部文档链接]
-- 视频教程：[内部视频链接]
+- GitHub仓库：https://github.com/your-org/jcia
+- 使用指南：查看项目 README.md
+- API文档：查看项目 docs/ 目录
 
 ## 技术支持
 
 如有任何问题或建议，欢迎通过以下方式联系我们：
 
-- 企业微信群：JCIA技术支持群
-- 钉钉群：JCIA用户交流群
-- 邮箱：jcia-support@company.com
-- 问题反馈：[内部Jira项目]
+- GitHub Issues：https://github.com/your-org/jcia/issues
+- 邮箱：jcia-dev@example.org
 
 ---
 
@@ -94,7 +92,7 @@ python -m jcia analyze --repo-path /your/repo --from-commit abc123 --to-commit d
 
 此致
 
-**JCIA产品研发团队**
+**JCIA开发团队**
 **[日期]**
 
 ---
@@ -193,15 +191,14 @@ severity:
 
 如有任何问题或建议，欢迎通过以下方式联系我们：
 
-- 企业微信群：JCIA技术支持群
-- 钉钉群：JCIA用户交流群
-- 邮箱：jcia-support@company.com
+- GitHub Issues：https://github.com/your-org/jcia/issues
+- 邮箱：jcia-dev@example.org
 
 ---
 
 **感谢大家对JCIA的支持！我们将继续努力，为大家提供更好的产品体验。**
 
-JCIA产品研发团队
+JCIA开发团队
 [日期]
 
 ---
@@ -215,9 +212,9 @@ JCIA产品研发团队
 
 ---
 
-**各位同事，大家好！**
+**各位开发者，大家好！**
 
-我们正在寻找**内测志愿者**来体验我们的新产品——**JCIA（Java Code Impact Analyzer）**。
+我们正在寻找**内测志愿者**来体验我们的开源工具——**JCIA（Java Code Impact Analyzer）**。
 
 ## 什么是JCIA？
 
@@ -255,9 +252,9 @@ JCIA是一款**智能化的Java代码影响分析工具**，能够：
 
 **报名方式很简单：**
 
-1. 回复此邮件，主题为：**【JCIA内测报名】姓名-部门**
-2. 或扫描下方二维码加入内测群
-3. 或直接联系：张三（工号12345，企业微信）
+1. 在GitHub上Star项目：https://github.com/your-org/jcia
+2. 在Issues中提交你的使用反馈
+3. 或发送邮件至：jcia-dev@example.org
 
 **报名时间：**即日起至[日期]
 
@@ -269,14 +266,12 @@ JCIA是一款**智能化的Java代码影响分析工具**，能够：
 
 如有任何问题，欢迎随时联系我们。
 
-**JCIA产品研发团队**
+**JCIA开发团队**
 **[日期]**
 
 ---
 
-*扫描下方二维码加入内测群：*
-
-[二维码图片位置]
+*欢迎访问项目主页了解更多：https://github.com/your-org/jcia*
 
 ---
 
@@ -297,11 +292,11 @@ JCIA是一款**智能化的Java代码影响分析工具**，能够：
 
 ### 发送渠道
 
-- 公司邮件列表
-- 企业微信群/钉钉群
-- 内部Wiki公告
+- 项目邮件列表
+- 技术社区论坛
+- GitHub Discussions
 - 技术分享会议
 
 ---
 
-*以上为邮件模板，可根据公司实际情况调整内容。*
+*以上为邮件模板，可根据实际情况调整内容。*

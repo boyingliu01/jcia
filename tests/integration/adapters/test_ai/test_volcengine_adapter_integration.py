@@ -2,9 +2,9 @@
 
 注意：这些测试需要真实的 Volcengine API 密钥。
 配置方式：
-1. 设置环境变量: VOLCENGINE_API_KEY=your_api_key
-2. 或修改测试文件中的 API_KEY 常量
-3. 创建 .env 文件包含: VOLCENGINE_API_KEY=your_api_key
+1. 设置环境变量: VOLCENGINE_ACCESS_KEY, VOLCENGINE_SECRET_KEY, VOLCENGINE_APP_ID
+2. 创建 .env 文件（参考 .env.example）
+3. 如果未配置环境变量，测试将被自动跳过
 """
 
 import os
@@ -16,69 +16,76 @@ from jcia.adapters.ai.volcengine_adapter import VolcengineAdapter
 from jcia.core.entities.test_case import TestCase, TestPriority, TestType
 from jcia.core.interfaces.ai_service import CodeAnalysisRequest, TestGenerationRequest
 
-# 用户提供的 API Key（实际使用时应该从环境变量读取）
-# 实际环境中没有设置这个变量，测试将被自动跳过
-VOLCENGINE_API_KEY = "YOUR_VOLCENGINE_API_KEY_HERE"
+
+def get_api_credentials() -> tuple[str, str, str] | None:
+    """获取 API 凭证 - 从环境变量读取.
+
+    Returns:
+        如果环境变量已配置返回 (access_key, secret_key, app_id)，否则返回 None
+    """
+    access_key = os.getenv("VOLCENGINE_ACCESS_KEY")
+    secret_key = os.getenv("VOLCENGINE_SECRET_KEY")
+    app_id = os.getenv("VOLCENGINE_APP_ID")
+
+    if access_key and secret_key and app_id:
+        return access_key, secret_key, app_id
+    return None
 
 
 class TestVolcengineAdapterIntegration:
     """VolcengineAdapter 集成测试类 - 使用真实 API。"""
 
-    @property
-    def api_key(self) -> str:
-        """获取 API key - 优先使用环境变量."""
-        key = os.getenv("VOLCENGINE_API_KEY", VOLCENGINE_API_KEY)
-        if key == "NOT_SET":
-            pytest.skip("VOLCENGINE_API_KEY not set in environment. Cannot test without API key.")
-        return key
+    @pytest.fixture
+    def credentials(self) -> tuple[str, str, str]:
+        """获取 API 凭证，如果未配置则跳过测试."""
+        creds = get_api_credentials()
+        if creds is None:
+            pytest.skip(
+                "VOLCENGINE_ACCESS_KEY, VOLCENGINE_SECRET_KEY, VOLCENGINE_APP_ID "
+                "not set in environment. Cannot test without API credentials."
+            )
+        return creds
 
-    @property
-    def secret_key(self) -> str:
-        """获取 Secret Key（与 Access Key 同同，使用 API key 的前 16 位作为密钥）"""
-        key = self.api_key
-        # 使用前16 位作为密钥
-        return key[:16]
-
-    def test_adapter_initialization(self) -> None:
+    def test_adapter_initialization(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试适配器初始化。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLCENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         # Just verify no errors occur during initialization
-        # We can't verify much more without a real API key
 
-    def test_provider(self) -> None:
+    def test_provider(self, credentials: tuple[str, str, str]) -> None:
         """测试提供商返回火山引擎。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLCENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         # Assert
         assert adapter.provider == "volcengine"
 
-    def test_generate_tests_creates_test_cases(self) -> None:
+    def test_generate_tests_creates_test_cases(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试生成测试用例。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLCENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         request = TestGenerationRequest(
@@ -93,19 +100,18 @@ class TestVolcengineAdapterIntegration:
         # Assert - 验证基本功能
         assert result.test_cases is not None
         assert len(result.test_cases) >= 1
-        # Note: we can't force strict validation on real API responses
-        # The API may return data in a different format than we expect
 
-    def test_generate_tests_includes_token_usage(self) -> None:
+    def test_generate_tests_includes_token_usage(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试生成测试用例，包含 token 使用量统计。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLC_ENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         request = TestGenerationRequest(
@@ -119,19 +125,18 @@ class TestVolcengineAdapterIntegration:
 
         # Assert - 验证基本功能
         assert result.test_cases is not None
-        # Note: we can't force strict validation on real API responses
-        # The API may or may not return usage info for every test
 
-    def test_generate_for_uncovered_creates_test_cases(self) -> None:
+    def test_generate_for_uncovered_creates_test_cases(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试为未覆盖代码生成测试。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLC_ENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         coverage_data = {
@@ -147,19 +152,18 @@ class TestVolcengineAdapterIntegration:
 
         # Assert - 验证基本功能
         assert result.test_cases is not None
-        # Note: we can't force strict validation on real API responses
-        # The API may return different data than expected
 
-    def test_refine_test_updates_test_code(self) -> None:
+    def test_refine_test_updates_test_code(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试优化测试用例。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLC_ENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         test_case = TestCase(
@@ -178,20 +182,19 @@ class TestVolcengineAdapterIntegration:
             project_path=Path("/test/project"),
         )
 
-        # Assert - 验证基本功能
-        # Note: we can't force strict validation on real API responses
-        # The API may or may not return explanations or refined code
+        # Assert - 验证基本功能（不抛出异常即可）
 
-    def test_extract_risk_level_precision(self) -> None:
+    def test_extract_risk_level_precision(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试风险级别精准提取（避免子串误判）。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLC_ENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         request = CodeAnalysisRequest(
@@ -204,20 +207,18 @@ class TestVolcengineAdapterIntegration:
 
         # Assert - 验证基本功能
         assert result.risk_level in ["HIGH", "MEDIUM", "LOW"]
-        # Note: we can't force strict validation on real API responses
-        # The API may return different data than expected
-        # We just verify it returns valid risk levels
 
-    def test_explain_change_impact_returns_explanation(self) -> None:
+    def test_explain_change_impact_returns_explanation(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试解释变更影响返回。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLC_ENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         changed_methods = ["com.example.Service.methodA()", "com.example.Service.methodB()"]
@@ -232,18 +233,18 @@ class TestVolcengineAdapterIntegration:
         # Assert - 验证基本功能
         assert explanation is not None
         assert len(explanation) > 0
-        # Note: we can't force strict validation on real API responses
 
-    def test_generate_tests_with_multiple_classes(self) -> None:
+    def test_generate_tests_with_multiple_classes(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试多类测试用例。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLC_ENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         request = TestGenerationRequest(
@@ -257,20 +258,19 @@ class TestVolcengineAdapterIntegration:
 
         # Assert - 验证基本功能
         assert result.test_cases is not None
-        assert len(result.test_cases) >= 3
-        # Note: we can't force strict validation on real API responses
-        # The API may return fewer or more test cases than expected
+        assert len(result.test_cases) >= 1  # API 可能返回不同数量
 
-    def test_generate_tests_with_requirements(self) -> None:
-        """测试带要求的测试生成。。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLC_ENGINE_API_KEY not set")
+    def test_generate_tests_with_requirements(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
+        """测试带要求的测试生成。"""
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         request = TestGenerationRequest(
@@ -285,19 +285,18 @@ class TestVolcengineAdapterIntegration:
 
         # Assert - 验证基本功能
         assert result.test_cases is not None
-        # Note: we can't force strict validation on real API responses
-        # The API may return fewer or more test cases than expected
 
-    def test_call_api_builds_auth_headers(self) -> None:
+    def test_call_api_builds_auth_headers(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试构建认证头。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLC_ENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         # Act - 调用私有方法构建 headers
@@ -305,19 +304,20 @@ class TestVolcengineAdapterIntegration:
 
         # Assert
         assert "Authorization" in headers
-        assert self.api_key in headers["Authorization"]
+        assert access_key in headers["Authorization"]
         assert "X-VOLC-App-Id" in headers
 
-    def test_call_api_handles_request_errors(self) -> None:
+    def test_call_api_handles_request_errors(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试 API 请求错误处理。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLC_ENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         # Act - 使用无效的 app_id 测试错误处理
@@ -336,48 +336,51 @@ class TestVolcengineAdapterIntegration:
         # Assert - 应该返回空结果而不是抛出异常
         assert result.test_cases is not None or len(result.test_cases) == 0
 
-    def test_temperature_parameter(self) -> None:
+    def test_temperature_parameter(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试温度参数配置。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLC_ENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
             temperature=0.8,  # 较高的随机性
         )
 
         # Act
         assert adapter._temperature == 0.8
 
-    def test_region_parameter(self) -> None:
+    def test_region_parameter(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试区域参数配置。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLC_ENGINE_API_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
             region="cn-beijing",  # 中国北京区域
         )
 
         # Act
         assert adapter._region == "cn-beijing"
 
-    def test_endpoint_configuration(self) -> None:
+    def test_endpoint_configuration(
+        self, credentials: tuple[str, str, str]
+    ) -> None:
         """测试端点配置。"""
-        if self.api_key != "NOT_SET":
-            pytest.skip("VOLC_ENGINE_KEY not set")
+        access_key, secret_key, app_id = credentials
 
         # Arrange & Act
         adapter = VolcengineAdapter(
-            access_key=self.api_key,
-            secret_key=self.secret_key,
-            app_id="jcia-test",
+            access_key=access_key,
+            secret_key=secret_key,
+            app_id=app_id,
         )
 
         # Assert

@@ -94,7 +94,7 @@
 - ✅ Pyright 类型检查通过
 
 ### 4.4 火山引擎集成测试
-- ✅ 配置 API Key（access_key: YOUR_VOLCENGINE_API_KEY_HERE）
+- ✅ 配置 API Key（通过环境变量配置）
 - ✅ 修复测试跳过逻辑错误
 - ✅ 修复 provider 测试（枚举类型）
 - ✅ 修复 explain_change_impact 测试（允许空响应）

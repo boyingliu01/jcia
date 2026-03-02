@@ -4,7 +4,7 @@
 
 ## 推广材料清单
 
-本目录包含JCIA（Java Code Impact Analyzer）项目的完整内部推广材料，帮助公司同事了解和使用这款工具。
+本目录包含JCIA（Java Code Impact Analyzer）项目的完整推广材料，帮助开发者了解和使用这款工具。
 
 ### 文件结构
 
@@ -37,7 +37,7 @@ promotion/
 - 视觉设计建议（颜色、字体、图标）
 
 **使用场景：**
-- 制作宣传海报张贴在公司公共区域
+- 制作宣传海报用于技术会议
 - 制作PPT用于技术分享会
 - 制作易拉宝用于活动展示
 
@@ -219,7 +219,7 @@ promotion/
    - 邮件通知（使用email_template.md）
    - 海报张贴（使用poster_content.md）
    - 技术分享会（使用demo_script.md）
-   - 内部Wiki文档（使用quickstart.md和faq.md）
+   - 项目文档（使用quickstart.md和faq.md）
 
 3. **持续支持**
    - 建立技术支持渠道
@@ -244,9 +244,8 @@ promotion/
 
 如果您在使用这些推广材料时有任何建议或发现需要更新的内容，请通过以下方式反馈：
 
-- 企业微信：JCIA推广材料反馈群
-- 邮箱：jcia-promotion@company.com
-- Jira：[JCIA项目] 创建Issue
+- GitHub Issues: https://github.com/your-org/jcia/issues
+- 邮箱：jcia-dev@example.org
 
 ### 版本历史
 
@@ -258,11 +257,9 @@ promotion/
 
 ## 结语
 
-这套推广材料旨在帮助您有效地在公司内部推广JCIA工具，让更多同事了解并使用这个能够提升开发效率的强大工具。
-
-祝推广顺利！
+这套推广材料旨在帮助您有效地推广JCIA工具，让更多开发者了解并使用这个能够提升开发效率的强大工具。
 
 ---
 
-**JCIA产品团队**
+**JCIA开发团队**
 **[日期]**
