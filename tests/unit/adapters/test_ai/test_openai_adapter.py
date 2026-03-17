@@ -4,30 +4,26 @@ This module provides comprehensive test coverage for the OpenAI adapter,
 including test generation, code analysis, and API interaction.
 """
 
-import json
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 
 from jcia.adapters.ai.openai_adapter import (
-    OpenAIAdapter,
+    DEFAULT_MAX_TOKENS,
     DEFAULT_MODEL,
     DEFAULT_TEMPERATURE,
-    DEFAULT_MAX_TOKENS,
     DEFAULT_TIMEOUT,
-    MAX_RETRIES,
-    RETRY_DELAY,
+    OpenAIAdapter,
 )
+from jcia.core.entities.test_case import TestPriority, TestType
 from jcia.core.interfaces.ai_service import (
     AIProvider,
-    TestGenerationRequest,
-    TestGenerationResponse,
     CodeAnalysisRequest,
     CodeAnalysisResponse,
+    TestGenerationRequest,
+    TestGenerationResponse,
 )
-from jcia.core.entities.test_case import TestCase, TestPriority, TestType
 
 
 class TestOpenAIAdapterInitialization:

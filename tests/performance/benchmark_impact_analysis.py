@@ -27,8 +27,6 @@ sys.path.insert(0, str(project_root))
 
 from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
 from jcia.adapters.tools.source_code_call_graph_adapter import SourceCodeCallGraphAnalyzer
-from jcia.core.entities.impact_graph import ImpactGraph
-from jcia.core.services.impact_analysis_service import ImpactAnalysisService
 from jcia.core.use_cases.analyze_impact import AnalyzeImpactRequest, AnalyzeImpactUseCase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

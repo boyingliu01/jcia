@@ -14,11 +14,12 @@ import logging
 import pstats
 import time
 import tracemalloc
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)

@@ -6,9 +6,10 @@ calls in source code, including Class.forName, getMethod, invoke, and more.
 
 import logging
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from jcia.adapters.tools.reflection_models import (
     InferenceSource,

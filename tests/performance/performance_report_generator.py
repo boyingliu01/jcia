@@ -496,7 +496,7 @@ def main() -> int:
     args = parser.parse_args()
 
     # 读取基准测试数据
-    with open(args.benchmark_data, "r", encoding="utf-8") as f:
+    with open(args.benchmark_data, encoding="utf-8") as f:
         benchmark_data = json.load(f)
 
     # 生成报告

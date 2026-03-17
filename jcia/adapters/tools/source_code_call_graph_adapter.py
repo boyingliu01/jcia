@@ -16,7 +16,6 @@ from typing import Any
 from jcia.adapters.tools.reflection_models import (
     InferenceSource,
     ReflectionCallInfo,
-    ReflectionType,
 )
 from jcia.adapters.tools.reflection_patterns import ReflectionPatternMatcher
 from jcia.core.interfaces.call_chain_analyzer import (
@@ -234,10 +233,9 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
         if reflection_call.inference_source == InferenceSource.VARIABLE:
             # 尝试从上下文中获取变量值
             variable = reflection_call.context.get("variable")
-            if variable:
-                # 简单启发式：检查变量是否像类名
-                if "." in variable or variable[0].isupper():
-                    return variable, None
+            # 简单启发式：检查变量是否像类名
+            if variable and ("." in variable or variable[0].isupper()):
+                return variable, None
 
         return None, None
 
@@ -274,7 +272,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
         """
         results: list[ReflectionCallInfo] = []
 
-        for source_class, calls in self._reflection_calls_cache.items():
+        for _source_class, calls in self._reflection_calls_cache.items():
             for call in calls:
                 # 检查是否匹配目标类
                 if call.target_class == class_name:

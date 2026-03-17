@@ -55,7 +55,7 @@ def benchmark_project_scan(repo_path: Path) -> dict:
             "files_per_second": len(java_files) / (duration_ms / 1000) if duration_ms > 0 else 0,
         }
 
-        print(f"  成功!")
+        print("  成功!")
         print(f"  持续时间: {duration_ms:.2f} ms")
         print(f"  CPU时间: {cpu_time_ms:.2f} ms")
         print(f"  Java文件数: {len(java_files)}")

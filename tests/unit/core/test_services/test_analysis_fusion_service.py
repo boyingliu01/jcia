@@ -4,26 +4,22 @@ This module provides comprehensive test coverage for the AnalysisFusionService,
 including all fusion strategies and edge cases.
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock, patch
-from pathlib import Path
+from unittest.mock import Mock
 
-from jcia.core.services.analysis_fusion_service import (
-    AnalysisFusionService,
-    FusionStrategy,
-)
+import pytest
+
 from jcia.core.entities.impact_graph import (
     ImpactGraph,
-    ImpactNode,
-    ImpactEdge,
-    ImpactSeverity,
-    ImpactType,
 )
 from jcia.core.interfaces.call_chain_analyzer import (
     CallChainAnalyzer,
+    CallChainDirection,
     CallChainGraph,
     CallChainNode,
-    CallChainDirection,
+)
+from jcia.core.services.analysis_fusion_service import (
+    AnalysisFusionService,
+    FusionStrategy,
 )
 
 
