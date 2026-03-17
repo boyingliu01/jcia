@@ -5,6 +5,7 @@
 - 方法调用分析
 - 类依赖分析
 - 继承关系分析
+- 反射调用检测与推断
 """
 
 import logging
@@ -12,6 +13,12 @@ import re
 from pathlib import Path
 from typing import Any
 
+from jcia.adapters.tools.reflection_models import (
+    InferenceSource,
+    ReflectionCallInfo,
+    ReflectionType,
+)
+from jcia.adapters.tools.reflection_patterns import ReflectionPatternMatcher
 from jcia.core.interfaces.call_chain_analyzer import (
     AnalyzerType,
     CallChainAnalyzer,
@@ -52,6 +59,10 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
         self._method_calls_cache: dict[str, set[str]] = {}
         self._class_methods_cache: dict[str, dict[str, str]] = {}
         self._class_hierarchy_cache: dict[str, list[str]] = {}
+
+        # 反射分析
+        self._reflection_matcher = ReflectionPatternMatcher()
+        self._reflection_calls_cache: dict[str, list[ReflectionCallInfo]] = {}
 
         # 扫描项目结构
         self._scan_project()
@@ -129,6 +140,9 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
             # 查找方法调用
             self._extract_method_calls(content, full_class_name)
 
+            # 提取反射调用
+            self._extract_reflection_calls(content, full_class_name)
+
     def _extract_methods_from_class(self, content: str, class_name: str) -> None:
         """从类中提取方法定义.
 
@@ -178,6 +192,99 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
 
         if calls:
             self._method_calls_cache[class_name] = calls
+
+    def _extract_reflection_calls(self, content: str, class_name: str) -> None:
+        """从类中提取反射调用.
+
+        Args:
+            content: Java 文件内容
+            class_name: 类全限定名
+        """
+        # 使用反射模式匹配器查找反射调用
+        reflection_calls = self._reflection_matcher.find_patterns(content, class_name)
+
+        # 同时查找链式反射调用
+        chained_calls = self._reflection_matcher.find_chained_calls(content, class_name)
+
+        # 合并结果
+        all_reflection_calls = reflection_calls + chained_calls
+
+        if all_reflection_calls:
+            self._reflection_calls_cache[class_name] = all_reflection_calls
+            logger.debug(
+                f"Found {len(all_reflection_calls)} reflection calls in {class_name}"
+            )
+
+    def _infer_reflection_target(
+        self, reflection_call: ReflectionCallInfo
+    ) -> tuple[str | None, str | None]:
+        """推断反射调用的目标.
+
+        Args:
+            reflection_call: 反射调用信息
+
+        Returns:
+            tuple[str | None, str | None]: (目标类, 目标方法)
+        """
+        # 如果已经有明确目标，直接返回
+        if reflection_call.target_class or reflection_call.target_method:
+            return reflection_call.target_class, reflection_call.target_method
+
+        # 根据置信度和推断源决定
+        if reflection_call.inference_source == InferenceSource.VARIABLE:
+            # 尝试从上下文中获取变量值
+            variable = reflection_call.context.get("variable")
+            if variable:
+                # 简单启发式：检查变量是否像类名
+                if "." in variable or variable[0].isupper():
+                    return variable, None
+
+        return None, None
+
+    def get_reflection_calls(self, class_name: str) -> list[ReflectionCallInfo]:
+        """获取指定类的反射调用.
+
+        Args:
+            class_name: 类全限定名
+
+        Returns:
+            List[ReflectionCallInfo]: 反射调用列表
+        """
+        return self._reflection_calls_cache.get(class_name, [])
+
+    def get_all_reflection_calls(self) -> dict[str, list[ReflectionCallInfo]]:
+        """获取所有反射调用.
+
+        Returns:
+            Dict[str, List[ReflectionCallInfo]]: 类名到反射调用列表的映射
+        """
+        return self._reflection_calls_cache.copy()
+
+    def analyze_reflection_impact(
+        self, class_name: str, method_name: str | None = None
+    ) -> list[ReflectionCallInfo]:
+        """分析可能调用指定类/方法的反射调用.
+
+        Args:
+            class_name: 目标类名
+            method_name: 目标方法名（可选）
+
+        Returns:
+            List[ReflectionCallInfo]: 可能调用目标的反射调用列表
+        """
+        results: list[ReflectionCallInfo] = []
+
+        for source_class, calls in self._reflection_calls_cache.items():
+            for call in calls:
+                # 检查是否匹配目标类
+                if call.target_class == class_name:
+                    if method_name is None or call.target_method == method_name:
+                        results.append(call)
+                # 检查是否匹配目标方法（类名未知的情况）
+                elif method_name and call.target_method == method_name:
+                    results.append(call)
+
+        return results
 
     def analyze_upstream(self, method: str, max_depth: int = 10) -> CallChainGraph:
         """分析上游调用者.
@@ -287,6 +394,13 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
             if method_name in calls and caller_class != class_name:
                 callers.append((caller_class, method_name))
 
+        # 检查反射调用
+        reflection_callers = self.analyze_reflection_impact(class_name, method_name)
+        for ref_call in reflection_callers:
+            # 反射调用者的类名
+            if ref_call.source_file not in [c[0] for c in callers]:
+                callers.append((ref_call.source_file, ref_call.raw_expression[:50]))
+
         return callers[:max_depth]  # 限制数量
 
     def _find_callees(
@@ -312,6 +426,17 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
                 for target_class, methods in self._class_methods_cache.items():
                     if called_method in methods and target_class != class_name:
                         callees.append((target_class, called_method))
+
+        # 检查反射调用目标
+        reflection_calls = self._reflection_calls_cache.get(class_name, [])
+        for ref_call in reflection_calls:
+            if ref_call.target_class and ref_call.target_method:
+                # 高置信度的反射调用目标
+                if ref_call.is_high_confidence():
+                    callees.append((ref_call.target_class, ref_call.target_method))
+            elif ref_call.target_class:
+                # 只有类名的情况
+                callees.append((ref_call.target_class, "unknown"))
 
         return callees[:max_depth]
 
