@@ -12,7 +12,7 @@ JCIA (Java Code Impact Analyzer) is a tool for analyzing the impact of code chan
 ```bash
 make venv              # Create virtual environment
 make install           # Install dependencies
-make install-dev        # Install development dependencies
+make install-dev       # Install development dependencies
 make setup-hooks       # Set up pre-commit hooks
 ```
 
@@ -80,9 +80,13 @@ jcia config --show
   - `database/sqlite_adapter.py`: SQLite persistence
   - `maven/maven_adapter.py`: Maven integration
   - `test_runners/maven_surefire_test_executor.py`: JUnit test execution via Maven Surefire
-  - `tools/starts_test_selector_adapter.py`: STARTS algorithm implementation
-  - `tools/source_code_call_graph_adapter.py`, `tools/java_all_call_graph_adapter.py`: Call graph analysis
-  - `tools/skywalking_call_chain_adapter.py`: Runtime call chain from SkyWalking
+  - `tools/`:
+    - `starts_test_selector_adapter.py`: STARTS algorithm implementation
+    - `source_code_call_graph_adapter.py`: Source code-based call graph analysis with reflection detection
+    - `java_all_call_graph_adapter.py`: Java method call graph analysis
+    - `skywalking_call_chain_adapter.py`: Runtime call chain from SkyWalking
+    - `reflection_patterns.py`, `reflection_models.py`: Java reflection call detection and inference
+    - `codeql_adapter.py`, `codeql_models.py`: CodeQL semantic analysis integration
 
 - **Reports** (`jcia/reports/`): Output formatting
   - `json_reporter.py`, `html_reporter.py`, `markdown_reporter.py`
@@ -101,6 +105,7 @@ jcia config --show
 - **Severity determination**: `CallChainBuilder._determine_severity()` uses class name keywords (core, manager, handler → HIGH; util, config → LOW)
 - **Impact tracing**: Uses BFS/DFS to trace call chains up to `max_depth` levels
 - **Test selection**: Supports multiple strategies (ALL, STARTS, IMPACT_BASED, HYBRID)
+- **Reflection analysis**: Detects `Class.forName()`, `getMethod()`, `invoke()`, and other reflection patterns with confidence scores
 
 ### Data Flow: Impact Analysis
 1. `AnalyzeImpactUseCase.execute()` receives commit range
@@ -130,6 +135,7 @@ Environment variables for AI features:
 - Integration tests in `tests/integration/`
 - Markers: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.slow`
 - Tests follow AAA pattern (Arrange, Act, Assert) with descriptive names
+- For filesystem-dependent tests: use real temp directories (`tmp_path` fixture) instead of mocking `pathlib.Path.exists` - mocking global path operations doesn't pass context about which path is being checked
 
 ## Code Conventions
 
