@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 JCIA (Java Code Impact Analyzer) is a tool for analyzing the impact of code changes in Java projects. It identifies affected classes and methods, intelligently selects test cases, and executes regression testing using clean architecture principles (DDD-style with hexagonal layers).
 
+**Requirements**: Python 3.10+
+
 ## Common Commands
 
 ### Development
@@ -14,6 +16,9 @@ make venv              # Create virtual environment
 make install           # Install dependencies
 make install-dev       # Install development dependencies
 make setup-hooks       # Set up pre-commit hooks
+
+# For OpenAI integration
+pip install -e ".[ai]"
 ```
 
 ### Testing
@@ -136,6 +141,7 @@ Environment variables for AI features:
 - Markers: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.slow`
 - Tests follow AAA pattern (Arrange, Act, Assert) with descriptive names
 - For filesystem-dependent tests: use real temp directories (`tmp_path` fixture) instead of mocking `pathlib.Path.exists` - mocking global path operations doesn't pass context about which path is being checked
+- Async tests: `pytest-asyncio` is configured with `loop_scope = function` (see `pytest.ini`)
 
 ## Code Conventions
 
