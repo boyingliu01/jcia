@@ -1,2 +1,3 @@
 project:
   path: /new/path
+debug: 'true'

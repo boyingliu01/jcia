@@ -300,3 +300,111 @@ class TestChangeComparisonService:
         assert "baseline" in coverage_diff
         assert "regression" in coverage_diff
         assert "diff" in coverage_diff
+
+    def test_compare_with_none_regression(self) -> None:
+        """测试没有回归测试的情况."""
+        from jcia.core.services import ChangeComparisonService
+
+        # Arrange
+        service = ChangeComparisonService()
+
+        baseline = TestRun(
+            id=1,
+            run_type=RunType.BASELINE,
+            test_results=[
+                TestResult(
+                    test_class="Test",
+                    test_method="testMethod",
+                    status=TestStatus.PASSED,
+                ),
+            ],
+        )
+
+        # Act
+        comparison = service.compare(baseline, None)
+
+        # Assert
+        assert comparison.baseline_run == baseline
+        assert comparison.regression_run is None
+
+    def test_compare_both_none(self) -> None:
+        """测试基线和回归都为 None."""
+        from jcia.core.services import ChangeComparisonService
+
+        service = ChangeComparisonService()
+
+        comparison = service.compare(None, None)
+
+        assert comparison.baseline_run is None
+        assert comparison.regression_run is None
+
+    def test_get_coverage_diff_with_none_baseline(self) -> None:
+        """测试覆盖率差异比较当 baseline 为 None."""
+        from jcia.core.services import ChangeComparisonService
+
+        service = ChangeComparisonService()
+
+        regression = TestRun(
+            id=2,
+            run_type=RunType.REGRESSION,
+            coverage=CoverageData(line_coverage=75.0),
+            test_results=[],
+        )
+
+        coverage_diff = service.get_coverage_diff(None, regression)
+
+        # 当 baseline 为 None 时，返回 None
+        assert coverage_diff is None
+
+    def test_get_coverage_diff_with_none_regression(self) -> None:
+        """测试覆盖率差异比较当 regression 为 None."""
+        from jcia.core.services import ChangeComparisonService
+
+        service = ChangeComparisonService()
+
+        baseline = TestRun(
+            id=1,
+            run_type=RunType.BASELINE,
+            coverage=CoverageData(line_coverage=80.0),
+            test_results=[],
+        )
+
+        coverage_diff = service.get_coverage_diff(baseline, None)
+
+        # 当 regression 为 None 时，返回 None
+        assert coverage_diff is None
+
+    def test_detect_stable_fail(self) -> None:
+        """测试检测持续失败."""
+        from jcia.core.services import ChangeComparisonService
+
+        service = ChangeComparisonService()
+
+        baseline = TestRun(
+            id=1,
+            run_type=RunType.BASELINE,
+            test_results=[
+                TestResult(
+                    test_class="Test",
+                    test_method="testMethod",
+                    status=TestStatus.FAILED,
+                ),
+            ],
+        )
+
+        regression = TestRun(
+            id=2,
+            run_type=RunType.REGRESSION,
+            test_results=[
+                TestResult(
+                    test_class="Test",
+                    test_method="testMethod",
+                    status=TestStatus.FAILED,
+                ),
+            ],
+        )
+
+        comparison = service.compare(baseline, regression)
+
+        # 持续失败的测试应该在 diffs 中
+        assert len(comparison.diffs) > 0

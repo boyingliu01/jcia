@@ -287,3 +287,30 @@ class TestCLI:
 
         assert result.exit_code == 0
         assert "设置配置: project.path = /new/path" in result.output
+
+    def test_config_command_set_invalid_format(self, runner: CliRunner) -> None:
+        """测试config命令设置配置格式错误."""
+        result = runner.invoke(cli, ["config", "--set", "invalid_format_no_equals"])
+
+        assert result.exit_code != 0
+        assert "格式错误" in result.output
+
+    def test_config_command_set_single_key(self, runner: CliRunner) -> None:
+        """测试config命令设置单级键."""
+        result = runner.invoke(cli, ["config", "--set", "debug=true"])
+
+        assert result.exit_code == 0
+        assert "设置配置: debug = true" in result.output
+
+    def test_config_command_show_with_existing_config(self, runner: CliRunner) -> None:
+        """测试config命令显示已有配置."""
+        with runner.isolated_filesystem():
+            # 先设置配置
+            runner.invoke(cli, ["config", "--set", "project.path=/test/path"])
+            runner.invoke(cli, ["config", "--set", "logging.level=DEBUG"])
+
+            # 显示配置
+            result = runner.invoke(cli, ["config", "--show"])
+
+            assert result.exit_code == 0
+            assert "project:" in result.output or "project.path" in result.output
