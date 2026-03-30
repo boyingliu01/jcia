@@ -323,3 +323,245 @@ class TestAnalysisFusionServiceEdgeCases:
 
 # Mark all tests in this module
 pytestmark = pytest.mark.unit
+
+
+class TestAnalysisFusionServiceDownstreamStrategies:
+    """Tests for all downstream fusion strategies."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.static_analyzer = Mock(spec=CallChainAnalyzer)
+        self.dynamic_analyzer = Mock(spec=CallChainAnalyzer)
+        self.service = AnalysisFusionService(
+            static_analyzer=self.static_analyzer,
+            dynamic_analyzer=self.dynamic_analyzer,
+        )
+
+    def _create_mock_graph(self, method_name: str) -> CallChainGraph:
+        """Create a mock CallChainGraph."""
+        root = CallChainNode("TestClass", method_name, f"{method_name}()")
+        return CallChainGraph(root=root, direction=CallChainDirection.DOWNSTREAM, max_depth=5)
+
+    def test_downstream_bayesian_strategy(self):
+        """Test Bayesian fusion downstream."""
+        static_graph = self._create_mock_graph("staticMethod")
+        dynamic_graph = self._create_mock_graph("dynamicMethod")
+
+        self.static_analyzer.analyze_downstream.return_value = static_graph
+        self.dynamic_analyzer.analyze_downstream.return_value = dynamic_graph
+
+        result = self.service.fuse_downstream(
+            "TestClass.testMethod", max_depth=5, strategy=FusionStrategy.BAYESIAN
+        )
+
+        assert isinstance(result, ImpactGraph)
+
+    def test_downstream_voting_strategy(self):
+        """Test voting fusion downstream."""
+        static_graph = self._create_mock_graph("staticMethod")
+        dynamic_graph = self._create_mock_graph("dynamicMethod")
+
+        self.static_analyzer.analyze_downstream.return_value = static_graph
+        self.dynamic_analyzer.analyze_downstream.return_value = dynamic_graph
+
+        result = self.service.fuse_downstream(
+            "TestClass.testMethod", max_depth=5, strategy=FusionStrategy.VOTING
+        )
+
+        assert isinstance(result, ImpactGraph)
+
+    def test_downstream_weighted_strategy(self):
+        """Test weighted fusion downstream."""
+        static_graph = self._create_mock_graph("staticMethod")
+        dynamic_graph = self._create_mock_graph("dynamicMethod")
+
+        self.static_analyzer.analyze_downstream.return_value = static_graph
+        self.dynamic_analyzer.analyze_downstream.return_value = dynamic_graph
+
+        result = self.service.fuse_downstream(
+            "TestClass.testMethod", max_depth=5, strategy=FusionStrategy.WEIGHTED
+        )
+
+        assert isinstance(result, ImpactGraph)
+
+    def test_downstream_intersection_strategy(self):
+        """Test intersection fusion downstream."""
+        static_graph = self._create_mock_graph("commonMethod")
+        dynamic_graph = self._create_mock_graph("commonMethod")
+
+        self.static_analyzer.analyze_downstream.return_value = static_graph
+        self.dynamic_analyzer.analyze_downstream.return_value = dynamic_graph
+
+        result = self.service.fuse_downstream(
+            "TestClass.testMethod", max_depth=5, strategy=FusionStrategy.INTERSECTION
+        )
+
+        assert isinstance(result, ImpactGraph)
+
+    def test_downstream_with_static_exception(self):
+        """Test downstream fusion when static analyzer throws exception."""
+        self.static_analyzer.analyze_downstream.side_effect = Exception("Static failed")
+        dynamic_graph = self._create_mock_graph("dynamicMethod")
+        self.dynamic_analyzer.analyze_downstream.return_value = dynamic_graph
+
+        result = self.service.fuse_downstream("TestClass.testMethod", max_depth=5)
+
+        assert isinstance(result, ImpactGraph)
+
+    def test_downstream_with_dynamic_exception(self):
+        """Test downstream fusion when dynamic analyzer throws exception."""
+        static_graph = self._create_mock_graph("staticMethod")
+        self.static_analyzer.analyze_downstream.return_value = static_graph
+        self.dynamic_analyzer.analyze_downstream.side_effect = Exception("Dynamic failed")
+
+        result = self.service.fuse_downstream("TestClass.testMethod", max_depth=5)
+
+        assert isinstance(result, ImpactGraph)
+
+    def test_downstream_invalid_strategy_defaults_to_bayesian(self):
+        """Test that invalid strategy defaults to Bayesian downstream."""
+        static_graph = self._create_mock_graph("testMethod")
+        self.static_analyzer.analyze_downstream.return_value = static_graph
+        self.dynamic_analyzer.analyze_downstream.return_value = None
+
+        result = self.service.fuse_downstream(
+            "TestClass.testMethod", max_depth=5, strategy="invalid"
+        )
+
+        assert isinstance(result, ImpactGraph)
+
+
+class TestAnalysisFusionServiceWithCoverage:
+    """Tests for fusion with coverage data."""
+
+    def test_bayesian_fusion_with_low_coverage(self):
+        """Test Bayesian fusion with low coverage data (< 0.3)."""
+        static_analyzer = Mock(spec=CallChainAnalyzer)
+        root = CallChainNode("TestClass", "testMethod", "testMethod()")
+        static_graph = CallChainGraph(root=root, direction=CallChainDirection.UPSTREAM, max_depth=5)
+        static_analyzer.analyze_upstream.return_value = static_graph
+
+        # Low coverage should increase conditional factor
+        coverage_data = {"TestClass.testMethod": 0.2}
+        service = AnalysisFusionService(
+            static_analyzer=static_analyzer,
+            coverage_data=coverage_data,
+        )
+
+        result = service.fuse_upstream("TestClass.testMethod", max_depth=5)
+
+        assert isinstance(result, ImpactGraph)
+
+    def test_bayesian_fusion_with_medium_coverage(self):
+        """Test Bayesian fusion with medium coverage data (0.3 - 0.5)."""
+        static_analyzer = Mock(spec=CallChainAnalyzer)
+        root = CallChainNode("TestClass", "testMethod", "testMethod()")
+        static_graph = CallChainGraph(root=root, direction=CallChainDirection.UPSTREAM, max_depth=5)
+        static_analyzer.analyze_upstream.return_value = static_graph
+
+        coverage_data = {"TestClass.testMethod": 0.4}
+        service = AnalysisFusionService(
+            static_analyzer=static_analyzer,
+            coverage_data=coverage_data,
+        )
+
+        result = service.fuse_upstream("TestClass.testMethod", max_depth=5)
+
+        assert isinstance(result, ImpactGraph)
+
+    def test_bayesian_fusion_with_high_coverage(self):
+        """Test Bayesian fusion with high coverage data (0.5 - 0.7)."""
+        static_analyzer = Mock(spec=CallChainAnalyzer)
+        root = CallChainNode("TestClass", "testMethod", "testMethod()")
+        static_graph = CallChainGraph(root=root, direction=CallChainDirection.UPSTREAM, max_depth=5)
+        static_analyzer.analyze_upstream.return_value = static_graph
+
+        coverage_data = {"TestClass.testMethod": 0.6}
+        service = AnalysisFusionService(
+            static_analyzer=static_analyzer,
+            coverage_data=coverage_data,
+        )
+
+        result = service.fuse_upstream("TestClass.testMethod", max_depth=5)
+
+        assert isinstance(result, ImpactGraph)
+
+
+class TestAnalysisFusionServiceUpstreamStrategies:
+    """Tests for all upstream fusion strategies."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.static_analyzer = Mock(spec=CallChainAnalyzer)
+        self.dynamic_analyzer = Mock(spec=CallChainAnalyzer)
+        self.service = AnalysisFusionService(
+            static_analyzer=self.static_analyzer,
+            dynamic_analyzer=self.dynamic_analyzer,
+        )
+
+    def _create_mock_graph(self, method_name: str) -> CallChainGraph:
+        """Create a mock CallChainGraph."""
+        root = CallChainNode("TestClass", method_name, f"{method_name}()")
+        return CallChainGraph(root=root, direction=CallChainDirection.UPSTREAM, max_depth=5)
+
+    def test_upstream_voting_strategy(self):
+        """Test voting fusion upstream."""
+        static_graph = self._create_mock_graph("staticMethod")
+        dynamic_graph = self._create_mock_graph("dynamicMethod")
+
+        self.static_analyzer.analyze_upstream.return_value = static_graph
+        self.dynamic_analyzer.analyze_upstream.return_value = dynamic_graph
+
+        result = self.service.fuse_upstream(
+            "TestClass.testMethod", max_depth=5, strategy=FusionStrategy.VOTING
+        )
+
+        assert isinstance(result, ImpactGraph)
+
+    def test_upstream_union_strategy(self):
+        """Test union fusion upstream."""
+        static_graph = self._create_mock_graph("staticMethod")
+        dynamic_graph = self._create_mock_graph("dynamicMethod")
+
+        self.static_analyzer.analyze_upstream.return_value = static_graph
+        self.dynamic_analyzer.analyze_upstream.return_value = dynamic_graph
+
+        result = self.service.fuse_upstream(
+            "TestClass.testMethod", max_depth=5, strategy=FusionStrategy.UNION
+        )
+
+        assert isinstance(result, ImpactGraph)
+
+    def test_upstream_weighted_strategy(self):
+        """Test weighted fusion upstream."""
+        static_graph = self._create_mock_graph("staticMethod")
+        dynamic_graph = self._create_mock_graph("dynamicMethod")
+
+        self.static_analyzer.analyze_upstream.return_value = static_graph
+        self.dynamic_analyzer.analyze_upstream.return_value = dynamic_graph
+
+        result = self.service.fuse_upstream(
+            "TestClass.testMethod", max_depth=5, strategy=FusionStrategy.WEIGHTED
+        )
+
+        assert isinstance(result, ImpactGraph)
+
+    def test_upstream_with_static_exception(self):
+        """Test upstream fusion when static analyzer throws exception."""
+        self.static_analyzer.analyze_upstream.side_effect = Exception("Static failed")
+        dynamic_graph = self._create_mock_graph("dynamicMethod")
+        self.dynamic_analyzer.analyze_upstream.return_value = dynamic_graph
+
+        result = self.service.fuse_upstream("TestClass.testMethod", max_depth=5)
+
+        assert isinstance(result, ImpactGraph)
+
+    def test_upstream_with_dynamic_exception(self):
+        """Test upstream fusion when dynamic analyzer throws exception."""
+        static_graph = self._create_mock_graph("staticMethod")
+        self.static_analyzer.analyze_upstream.return_value = static_graph
+        self.dynamic_analyzer.analyze_upstream.side_effect = Exception("Dynamic failed")
+
+        result = self.service.fuse_upstream("TestClass.testMethod", max_depth=5)
+
+        assert isinstance(result, ImpactGraph)

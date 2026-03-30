@@ -246,3 +246,127 @@ class TestSQLiteDatabaseAdapter:
         # Act & Assert - 应该抛出 RuntimeError
         with pytest.raises(RuntimeError, match="Database not connected"):
             adapter.test_run_repo.find_latest()
+
+    def test_save_batch_test_diffs(self) -> None:
+        """测试批量保存测试差异。"""
+        adapter = SQLiteDatabaseAdapter(":memory:")
+
+        # 创建两个测试运行
+        baseline_run = adapter.create_test_run("base", RunType.BASELINE)
+        baseline_id = adapter.test_run_repo.save(baseline_run)
+
+        regression_run = adapter.create_test_run("reg", RunType.REGRESSION)
+        regression_id = adapter.test_run_repo.save(regression_run)
+
+        # 创建多个测试差异
+        diffs = []
+        for i in range(5):
+            diff = adapter.create_test_diff(
+                baseline_id,
+                regression_id,
+                f"TestClass{i}",
+                f"testMethod{i}",
+                TestStatus.PASSED,
+                TestStatus.FAILED if i % 2 == 0 else TestStatus.PASSED,
+                DiffType.NEW_FAIL if i % 2 == 0 else DiffType.NEW_PASS,
+            )
+            diffs.append(diff)
+
+        # Act - 批量保存
+        saved_count = adapter.test_diff_repo.save_batch(diffs)
+
+        # Assert
+        assert saved_count == 5
+
+        # 验证保存的数据
+        saved_diffs = adapter.test_diff_repo.find_by_run_ids(baseline_id, regression_id)
+        assert len(saved_diffs) == 5
+
+        adapter.close()
+
+    def test_save_batch_empty_list(self) -> None:
+        """测试批量保存空列表。"""
+        adapter = SQLiteDatabaseAdapter(":memory:")
+
+        # Act
+        saved_count = adapter.test_diff_repo.save_batch([])
+
+        # Assert
+        assert saved_count == 0
+
+        adapter.close()
+
+    def test_find_by_commit_with_run_type(self) -> None:
+        """测试通过 commit hash 和 run_type 查询。"""
+        adapter = SQLiteDatabaseAdapter(":memory:")
+
+        # 创建不同类型的测试运行
+        baseline_run = adapter.create_test_run("hash123", RunType.BASELINE)
+        adapter.test_run_repo.save(baseline_run)
+
+        regression_run = adapter.create_test_run("hash123", RunType.REGRESSION)
+        adapter.test_run_repo.save(regression_run)
+
+        # Act - 只查询 BASELINE 类型（使用 .value 转为字符串）
+        results = adapter.test_run_repo.find_by_commit("hash123", RunType.BASELINE.value)
+
+        # Assert
+        assert len(results) == 1
+        assert results[0].run_type == RunType.BASELINE
+
+        adapter.close()
+
+    def test_find_latest_with_run_type(self) -> None:
+        """测试查询最新测试运行（带类型过滤）。"""
+        adapter = SQLiteDatabaseAdapter(":memory:")
+
+        # 创建不同类型的测试运行
+        baseline_run = adapter.create_test_run("base1", RunType.BASELINE)
+        adapter.test_run_repo.save(baseline_run)
+
+        regression_run = adapter.create_test_run("reg1", RunType.REGRESSION)
+        adapter.test_run_repo.save(regression_run)
+
+        # Act（使用 .value 转为字符串）
+        latest_baseline = adapter.test_run_repo.find_latest(RunType.BASELINE.value)
+        latest_regression = adapter.test_run_repo.find_latest(RunType.REGRESSION.value)
+
+        # Assert
+        assert latest_baseline is not None
+        assert latest_baseline.run_type == RunType.BASELINE
+
+        assert latest_regression is not None
+        assert latest_regression.run_type == RunType.REGRESSION
+
+        adapter.close()
+
+    def test_delete_nonexistent_test_run(self) -> None:
+        """测试删除不存在的测试运行。"""
+        adapter = SQLiteDatabaseAdapter(":memory:")
+
+        # Act - 删除不存在的 ID
+        result = adapter.test_run_repo.delete(999)
+
+        # Assert - 应该返回 False
+        assert result is False
+
+        adapter.close()
+
+    def test_update_nonexistent_test_run(self) -> None:
+        """测试更新不存在的测试运行。"""
+        adapter = SQLiteDatabaseAdapter(":memory:")
+
+        # 创建一个没有保存的测试运行
+        run = TestRun(
+            commit_hash="not_saved",
+            run_type=RunType.BASELINE,
+            status=RunStatus.COMPLETED,
+        )
+
+        # Act - 尝试更新（没有 ID）
+        result = adapter.test_run_repo.update(run)
+
+        # Assert
+        assert result is False
+
+        adapter.close()
