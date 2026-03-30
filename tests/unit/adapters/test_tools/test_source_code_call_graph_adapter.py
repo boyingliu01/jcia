@@ -11,7 +11,6 @@ from jcia.core.interfaces.call_chain_analyzer import (
     AnalyzerType,
     CallChainDirection,
     CallChainGraph,
-    CallChainNode,
 )
 
 

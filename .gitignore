@@ -53,6 +53,14 @@ jcia-reports/
 .jcia.yaml
 jcia.log
 
+# Generated reports (may contain sensitive data)
+report/*.html
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
 # WSL
 *Zone.Identifier
 

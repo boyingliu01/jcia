@@ -285,9 +285,9 @@ pipeline {
 > jcia analyze --repo-path . --from-commit HEAD~1 --to-commit HEAD
 > ```
 >
-> 详细文档：[内部Wiki链接]
+> 详细文档：https://github.com/your-org/jcia
 >
-> 技术支持：jcia-support@company.com
+> 技术支持：jcia-dev@example.org
 >
 > **感谢大家的聆听！**
 >
@@ -322,7 +322,7 @@ pipeline {
 **A:** JCIA的设计目标就是简单易用。基本的分析只需要一条命令即可运行。对于高级功能，我们提供了详细的文档和视频教程，通常30分钟即可上手。
 
 ### Q7: 是否收费？
-**A:** JCIA目前对公司内部团队完全免费使用。未来可能会针对企业版推出一些高级功能，但基础功能将始终保持免费。
+**A:** JCIA是开源项目，采用MIT许可证，完全免费使用。
 
 ---
 

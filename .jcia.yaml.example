@@ -44,11 +44,11 @@ multi_repo:
   repos:
     - name: "user-service"
       path: "/repos/user-service"
-      git_url: "git@github.com:company/user-service.git"
+      git_url: "git@github.com:your-org/user-service.git"
     - name: "order-service"
       path: "/repos/order-service"
-      git_url: "git@github.com:company/order-service.git"
-  
+      git_url: "git@github.com:your-org/order-service.git"
+
   service_dependencies:
     - from: "order-service"
       to: ["user-service", "payment-service"]
@@ -57,7 +57,7 @@ multi_repo:
 # DeepWiki AI集成配置
 deepwiki:
   enabled: false
-  base_url: "http://your-internal-deepwiki.com"
+  base_url: "http://your-deepwiki-server.example.com"
   access_method: "url"  # url | api
   
   url_config:

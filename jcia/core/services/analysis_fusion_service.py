@@ -5,7 +5,6 @@
 """
 
 import logging
-from typing import Any
 
 from jcia.core.entities.impact_graph import (
     ImpactEdge,
@@ -17,7 +16,6 @@ from jcia.core.entities.impact_graph import (
 from jcia.core.interfaces.call_chain_analyzer import (
     CallChainAnalyzer,
     CallChainGraph,
-    CallChainNode,
 )
 
 logger = logging.getLogger(__name__)

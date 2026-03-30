@@ -179,7 +179,7 @@
 **测试状态**: ❌ 已创建但无法运行
 
 **问题分析**:
-1. ❌ **API Key 格式问题**: 提供的 Key `803de240-5683-4ce3-9cbd-0ad5192db942` 不匹配 Volcengine 要求
+1. ❌ **API Key 格式问题**: 提供的 Key 不匹配 Volcengine 要求
    - API endpoint: `https://ark.cn-beijing.volces.com/api/v3/chat/completions`
    - 错误信息: `The API key format is incorrect. Request id: 0`
    - 原因：Volcengine API 可能需要特定的 Key 格式（如：App ID + Secret Key 的组合）
@@ -403,7 +403,7 @@ mvn --version
 ### 2. Volcengine API 测试无法运行
 
 **原因**:
-- ❌ **API Key 格式问题**: 提供的 Key `803de240-5683-4ce3-9cbd-0ad5192db942` 可能不符合 Volcengine 要求
+- ❌ **API Key 格式问题**: 提供的 Key 可能不符合 Volcengine 要求
 - ❌ **API endpoint 错误**: 使用的 endpoint `https://ark.cn-beijing.volces.com/api/v3/chat/completions` 无法连接
 - ❌ **网络限制**: 无法连接到 Volcengine API 服务
 

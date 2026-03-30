@@ -137,9 +137,8 @@
 │   2. 配置: 编辑 .jcia.yaml 配置文件                              │
 │   3. 分析: jcia analyze --repo-path /your/repo --from-commit xxx│
 │                                                                 │
-│   📖 详细文档: [内部Wiki链接]                                      │
-│   💬 技术支持: [企业微信/钉钉群]                                    │
-│   📧 联系邮箱: jcia-support@company.com                          │
+│   📖 详细文档: https://github.com/your-org/jcia                    │
+│   📧 联系邮箱: jcia-dev@example.org                               │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```

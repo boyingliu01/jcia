@@ -218,7 +218,7 @@ make check
 
 ## 支持
 
-- 📧 Email: support@example.com
+- 📧 Email: jcia-dev@example.org
 - 🐛 Issues: [GitHub Issues](https://github.com/your-org/jcia/issues)
 - 📖 Docs: [项目文档](https://github.com/your-org/jcia#readme)
 
