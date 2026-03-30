@@ -78,7 +78,7 @@
 
 | 指标 | 目标 | 当前状态 |
 |------|------|----------|
-| 测试覆盖率（整体） | ≥ 80% | **79%** ⚠️ (差 1%) |
+| 测试覆盖率（整体） | ≥ 80% | **80%** ✓ |
 | 测试覆盖率（Entities） | ≥ 95% | 97% ✓ |
 | 测试覆盖率（Services） | ≥ 85% | 86% ✓ |
 | 测试覆盖率（Adapters） | ≥ 75% | 74% ⚠️ |
@@ -91,8 +91,8 @@
 1. **远程调用检测实现** - 待开始（核心目标）
 2. **分析融合服务实现** - 待开始
 3. **严重度评级增强** - 待开始
-4. **测试覆盖率提升** - 当前 79%，目标 80%
-   - 已完成：`analysis_fusion_service.py`: 58% → 92%
-   - 已完成：`sqlite_repository.py`: 72% → 80%
-   - 已完成：`mock_call_chain_analyzer.py`: 45% → 100%
-   - 进行中：`source_code_call_graph_adapter.py`: 72% → 76%
+4. ~~测试覆盖率提升~~ - **已完成** ✓
+   - `analysis_fusion_service.py`: 58% → 92%
+   - `sqlite_repository.py`: 72% → 80%
+   - `mock_call_chain_analyzer.py`: 45% → 100%
+   - `source_code_call_graph_adapter.py`: 72% → 78%
