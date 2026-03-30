@@ -8,6 +8,14 @@ JCIA (Java Code Impact Analyzer) is a tool for analyzing the impact of code chan
 
 **Requirements**: Python 3.10+
 
+## Development Methodology
+
+This project follows **SDD (Specification-Driven Development)** and **TDD (Test-Driven Development)**:
+- Write specifications before implementation
+- Write tests before code
+- All new features must have test coverage
+- Boy Scout Rule: Every commit improves code quality
+
 ## Common Commands
 
 ### Development
@@ -29,6 +37,9 @@ make test-integration  # Run only integration tests
 
 # Run a single test
 python -m pytest tests/unit/core/test_change_set.py::TestChangeSet::test_is_empty -v
+
+# Run with coverage for specific module
+python -m pytest tests/unit --cov=jcia.core.services.analysis_fusion_service --cov-report=term-missing
 ```
 
 ### Code Quality
@@ -37,6 +48,9 @@ make lint              # Run ruff linter
 make format            # Format code with ruff
 make check             # Run lint + type check + security scan
 make security          # Run bandit security scanner
+
+# Type checking (not in make check by default)
+python -m pyright jcia
 ```
 
 ### CLI Usage
@@ -163,6 +177,12 @@ Environment variables for AI features:
 - Services layer: ≥ 85%
 - Adapters layer: ≥ 75%
 
+### Ruff Configuration
+Per-file ignores are configured for tests:
+- `E501`: Line too long (test data/paths)
+- `E402`: Module import not at top (sys.path manipulation)
+- `S108`: Hardcoded temp file (intentional in tests)
+
 ### Import Order
 1. Standard library
 2. Third-party libraries
@@ -174,3 +194,22 @@ Dependencies must point inward: `Adapters → Infrastructure → Use Cases → S
 - Services: Only depend on Entities
 - Use Cases: Depend on interfaces, not adapters directly
 - Adapters: Bridge external systems to core
+
+## SDD Workflow
+
+This project uses Specification-Driven Development. Key files in `.speckit/`:
+
+| File | Purpose |
+|------|---------|
+| `constitution.md` | Project principles and quality standards |
+| `specify.md` | Feature specifications (write before implementation) |
+| `plan.md` | Implementation plans |
+| `tasks.md` | Task tracking |
+| `analyze.md` | Quality metrics and consistency analysis |
+
+When implementing new features:
+1. Write/update specification in `specify.md`
+2. Create implementation plan in `plan.md`
+3. Write tests first (TDD)
+4. Implement to pass tests
+5. Update `analyze.md` with quality metrics
