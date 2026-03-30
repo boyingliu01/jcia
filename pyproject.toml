@@ -89,6 +89,13 @@ ignore = [
     "S607",  # subprocess calls (intentional)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "E501",  # line too long (test data/paths)
+    "E402",  # module import not at top (sys.path manipulation)
+    "S108",  # hardcoded temp file (intentional in tests)
+]
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 

@@ -38,7 +38,10 @@
       "Bash(echo:*)",
       "Bash(done)",
       "Bash(git diff-tree:*)",
-      "Bash(do echo:*)"
+      "Bash(do echo:*)",
+      "WebFetch(domain:codeql.github.com)",
+      "WebFetch(domain:github.blog)",
+      "WebFetch(domain:snyk.io)"
     ]
   }
 }

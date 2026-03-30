@@ -136,7 +136,7 @@ class SQLiteTestRunRepository(TestRunRepository):
                        coverage_json, metadata_json
                   FROM test_runs
                  WHERE run_type = ?
-                 ORDER BY start_time DESC
+                 ORDER BY start_time DESC, id DESC
                  LIMIT 1
                 """,
                 (run_type,),
@@ -149,7 +149,7 @@ class SQLiteTestRunRepository(TestRunRepository):
                        failed_tests, skipped_tests, error_tests, total_duration_ms,
                        coverage_json, metadata_json
                   FROM test_runs
-                 ORDER BY start_time DESC
+                 ORDER BY start_time DESC, id DESC
                  LIMIT 1
                 """,
                 (),

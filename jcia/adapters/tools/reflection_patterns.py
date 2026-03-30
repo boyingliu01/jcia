@@ -344,10 +344,11 @@ class ReflectionPatternMatcher:
 
     def _extract_invoke(self, match: re.Match[str]) -> dict[str, Any]:
         """Extract info from Method.invoke(obj, args)."""
+        lastindex = match.lastindex
         return {
             "context": {
                 "target_object": match.group(1),
-                "args": match.group(2) if match.lastindex >= 2 else None,
+                "args": match.group(2) if lastindex is not None and lastindex >= 2 else None,
             },
         }
 

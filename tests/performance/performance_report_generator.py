@@ -501,7 +501,7 @@ def main() -> int:
 
     # 生成报告
     generator = PerformanceReportGenerator(benchmark_data)
-    report = generator.generate_report()
+    generator.generate_report()  # noqa: F841
 
     # 保存报告
     report_path = generate_full_report(benchmark_data, args.output)

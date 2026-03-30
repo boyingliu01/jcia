@@ -342,7 +342,7 @@ class MavenSurefireTestExecutor(TestExecutor):
                 "cases": [],
             }
 
-    def _parse_test_case(self, element: Any) -> TestExecutionResult:  # ruff: noqa: ANN401
+    def _parse_test_case(self, element: Any) -> TestExecutionResult:  # noqa: ANN401
         """解析单个测试用例.
 
         Args:

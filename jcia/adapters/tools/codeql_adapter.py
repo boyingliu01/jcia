@@ -251,7 +251,7 @@ class CodeQLAdapter(CallChainAnalyzer):
             return db_path
 
         except subprocess.TimeoutExpired:
-            raise RuntimeError(f"CodeQL database creation timed out after {timeout}s")
+            raise RuntimeError(f"CodeQL database creation timed out after {timeout}s") from None
 
     def _run_query(
         self,
@@ -313,7 +313,7 @@ class CodeQLAdapter(CallChainAnalyzer):
             return {}
 
         except subprocess.TimeoutExpired:
-            raise RuntimeError("CodeQL query timed out")
+            raise RuntimeError("CodeQL query timed out") from None
 
     def analyze_database(self) -> CodeQLAnalysisResult:
         """Perform full analysis on the CodeQL database.

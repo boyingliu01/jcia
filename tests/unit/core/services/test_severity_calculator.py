@@ -279,6 +279,7 @@ class TestMultiDimensionalSeverityCalculator:
         )
 
         # 验证权重已应用
+        assert result is not None  # noqa: F841
         weights = calculator.get_weights()
         assert weights[SeverityDimension.CLASS_KEYWORDS] == 0.5
         assert weights[SeverityDimension.METHOD_COMPLEXITY] == 0.3

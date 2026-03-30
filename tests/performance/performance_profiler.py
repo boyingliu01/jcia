@@ -158,7 +158,7 @@ class PerformanceProfiler:
         """
         timings = []
         # 限制只获取前20个最耗时的函数
-        for func, (cc, nc, tt, ct, callers) in list(stats.stats.items())[:20]:
+        for func, (cc, _nc, tt, ct, _callers) in list(stats.stats.items())[:20]:
             filename, line_no, func_name = func
             timings.append({
                 "function": func_name,
