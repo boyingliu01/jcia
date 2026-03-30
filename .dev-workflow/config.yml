@@ -1,0 +1,67 @@
+# Dev-Workflow 配置文件
+# JCIA (Java Code Impact Analyzer) 项目配置
+
+# 固定方法论（不可修改）
+methodology:
+  tdd: true                    # TDD开发流程
+  solid: true                  # SOLID原则
+  boy_scout_rule: true          # 童子军规则（质量门禁）
+  clean_architecture: true       # Clean Architecture
+
+# SDD 开发模式（每个项目只能设置一次）
+sdd_mode: spec-kit             # open-spec | spec-kit
+sdd_mode_set_date: "2026-03-30 09:30:00"
+
+# 项目信息
+project:
+  name: JCIA
+  type: maintenance                    # new | maintenance
+  primary_language: python
+  architecture: hexagonal
+  created_date: 2026-03-30
+
+# 质量门禁（统一使用童子军规则）
+quality_gate:
+  mode: incremental              # 固定为incremental
+  exclude:
+    directories:
+      - "node_modules/"
+      - "vendor/"
+      - "third_party/"
+      - "__pycache__/"
+      - ".venv/"
+      - "venv/"
+      - "dev-workflow/"          # 子模块排除
+      - "docs/reports/"          # 生成的报告文件
+      - "benchmark_data/"        # 基准测试数据
+    patterns:
+      - "*.generated.*"
+      - "*_pb2.py"
+      - "*.min.js"
+    files: []
+
+# 语言配置
+languages:
+  - id: python
+    name: Python
+    role: backend
+    path: ./
+    linter: ruff
+    formatter: ruff
+    type_checker: pyright
+    test_framework: pytest
+
+# 项目复杂度评估
+complexity:
+  type: medium                 # small | medium | large
+  modules: 15
+  team_size: 1
+  expected_lines: 15000
+  estimated_date: "2026-03-30"
+
+# Clean Architecture检测配置
+architecture_check:
+  enabled: true
+  strict: false                # 维护项目设为false，逐步改进
+  tool: auto                   # auto | custom
+  config: {}
