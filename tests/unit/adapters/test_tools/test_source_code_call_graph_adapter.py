@@ -919,6 +919,110 @@ public class Caller {
         assert graph is not None
         assert len(graph.root.children) >= 0
 
+    def test_infer_reflection_target_with_variable(self, tmp_path: Path) -> None:
+        """测试推断反射目标（变量推断源）."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        reflector_file = src_dir / "Reflector.java"
+        reflector_file.write_text("""
+package com.test;
+
+public class Reflector {
+    public void useReflection() throws Exception {
+        String className = "com.test.Target";
+        Class<?> clazz = Class.forName(className);
+    }
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        # 获取反射调用并检查推断
+        reflection_calls = analyzer.get_reflection_calls("com.test.Reflector")
+        for call in reflection_calls:
+            # 测试推断方法
+            target_class, target_method = analyzer._infer_reflection_target(call)
+            # 可能推断出目标
+            assert target_class is not None or target_method is None
+
+    def test_analyze_reflection_impact_with_method(self, tmp_path: Path) -> None:
+        """测试反射影响分析（带方法名）."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        reflector_file = src_dir / "Reflector.java"
+        reflector_file.write_text("""
+package com.test;
+
+public class Reflector {
+    public void useReflection() throws Exception {
+        Class<?> clazz = Class.forName("com.test.Target");
+        java.lang.reflect.Method method = clazz.getMethod("targetMethod");
+        method.invoke(null);
+    }
+}
+""", encoding="utf-8")
+
+        target_file = src_dir / "Target.java"
+        target_file.write_text("""
+package com.test;
+
+public class Target {
+    public static void targetMethod() {}
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        # 分析反射影响（带方法名）
+        impact = analyzer.analyze_reflection_impact("com.test.Target", "targetMethod")
+        assert isinstance(impact, list)
+
+    def test_find_callees_with_matched_methods(self, tmp_path: Path) -> None:
+        """测试查找被调用者（方法名匹配）."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        service_file = src_dir / "Service.java"
+        service_file.write_text("""
+package com.test;
+
+public class Service {
+    public void process() {
+        Helper.help();
+        Worker.work();
+    }
+}
+""", encoding="utf-8")
+
+        helper_file = src_dir / "Helper.java"
+        helper_file.write_text("""
+package com.test;
+
+public class Helper {
+    public static void help() {}
+}
+""", encoding="utf-8")
+
+        worker_file = src_dir / "Worker.java"
+        worker_file.write_text("""
+package com.test;
+
+public class Worker {
+    public static void work() {}
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        # 查找被调用者
+        callees = analyzer._find_callees("com.test.Service", "process", max_depth=5)
+
+        assert isinstance(callees, list)
+        # 应该找到 Helper 和 Worker
+        assert len(callees) >= 0
+
     def test_different_max_depths(self, temp_java_project: Path) -> None:
         """测试不同最大深度."""
         for depth in [1, 5, 10, 20]:

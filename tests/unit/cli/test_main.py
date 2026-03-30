@@ -328,3 +328,29 @@ class TestCLI:
 
         assert result.exit_code != 0
         assert "一级和二级" in result.output or "不支持" in result.output
+
+    def test_config_command_show_with_nested_config(self, runner: CliRunner) -> None:
+        """测试config命令显示嵌套配置."""
+        with runner.isolated_filesystem():
+            # 先设置嵌套配置
+            runner.invoke(cli, ["config", "--set", "project.path=/test/path"])
+            runner.invoke(cli, ["config", "--set", "project.name=TestProject"])
+
+            # 显示配置
+            result = runner.invoke(cli, ["config", "--show"])
+
+            assert result.exit_code == 0
+            # 嵌套配置应该显示为 project: 子项
+            assert "project:" in result.output or "project." in result.output
+
+    def test_config_command_show_with_flat_config(self, runner: CliRunner) -> None:
+        """测试config命令显示扁平配置."""
+        with runner.isolated_filesystem():
+            # 设置单级键
+            runner.invoke(cli, ["config", "--set", "debug=true"])
+            runner.invoke(cli, ["config", "--set", "verbose=false"])
+
+            # 显示配置
+            result = runner.invoke(cli, ["config", "--show"])
+
+            assert result.exit_code == 0
