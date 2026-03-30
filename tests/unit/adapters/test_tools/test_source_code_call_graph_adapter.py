@@ -582,6 +582,75 @@ class TestSourceCodeCallGraphAnalyzerIntegration:
         tests = analyzer.find_test_classes("Service")
         assert tests is not None
 
+    def test_reflection_analysis(self, tmp_path: Path) -> None:
+        """测试反射调用分析."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        # 创建包含反射调用的类
+        reflector_file = src_dir / "Reflector.java"
+        reflector_file.write_text("""
+package com.test;
+
+public class Reflector {
+    public void useReflection() throws Exception {
+        Class<?> clazz = Class.forName("com.test.Target");
+        Object instance = clazz.newInstance();
+        java.lang.reflect.Method method = clazz.getMethod("targetMethod");
+        method.invoke(instance);
+    }
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        # 检查反射调用被检测到
+        reflection_calls = analyzer.get_reflection_calls("com.test.Reflector")
+        assert isinstance(reflection_calls, list)
+
+    def test_all_reflection_calls(self, tmp_path: Path) -> None:
+        """测试获取所有反射调用."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        reflector_file = src_dir / "Reflector.java"
+        reflector_file.write_text("""
+package com.test;
+
+public class Reflector {
+    public void method() throws Exception {
+        Class.forName("com.test.Target");
+    }
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        all_calls = analyzer.get_all_reflection_calls()
+        assert isinstance(all_calls, dict)
+
+    def test_analyze_reflection_impact(self, tmp_path: Path) -> None:
+        """测试反射影响分析."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        reflector_file = src_dir / "Reflector.java"
+        reflector_file.write_text("""
+package com.test;
+
+public class Reflector {
+    public void method() throws Exception {
+        Class.forName("com.test.Target");
+    }
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        # 分析反射影响
+        impact = analyzer.analyze_reflection_impact("com.test.Target")
+        assert isinstance(impact, list)
+
     def test_different_max_depths(self, temp_java_project: Path) -> None:
         """测试不同最大深度."""
         for depth in [1, 5, 10, 20]:
