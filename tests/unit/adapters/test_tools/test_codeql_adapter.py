@@ -6,13 +6,12 @@ Tests for CodeQL-based call chain analysis functionality.
 import json
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch, mock_open
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from jcia.adapters.tools.codeql_adapter import CodeQLAdapter
 from jcia.adapters.tools.codeql_models import (
-    CodeQLAnalysisStatus,
     CodeQLCall,
     CodeQLCallGraph,
     CodeQLFinding,
@@ -23,7 +22,6 @@ from jcia.adapters.tools.codeql_models import (
 from jcia.core.interfaces.call_chain_analyzer import (
     AnalyzerType,
     CallChainDirection,
-    CallChainGraph,
     CallChainNode,
 )
 
