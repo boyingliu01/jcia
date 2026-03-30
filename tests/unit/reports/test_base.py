@@ -45,6 +45,66 @@ class TestReportData:
         assert "test_run" not in result
         assert "impact_graph" not in result
 
+    def test_to_dict_with_test_run(self) -> None:
+        """测试带 test_run 的数据转换为字典."""
+        from jcia.core.entities.test_run import TestRun, RunType
+
+        test_run = TestRun(
+            id=1,
+            run_type=RunType.BASELINE,
+            commit_hash="abc123",
+        )
+        data = ReportData(title="测试", test_run=test_run)
+        result = data.to_dict()
+
+        assert "test_run" in result
+        assert result["test_run"]["id"] == 1
+
+    def test_to_dict_with_baseline_run(self) -> None:
+        """测试带 baseline_run 的数据转换为字典."""
+        from jcia.core.entities.test_run import TestRun, RunType
+
+        baseline_run = TestRun(
+            id=1,
+            run_type=RunType.BASELINE,
+            commit_hash="baseline123",
+        )
+        data = ReportData(title="测试", baseline_run=baseline_run)
+        result = data.to_dict()
+
+        assert "baseline_run" in result
+        assert result["baseline_run"]["id"] == 1
+
+    def test_to_dict_with_comparison(self) -> None:
+        """测试带 comparison 的数据转换为字典."""
+        from jcia.core.entities.test_run import TestComparison
+
+        comparison = TestComparison()
+        data = ReportData(title="测试", comparison=comparison)
+        result = data.to_dict()
+
+        assert "comparison" in result
+
+    def test_to_dict_with_impact_graph(self) -> None:
+        """测试带 impact_graph 的数据转换为字典."""
+        from jcia.core.entities.impact_graph import ImpactGraph
+
+        impact_graph = ImpactGraph(change_set_id="test_123")
+        data = ReportData(title="测试", impact_graph=impact_graph)
+        result = data.to_dict()
+
+        assert "impact_graph" in result
+
+    def test_to_dict_with_change_set(self) -> None:
+        """测试带 change_set 的数据转换为字典."""
+        from jcia.core.entities.change_set import ChangeSet
+
+        change_set = ChangeSet()
+        data = ReportData(title="测试", change_set=change_set)
+        result = data.to_dict()
+
+        assert "change_set" in result
+
 
 class TestReportResult:
     """测试ReportResult数据类."""

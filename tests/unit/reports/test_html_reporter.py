@@ -254,3 +254,21 @@ class TestHTMLReporter:
 
         assert result.success is True
         assert reporter._include_charts is True
+
+    def test_generate_with_invalid_path(self) -> None:
+        """测试生成报告时路径无效."""
+        import platform
+
+        if platform.system() == "Windows":
+            invalid_path = Path("COM1")  # Windows 保留名称
+        else:
+            invalid_path = Path("/nonexistent_root_dir_xyz/report.html")
+
+        reporter = HTMLReporter(output_dir=invalid_path)
+        data = ReportData(title="无效路径测试")
+
+        result = reporter.generate(data)
+
+        # 应该返回失败结果
+        assert result.success is False
+        assert result.error_message is not None

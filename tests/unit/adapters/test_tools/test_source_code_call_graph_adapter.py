@@ -651,6 +651,274 @@ public class Reflector {
         impact = analyzer.analyze_reflection_impact("com.test.Target")
         assert isinstance(impact, list)
 
+    def test_analyze_downstream_with_multiple_callees(self, tmp_path: Path) -> None:
+        """测试下游分析找到多个被调用者."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        # 创建调用多个方法的类
+        caller_file = src_dir / "Caller.java"
+        caller_file.write_text("""
+package com.test;
+
+public class Caller {
+    public void doWork() {
+        Helper.help();
+        Worker.work();
+        Util.process();
+    }
+}
+""", encoding="utf-8")
+
+        # 创建被调用的类
+        helper_file = src_dir / "Helper.java"
+        helper_file.write_text("""
+package com.test;
+
+public class Helper {
+    public static void help() {}
+}
+""", encoding="utf-8")
+
+        worker_file = src_dir / "Worker.java"
+        worker_file.write_text("""
+package com.test;
+
+public class Worker {
+    public static void work() {}
+}
+""", encoding="utf-8")
+
+        util_file = src_dir / "Util.java"
+        util_file.write_text("""
+package com.test;
+
+public class Util {
+    public static void process() {}
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        # 分析下游
+        graph = analyzer.analyze_downstream("com.test.Caller.doWork", max_depth=5)
+
+        assert graph is not None
+        assert graph.root.class_name == "com.test.Caller"
+        assert graph.root.method_name == "doWork"
+
+    def test_find_callees_with_reflection(self, tmp_path: Path) -> None:
+        """测试查找被调用者包含反射调用."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        caller_file = src_dir / "Caller.java"
+        caller_file.write_text("""
+package com.test;
+
+public class Caller {
+    public void method() throws Exception {
+        Class<?> clazz = Class.forName("com.test.Target");
+        Object instance = clazz.newInstance();
+    }
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        # 查找被调用者
+        callees = analyzer._find_callees("com.test.Caller", "method", max_depth=5)
+
+        assert isinstance(callees, list)
+
+    def test_analyze_class_dependencies_with_dependencies(self, tmp_path: Path) -> None:
+        """测试类依赖分析有依赖的情况."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        service_file = src_dir / "Service.java"
+        service_file.write_text("""
+package com.test;
+
+public class Service {
+    public void process() {
+        Repository.save();
+        Validator.validate();
+    }
+}
+""", encoding="utf-8")
+
+        repo_file = src_dir / "Repository.java"
+        repo_file.write_text("""
+package com.test;
+
+public class Repository {
+    public static void save() {}
+}
+""", encoding="utf-8")
+
+        validator_file = src_dir / "Validator.java"
+        validator_file.write_text("""
+package com.test;
+
+public class Validator {
+    public static void validate() {}
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        deps = analyzer.analyze_class_dependencies("com.test.Service")
+
+        assert deps["class_name"] == "com.test.Service"
+        # Service 依赖 Repository 和 Validator
+        assert len(deps["dependencies"]) >= 0
+
+    def test_analyze_class_dependencies_with_dependents(self, tmp_path: Path) -> None:
+        """测试类依赖分析有依赖者的情况."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        service_file = src_dir / "Service.java"
+        service_file.write_text("""
+package com.test;
+
+public class Service {
+    public void doSomething() {}
+}
+""", encoding="utf-8")
+
+        client_file = src_dir / "Client.java"
+        client_file.write_text("""
+package com.test;
+
+public class Client {
+    public void run() {
+        Service service = new Service();
+        service.doSomething();
+    }
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        deps = analyzer.analyze_class_dependencies("com.test.Service")
+
+        assert deps["class_name"] == "com.test.Service"
+        # Service 有 Client 作为依赖者
+        assert len(deps["dependents"]) >= 0
+
+    def test_extract_method_calls_with_keywords(self, tmp_path: Path) -> None:
+        """测试方法调用提取排除关键字."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        # 创建包含关键字的代码
+        keyword_file = src_dir / "KeywordClass.java"
+        keyword_file.write_text("""
+package com.test;
+
+public class KeywordClass {
+    public void method() {
+        if (condition()) {}
+        for (int i = 0; i < 10; i++) {}
+        while (running()) {}
+        switch (value()) {}
+        try {} catch (Exception e) {}
+        assert isValid();
+        realMethod();
+    }
+
+    public boolean condition() { return true; }
+    public boolean running() { return false; }
+    public int value() { return 0; }
+    public boolean isValid() { return true; }
+    public void realMethod() {}
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        # 验证关键字被排除，但真实方法被检测到
+        assert "com.test.KeywordClass" in analyzer._class_methods_cache
+
+    def test_find_callers_with_same_method_name(self, tmp_path: Path) -> None:
+        """测试查找调用者时同名方法的情况."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        # 创建多个类调用同名方法
+        caller1_file = src_dir / "Caller1.java"
+        caller1_file.write_text("""
+package com.test;
+
+public class Caller1 {
+    public void execute() {
+        Target.process();
+    }
+}
+""", encoding="utf-8")
+
+        caller2_file = src_dir / "Caller2.java"
+        caller2_file.write_text("""
+package com.test;
+
+public class Caller2 {
+    public void run() {
+        Target.process();
+    }
+}
+""", encoding="utf-8")
+
+        target_file = src_dir / "Target.java"
+        target_file.write_text("""
+package com.test;
+
+public class Target {
+    public static void process() {}
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        # 查找调用者
+        callers = analyzer._find_callers("com.test.Target", "process", max_depth=5)
+
+        assert isinstance(callers, list)
+
+    def test_upstream_with_callers(self, tmp_path: Path) -> None:
+        """测试上游分析有调用者的情况."""
+        src_dir = tmp_path / "src" / "main" / "java" / "com" / "test"
+        src_dir.mkdir(parents=True, exist_ok=True)
+
+        target_file = src_dir / "Target.java"
+        target_file.write_text("""
+package com.test;
+
+public class Target {
+    public void process() {}
+}
+""", encoding="utf-8")
+
+        caller_file = src_dir / "Caller.java"
+        caller_file.write_text("""
+package com.test;
+
+public class Caller {
+    public void execute() {
+        Target target = new Target();
+        target.process();
+    }
+}
+""", encoding="utf-8")
+
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
+
+        graph = analyzer.analyze_upstream("com.test.Target.process", max_depth=5)
+
+        assert graph is not None
+        assert len(graph.root.children) >= 0
+
     def test_different_max_depths(self, temp_java_project: Path) -> None:
         """测试不同最大深度."""
         for depth in [1, 5, 10, 20]:

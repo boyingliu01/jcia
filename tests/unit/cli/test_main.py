@@ -314,3 +314,17 @@ class TestCLI:
 
             assert result.exit_code == 0
             assert "project:" in result.output or "project.path" in result.output
+
+    def test_config_command_no_args(self, runner: CliRunner) -> None:
+        """测试config命令不带任何参数."""
+        result = runner.invoke(cli, ["config"])
+
+        assert result.exit_code == 0
+        assert "--show" in result.output or "--set" in result.output
+
+    def test_config_command_set_three_level_key(self, runner: CliRunner) -> None:
+        """测试config命令设置三级键（应该报错）."""
+        result = runner.invoke(cli, ["config", "--set", "a.b.c=value"])
+
+        assert result.exit_code != 0
+        assert "一级和二级" in result.output or "不支持" in result.output

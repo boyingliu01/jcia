@@ -125,3 +125,23 @@ class TestSQLiteAdapter:
 
         # Assert
         assert affected == 1
+
+    def test_execute_write_without_connection_raises(self) -> None:
+        """测试未连接时执行写入抛出异常."""
+        adapter = SQLiteAdapter(":memory:")
+
+        with pytest.raises(RuntimeError, match="Database not connected"):
+            adapter.execute_write(
+                "INSERT INTO test_runs (commit_hash) VALUES (?)",
+                ("test",),
+            )
+
+    def test_execute_non_query_without_connection_raises(self) -> None:
+        """测试未连接时执行更新抛出异常."""
+        adapter = SQLiteAdapter(":memory:")
+
+        with pytest.raises(RuntimeError, match="Database not connected"):
+            adapter.execute_non_query(
+                "UPDATE test_runs SET status = ?",
+                ("completed",),
+            )
