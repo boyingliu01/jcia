@@ -32,7 +32,11 @@ JCIA (Java Code Impact Analyzer) is a development tool that helps teams quickly 
 - Selective test acceleration: ≥ 50%
 
 **Test Project**:
-- **Jenkins** (`jenkins-full/`) - Open-source continuous integration server used for validation and testing of JCIA functionality. This is a real Java project with ~1000+ test cases that serves as the primary testbed for impact analysis and test selection features.
+- **Jenkins** (`jenkins/`) - Open-source continuous integration server used for validation and testing of JCIA functionality. This is a real Java project with ~1000+ test cases (~2956 Java/XML files) that serves as the primary testbed for impact analysis and test selection features. Has its own `AGENTS.md` at `jenkins/AGENTS.md`.
+
+**Known Issues**:
+- **CLI entry point**: `pyproject.toml` defines `jcia = "jcia.cli:main"` but no `jcia/cli/__init__.py` exists and no `main()` function is defined. The `cli()` function lives in `jcia/cli/main.py`. Fix: either create `jcia/cli/__init__.py` or update entry point to `jcia.cli.main:cli`.
+- **Duplicate sqlite_adapter.py**: Present in both `jcia/adapters/database/` and `jcia/infrastructure/database/`. The adapter imports from infrastructure, creating naming confusion.
 
 ---
 
@@ -138,7 +142,16 @@ jcia/
 │       ├── mock_call_chain_analyzer.py
 │       ├── starts_test_selector_adapter.py
 │       ├── java_all_call_graph_adapter.py
-│       └── skywalking_call_chain_adapter.py
+│       ├── source_code_call_graph_adapter.py
+│       ├── skywalking_call_chain_adapter.py
+│       ├── codeql_adapter.py, codeql_models.py
+│       ├── reflection_patterns.py, reflection_models.py
+│       └── remote_call/          # Remote call detection adapters (IN PROGRESS)
+│           ├── dubbo_analyzer.py
+│           ├── feign_analyzer.py
+│           ├── httpclient_analyzer.py
+│           └── mq_listener_analyzer.py
+│       └── remote_call_patterns.py
 ├── cli/                  # Command-line interface
 │   └── main.py
 ├── core/                 # Core business logic (clean architecture)
@@ -203,7 +216,7 @@ scripts/                  # Development and utility scripts
 ├── run_pytest.ps1
 └── setup_env.ps1
 
-jenkins-full/            # Jenkins CI/CD project (testbed for JCIA)
+jenkins/            # Jenkins CI/CD project (testbed for JCIA, 2956 files)
 ├── core/                # Core Java classes
 ├── test/                # Java test classes (1000+ tests)
 ├── pom.xml              # Maven build configuration

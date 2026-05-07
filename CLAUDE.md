@@ -70,12 +70,15 @@ jcia config --show
   - `ImpactGraph`: Method call dependency graph with severity levels
   - `TestCase`: Generated test case with priority and coverage info
   - `TestRun`, `TestResult`, `TestDiff`: Test execution and comparison models
+  - `RemoteCallNode`: Remote call detection and modeling (IN PROGRESS)
+  - `RemoteEndpoint`: Remote service endpoint definition (IN PROGRESS)
 
 - **Interfaces** (`jcia/core/interfaces/`): Abstract contracts for adapters
   - `ChangeAnalyzer`: Analyze Git commits/changes (implemented by `PyDrillerAdapter`)
   - `CallChainAnalyzer`: Analyze method call dependencies
   - `TestSelector`, `TestGenerator`, `TestExecutor`: Test-related abstractions
   - `AIService`: AI service for test generation (Volcengine, LLM)
+  - `RemoteCallAnalyzer`: Remote call detection interface (IN PROGRESS)
 
 - **Services** (`jcia/core/services/`): Domain logic coordinating entities
   - `CallChainBuilder`: Builds impact graphs from method changes
@@ -85,6 +88,7 @@ jcia config --show
   - `ChangeComparisonService`: Compares test runs (baseline vs regression)
   - `SeverityCalculator`, `SeverityEnhancer`: Calculate/enhance impact severity
   - `AnalysisFusionService`: Combines multiple analysis results
+  - `RemoteCallDetectionService`: Remote call analysis orchestration (IN PROGRESS)
 
 - **Use Cases** (`jcia/core/use_cases/`): Application-level orchestration
   - `AnalyzeImpactUseCase`: End-to-end change impact analysis
@@ -106,6 +110,12 @@ jcia config --show
     - `skywalking_call_chain_adapter.py`: Runtime call chain from SkyWalking
     - `reflection_patterns.py`, `reflection_models.py`: Java reflection call detection and inference
     - `codeql_adapter.py`, `codeql_models.py`: CodeQL semantic analysis integration
+    - `remote_call/`: Remote call detection adapters (IN PROGRESS)
+      - `dubbo_analyzer.py`: Dubbo RPC detection
+      - `feign_analyzer.py`: Feign HTTP detection
+      - `httpclient_analyzer.py`: HTTP client detection
+      - `mq_listener_analyzer.py`: MQ listener detection
+    - `remote_call_patterns.py`: Remote call pattern definitions
 
 - **Reports** (`jcia/reports/`): Output formatting
   - `json_reporter.py`, `html_reporter.py`, `markdown_reporter.py`
@@ -213,3 +223,60 @@ When implementing new features:
 3. Write tests first (TDD)
 4. Implement to pass tests
 5. Update `analyze.md` with quality metrics
+
+## Project Status
+
+### Current State (2025-03-31)
+
+#### Completed Features
+1. **Git Change Analysis** (PyDriller)
+2. **Method Call Chain Analysis** (Static + Reflection Detection)
+3. **Impact Assessment** (Multi-dimensional Severity Rating)
+4. **Test Selection Strategies** (STARTS, IMPACT_BASED, HYBRID)
+5. **Regression Test Execution** (Maven Surefire)
+6. **Report Generation** (JSON, HTML, Markdown)
+7. **Coverage Target Achieved**: Overall 80% coverage ✓
+
+#### In Progress
+1. **Remote Call Analysis** - Entities and interfaces defined, implementation pending
+   - Dubbo RPC detection
+   - Feign HTTP detection
+   - HTTP Client detection
+   - MQ Listener detection
+
+#### Remaining Work (Core Objectives)
+1. **Remote Call Adapters** (Phase 2)
+   - DubboAnalyzerAdapter implementation
+   - FeignAnalyzerAdapter implementation
+   - HttpClientAnalyzerAdapter implementation
+   - MQListenerAnalyzerAdapter implementation
+
+2. **Service Layer Fusion** (Phase 3)
+   - AnalysisFusionService implementation
+   - SeverityEnhancer implementation
+   - RemoteCallDetectionService completion
+
+3. **Integration & Validation** (Phase 4)
+   - End-to-end integration tests
+   - Real project validation (Jenkins, etc.)
+   - Performance benchmarking
+
+### Quality Metrics Summary
+
+| Metric | Target | Current | Status |
+|--------|--------|---------|--------|
+| Overall Coverage | ≥ 80% | 80% | ✓ |
+| Entities Coverage | ≥ 95% | 97% | ✓ |
+| Services Coverage | ≥ 85% | 86% | ✓ |
+| Adapters Coverage | ≥ 75% | 74% | ~ |
+| Ruff Pass Rate | 100% | 100% | ✓ |
+| Pyright Errors | 0 | 0 | ✓ |
+| Test Pass Rate | 100% | 100% | ✓ |
+
+### Next Steps Priority
+
+1. **High Priority**: Complete Remote Call Analysis implementation
+2. **High Priority**: Implement AnalysisFusionService
+3. **Medium Priority**: Complete SeverityEnhancer with remote call factors
+4. **Medium Priority**: End-to-end integration testing
+5. **Low Priority**: Real project validation and performance benchmarking

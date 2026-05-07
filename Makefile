@@ -46,14 +46,49 @@ lint:
 	python -m ruff check jcia tests
 	python -m ruff check --select I jcia tests
 
+lint-strict:
+	@echo "Running strict lint checks..."
+	python -m ruff check --select ALL jcia tests
+
 format:
 	python -m ruff format jcia tests
 
-check: lint security
+check: lint security typecheck
+
+check-strict: lint-strict security typecheck-strict
+	@echo "All strict checks passed!"
+
+typecheck:
 	python -m pyright jcia tests
+
+typecheck-strict:
+	@echo "Running strict type checking..."
+	python -m pyright --level error jcia tests
 
 security:
 	python -m bandit -r jcia -c pyproject.toml
+
+security-strict:
+	@echo "Running strict security checks..."
+	python -m bandit -r jcia -c pyproject.toml -ll
+
+mypy-check:
+	python -m mypy jcia tests
+
+complexity:
+	@echo "Checking code complexity..."
+	python -m ruff check --select C90 jcia tests
+
+unused:
+	@echo "Checking for unused code..."
+	python -m ruff check --select F,ARG jcia tests
+
+docstrings:
+	@echo "Checking docstrings..."
+	python -m ruff check --select D jcia tests
+
+static-analysis-full: format lint-strict typecheck-strict security-strict mypy-check complexity unused
+	@echo "Full static analysis complete!"
 
 clean:
 	powershell -Command "Remove-Item -Path build, dist, *.egg-info, htmlcov, .pytest_cache, .mypy_cache, .ruff_cache -Recurse -Force -ErrorAction SilentlyContinue"

@@ -818,3 +818,77 @@ class AnalysisFusionService:
             fused.add_edge(edge)
 
         return fused
+
+    def fuse_with_remote_calls(
+        self,
+        impact_graph: ImpactGraph,
+        remote_calls: list["RemoteCallInfo"],
+    ) -> ImpactGraph:
+        """Fuse impact graph with detected remote calls.
+
+        Enhances the impact graph with cross-service call information,
+        adding nodes for remote service dependencies.
+
+        Args:
+            impact_graph: Existing impact graph to enhance
+            remote_calls: List of detected remote calls
+
+        Returns:
+            ImpactGraph: Enhanced impact graph with cross-service nodes
+        """
+        from jcia.core.entities.remote_call import RemoteCallType
+
+        if not remote_calls:
+            return impact_graph
+
+        # Create a copy of the impact graph
+        fused = ImpactGraph(
+            change_set_id=impact_graph.change_set_id,
+            root_methods=impact_graph.root_methods.copy(),
+        )
+
+        # Copy existing nodes
+        for node in impact_graph.nodes.values():
+            fused.add_node(node)
+
+        # Copy existing edges
+        for edge in impact_graph.edges:
+            fused.add_edge(edge)
+
+        # Add remote call nodes
+        for call in remote_calls:
+            if not call.endpoint.service_name:
+                continue
+
+            # Create a cross-service node
+            service_node_name = f"remote:{call.endpoint.service_name}"
+            if service_node_name not in fused.nodes:
+                cross_service_node = ImpactNode(
+                    method_name=service_node_name,
+                    class_name=call.endpoint.service_name or "",
+                    impact_type=ImpactType.INDIRECT,
+                    severity=ImpactSeverity.HIGH,  # Cross-service calls are high severity
+                    depth=-1,  # Special depth for cross-service
+                    metadata={
+                        "is_cross_service": True,
+                        "call_type": call.call_type.value,
+                        "endpoint": call.endpoint.full_identifier,
+                        "confidence": call.confidence,
+                    },
+                )
+                fused.add_node(cross_service_node)
+
+            # Add edge from caller to remote service
+            caller_method = call.full_call_signature.split(" -> ")[0]
+            if caller_method in fused.nodes:
+                edge = ImpactEdge(
+                    source=caller_method,
+                    target=service_node_name,
+                )
+                fused.add_edge(edge)
+
+        logger.info(
+            f"Fused impact graph with {len(remote_calls)} remote calls, "
+            f"added cross-service nodes"
+        )
+        return fused

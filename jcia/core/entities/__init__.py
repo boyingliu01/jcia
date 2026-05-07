@@ -18,6 +18,12 @@ from jcia.core.entities.impact_graph import (
     ImpactSeverity,
     ImpactType,
 )
+from jcia.core.entities.remote_call import (
+    RemoteCallChain,
+    RemoteCallInfo,
+    RemoteCallType,
+    RemoteEndpoint,
+)
 from jcia.core.entities.test_case import (
     TestCase,
     TestPriority,
@@ -49,6 +55,11 @@ __all__ = [
     "ImpactNode",
     "ImpactSeverity",
     "ImpactType",
+    # 远程调用
+    "RemoteCallChain",
+    "RemoteCallInfo",
+    "RemoteCallType",
+    "RemoteEndpoint",
     # 测试用例
     "TestCase",
     "TestPriority",

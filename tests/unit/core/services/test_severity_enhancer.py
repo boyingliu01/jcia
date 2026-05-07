@@ -109,7 +109,7 @@ class TestSeverityEnhancerDetailedCalculation:
         assert isinstance(result, SeverityCalculationResult)
         assert 0.0 <= result.final_score <= 100.0
         assert isinstance(result.severity, ImpactSeverity)
-        assert len(result.dimension_scores) == 6
+        assert len(result.dimension_scores) == 7  # 7 dimensions including CROSS_SERVICE
 
         # 验证元数据
         assert result.metadata["class_name"] == "OrderCoreService"
@@ -120,7 +120,7 @@ class TestSeverityEnhancerDetailedCalculation:
         result = enhancer.calculate_detailed(class_name="TestService")
 
         assert isinstance(result, SeverityCalculationResult)
-        assert len(result.dimension_scores) == 6
+        assert len(result.dimension_scores) == 7  # 7 dimensions including CROSS_SERVICE
 
 
 class TestSeverityEnhancerWeightManagement:
@@ -134,27 +134,30 @@ class TestSeverityEnhancerWeightManagement:
     def test_update_weights(self, enhancer: SeverityEnhancer) -> None:
         """测试更新权重."""
         new_weights = {
-            SeverityDimension.CLASS_KEYWORDS: 0.5,
-            SeverityDimension.METHOD_COMPLEXITY: 0.3,
-            SeverityDimension.CALL_DEPTH: 0.2,
-            SeverityDimension.TEST_COVERAGE: 0.0,
-            SeverityDimension.CHANGE_FREQUENCY: 0.0,
+            SeverityDimension.CLASS_KEYWORDS: 0.4,
+            SeverityDimension.METHOD_COMPLEXITY: 0.2,
+            SeverityDimension.CALL_DEPTH: 0.1,
+            SeverityDimension.TEST_COVERAGE: 0.1,
+            SeverityDimension.CHANGE_FREQUENCY: 0.1,
             SeverityDimension.BUSINESS_CRITICALITY: 0.0,
+            SeverityDimension.CROSS_SERVICE: 0.1,
         }
 
         enhancer.update_weights(new_weights)
         weights = enhancer.get_weights()
 
-        assert weights[SeverityDimension.CLASS_KEYWORDS] == 0.5
-        assert weights[SeverityDimension.METHOD_COMPLEXITY] == 0.3
-        assert weights[SeverityDimension.CALL_DEPTH] == 0.2
+        # Weights are normalized, so we need to check normalized values
+        # Total = 0.4 + 0.2 + 0.1 + 0.1 + 0.1 + 0.0 + 0.1 = 1.0
+        assert weights[SeverityDimension.CLASS_KEYWORDS] == 0.4
+        assert weights[SeverityDimension.METHOD_COMPLEXITY] == 0.2
+        assert weights[SeverityDimension.CALL_DEPTH] == 0.1
 
     def test_get_weights(self, enhancer: SeverityEnhancer) -> None:
         """测试获取权重."""
         weights = enhancer.get_weights()
 
         assert isinstance(weights, dict)
-        assert len(weights) == 6
+        assert len(weights) == 7  # 7 dimensions including CROSS_SERVICE
         assert all(isinstance(w, float) for w in weights.values())
         assert abs(sum(weights.values()) - 1.0) < 0.001
 

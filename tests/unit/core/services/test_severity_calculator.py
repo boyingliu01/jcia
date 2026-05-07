@@ -235,7 +235,7 @@ class TestMultiDimensionalSeverityCalculator:
         assert isinstance(result, SeverityCalculationResult)
         assert 0.0 <= result.final_score <= 100.0
         assert isinstance(result.severity, ImpactSeverity)
-        assert len(result.dimension_scores) == 6  # 6个维度
+        assert len(result.dimension_scores) == 7  # 7个维度 (including CROSS_SERVICE)
 
         # 验证各维度都有评分
         dimensions = [ds.dimension for ds in result.dimension_scores]
@@ -245,6 +245,7 @@ class TestMultiDimensionalSeverityCalculator:
         assert SeverityDimension.TEST_COVERAGE in dimensions
         assert SeverityDimension.CHANGE_FREQUENCY in dimensions
         assert SeverityDimension.BUSINESS_CRITICALITY in dimensions
+        assert SeverityDimension.CROSS_SERVICE in dimensions
 
     def test_score_to_severity_conversion(self, calculator: MultiDimensionalSeverityCalculator) -> None:
         """测试分数到严重程度的转换."""

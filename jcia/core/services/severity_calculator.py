@@ -19,6 +19,7 @@ class SeverityDimension(Enum):
     TEST_COVERAGE = "test_coverage"  # 测试覆盖率
     CHANGE_FREQUENCY = "change_frequency"  # 变更频率
     BUSINESS_CRITICALITY = "business_criticality"  # 业务关键性
+    CROSS_SERVICE = "cross_service"  # 跨服务调用
 
 
 @dataclass
@@ -82,12 +83,13 @@ class MultiDimensionalSeverityCalculator:
 
     # 默认权重配置
     DEFAULT_WEIGHTS: dict[SeverityDimension, float] = {
-        SeverityDimension.CLASS_KEYWORDS: 0.25,
-        SeverityDimension.METHOD_COMPLEXITY: 0.20,
+        SeverityDimension.CLASS_KEYWORDS: 0.20,
+        SeverityDimension.METHOD_COMPLEXITY: 0.15,
         SeverityDimension.CALL_DEPTH: 0.15,
         SeverityDimension.TEST_COVERAGE: 0.15,
         SeverityDimension.CHANGE_FREQUENCY: 0.10,
-        SeverityDimension.BUSINESS_CRITICALITY: 0.15,
+        SeverityDimension.BUSINESS_CRITICALITY: 0.10,
+        SeverityDimension.CROSS_SERVICE: 0.15,  # 跨服务调用权重
     }
 
     # 类名关键词评分配置
@@ -167,6 +169,7 @@ class MultiDimensionalSeverityCalculator:
         call_depth: int = 0,
         test_coverage: float = 0.0,
         change_frequency: int = 0,
+        cross_service_calls: int = 0,
     ) -> SeverityCalculationResult:
         """计算综合严重程度.
 
@@ -177,6 +180,7 @@ class MultiDimensionalSeverityCalculator:
             call_depth: 调用链深度
             test_coverage: 测试覆盖率 (0-1)
             change_frequency: 变更频率（近N次提交中变更次数）
+            cross_service_calls: 跨服务调用数量
 
         Returns:
             SeverityCalculationResult: 计算结果
@@ -255,6 +259,17 @@ class MultiDimensionalSeverityCalculator:
             )
         )
 
+        # 7. 跨服务调用评分
+        cross_service_score = self._calculate_cross_service_score(cross_service_calls)
+        dimension_scores.append(
+            DimensionScore(
+                dimension=SeverityDimension.CROSS_SERVICE,
+                score=cross_service_score,
+                weight=self._weights.get(SeverityDimension.CROSS_SERVICE, 0.15),
+                details={"cross_service_calls": cross_service_calls},
+            )
+        )
+
         # 计算最终分数
         final_score = self._calculate_final_score(dimension_scores)
         severity = self._score_to_severity(final_score)
@@ -267,6 +282,7 @@ class MultiDimensionalSeverityCalculator:
                 "class_name": class_name,
                 "method_name": method_name,
                 "method_metadata": method_metadata,
+                "cross_service_calls": cross_service_calls,
             },
         )
 
@@ -426,6 +442,26 @@ class MultiDimensionalSeverityCalculator:
                     break
 
         return max_score if max_score > 0 else 40.0  # 默认中等分数
+
+    def _calculate_cross_service_score(self, cross_service_calls: int) -> float:
+        """根据跨服务调用数量计算分数.
+
+        跨服务调用越多，影响范围越广，风险越高。
+
+        Args:
+            cross_service_calls: 跨服务调用数量
+
+        Returns:
+            float: 分数 (0-100)
+        """
+        if cross_service_calls >= 5:
+            return 100.0
+        elif cross_service_calls >= 3:
+            return 80.0 + (cross_service_calls - 3) * 10
+        elif cross_service_calls >= 1:
+            return 50.0 + (cross_service_calls - 1) * 15
+        else:
+            return 0.0
 
     def _calculate_final_score(self, dimension_scores: list[DimensionScore]) -> float:
         """计算最终分数.

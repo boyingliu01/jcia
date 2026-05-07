@@ -70,23 +70,73 @@ line-length = 100
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # Pyflakes
-    "I",   # isort
-    "N",   # pep8-naming
-    "C",   # flake8-comprehensions
-    "B",   # flake8-bugbear
-    "UP",  # pyupgrade
-    "SIM", # flake8-simplify
-    "TCH", # flake8-type-checking
-    "C4",  # flake8-comprehensions
-    "S",   # flake8-bandit (security)
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # Pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "C",    # flake8-comprehensions
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "C4",   # flake8-comprehensions
+    "S",    # flake8-bandit (security)
+    "A",    # flake8-builtins
+    "ARG",  # flake8-unused-arguments
+    "COM",  # flake8-commas
+    "DTZ",  # flake8-datetimez
+    "EM",   # flake8-errmsg
+    "EXE",  # flake8-executable
+    "FA",   # flake8-future-annotations
+    "FBT",  # flake8-boolean-trap
+    "FIX",  # flake8-fixme
+    "FLY",  # flynt
+    "G",    # flake8-logging-format
+    "ICN",  # flake8-import-conventions
+    "INP",  # flake8-no-pep420
+    "INT",  # flake8-gettext
+    "ISC",  # flake8-implicit-str-concat
+    "LOG",  # flake8-logging
+    "PERF", # perflint
+    "PGH",  # pygrep-hooks
+    "PIE",  # flake8-pie
+    "PL",   # pylint
+    "PT",   # flake8-pytest-style
+    "PTH",  # flake8-use-pathlib
+    "PYI",  # flake8-pyi
+    "Q",    # flake8-quotes
+    "RET",  # flake8-return
+    "RSE",  # flake8-raise
+    "RUF",  # ruff-specific rules
+    "SLF",  # flake8-self
+    "SLOT", # flake8-slots
+    "T10",  # flake8-debugger
+    "T20",  # flake8-print
+    "TD",   # flake8-todos
+    "TRY",  # tryceratops
+    "UP",   # pyupgrade
+    "YTT",  # flake8-2020
 ]
 ignore = [
-    "S101",  # assert statements (used in tests)
-    "S603",  # subprocess calls (intentional)
-    "S607",  # subprocess calls (intentional)
+    "S101",   # assert statements (used in tests)
+    "S603",   # subprocess calls (intentional)
+    "S607",   # subprocess calls (intentional)
+    "COM812", # missing trailing comma (conflicts with formatter)
+    "ISC001", # implicit string concatenation (conflicts with formatter)
+    "ARG001", # unused function arguments (common in overrides)
+    "ARG002", # unused method arguments (common in overrides)
+    "PLR0913",# too many arguments (common in complex classes)
+    "PLR2004",# magic value comparison (too strict)
+    "TRY003", # long messages outside exception class
+    "EM101",  # raw string in exception
+    "EM102",  # f-string in exception
+    "FIX002", # todo comments (we want these)
+    "TD003",  # missing issue link in todo
+    "FBT001", # boolean positional arg (common pattern)
+    "FBT002", # boolean default arg (common pattern)
+    "PLW2901",# redefined loop variable (common pattern)
+    "RUF012", # mutable class variables (common with dataclasses)
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -107,7 +157,7 @@ line-ending = "auto"
 
 [tool.pyright]
 pythonVersion = "3.10"
-typeCheckingMode = "basic"
+typeCheckingMode = "strict"
 venvPath = "."
 venv = ".venv"
 include = ["jcia", "tests"]
@@ -118,12 +168,22 @@ exclude = [
     "**/build",
     "**/dist",
 ]
-reportMissingTypeStubs = false
-reportUnknownMemberType = false
-reportUnknownVariableType = false
-reportMissingParameterType = false
-reportUnknownArgumentType = false
-reportUnknownLambdaType = false
+# Strict type checking settings
+reportMissingTypeStubs = true
+reportUnknownMemberType = true
+reportUnknownVariableType = true
+reportMissingParameterType = true
+reportUnknownArgumentType = true
+reportUnknownLambdaType = true
+reportMissingReturnType = true
+reportPrivateUsage = true
+reportUnnecessaryIsInstance = true
+reportUnnecessaryCast = true
+reportUnnecessaryComparison = true
+reportInvalidStubStatement = true
+reportIncompleteStub = true
+reportUnusedExpression = true
+reportMatchNotExhaustive = true
 
 
 
@@ -148,8 +208,17 @@ exclude_lines = [
 ]
 
 [tool.bandit]
-exclude_dirs = ["tests"]
-skips = ["B101", "B603", "B607", "B404", "B405", "B310", "B324"]
+exclude_dirs = ["tests", ".venv", "venv", ".git", "build", "dist"]
+# Enable all tests by default
+skips = []
+# Specific tests to skip with reasons:
+# B101 - assert_used (common in tests and defensive programming)
+# B603 - subprocess_without_shell_equals_true (intentional in this codebase)
+# B607 - start_process_with_partial_path (intentional)
+# B404 - import_subprocess (needed functionality)
+# B405 - import_xml_etree (needed functionality)
+# B310 - audit_url_open (needed functionality)
+# B324 - hashlib_new_insecure_functions (using secure defaults)
 
 [tool.mypy]
 python_version = "3.10"

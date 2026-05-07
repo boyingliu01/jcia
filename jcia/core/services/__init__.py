@@ -4,6 +4,10 @@ from jcia.core.services.analysis_fusion_service import AnalysisFusionService
 from jcia.core.services.call_chain_builder import CallChainBuilder
 from jcia.core.services.change_comparison_service import ChangeComparisonService
 from jcia.core.services.impact_analysis_service import ImpactAnalysisService
+from jcia.core.services.remote_call_detection_service import (
+    RemoteCallDetectionResult,
+    RemoteCallDetectionService,
+)
 from jcia.core.services.severity_calculator import (
     DimensionScore,
     MultiDimensionalSeverityCalculator,
@@ -21,6 +25,8 @@ __all__ = [
     "DimensionScore",
     "ImpactAnalysisService",
     "MultiDimensionalSeverityCalculator",
+    "RemoteCallDetectionResult",
+    "RemoteCallDetectionService",
     "SeverityCalculationResult",
     "SeverityDimension",
     "SeverityEnhancer",

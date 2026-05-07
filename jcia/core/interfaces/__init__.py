@@ -22,6 +22,10 @@ from jcia.core.interfaces.call_chain_analyzer import (
     CallChainNode,
 )
 from jcia.core.interfaces.file_system import FileSystemService
+from jcia.core.interfaces.remote_call_analyzer import (
+    RemoteCallAnalyzer,
+    RemoteCallAnalysisResult,
+)
 from jcia.core.interfaces.repository import (
     ChangeImpactRepository,
     TestDiffRepository,
@@ -55,6 +59,9 @@ __all__ = [
     "CallChainDirection",
     "CallChainGraph",
     "CallChainNode",
+    # 远程调用分析器接口
+    "RemoteCallAnalyzer",
+    "RemoteCallAnalysisResult",
     # AI 服务接口
     "AIAnalyzer",
     "AIProvider",
