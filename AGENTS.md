@@ -38,6 +38,12 @@ JCIA (Java Code Impact Analyzer) is a development tool that helps teams quickly 
 - **CLI entry point**: `pyproject.toml` defines `jcia = "jcia.cli:main"` but no `jcia/cli/__init__.py` exists and no `main()` function is defined. The `cli()` function lives in `jcia/cli/main.py`. Fix: either create `jcia/cli/__init__.py` or update entry point to `jcia.cli.main:cli`.
 - **Duplicate sqlite_adapter.py**: Present in both `jcia/adapters/database/` and `jcia/infrastructure/database/`. The adapter imports from infrastructure, creating naming confusion.
 
+**Remote Call Analysis Status (2026 restart priorities)**:
+- `jcia/adapters/tools/remote_call/` - 5 adapters: Dubbo, Feign, HTTP, MQ (RabbitMQ/Kafka/RocketMQ), Composite. All implement `RemoteCallAnalyzer` ABC but use regex-based pattern matching (2022-level). **Missing**: AST-based parsing, service registry integration, dynamic call graph resolution, Kubernetes-aware service topology, gRPC adapter (stub exists in enum but no implementation).
+- Cross-service chain tracing (`analyze_cross_service_chain` method) is defined in the interface but **not fully implemented** in adapters — requires service discovery topology.
+- `analysis_fusion_service.py` (894 lines) - Fusion of local call graph + remote call detection + severity scoring. This is the integration point for microservice impact analysis.
+- To reach 2026 level: Need Tree-sitter/AST parsing instead of regex, integration with actual service discovery (Consul/Nacos), async event-driven impact propagation for MQ, and API gateway awareness.
+
 ---
 
 ## Build & Test Commands

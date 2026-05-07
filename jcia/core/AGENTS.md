@@ -8,7 +8,7 @@
 core/
 ├── entities/         # Dataclass domain models (6 files)
 ├── interfaces/       # ABC contracts (9 files) - excluded from coverage
-├── services/         # Domain logic (10 files) - 85%+ coverage target
+├── services/         # Domain logic (10 files) - 85%+ coverage target → see services/AGENTS.md
 └── use_cases/        # App orchestration (5 files) - request/response pattern
 ```
 

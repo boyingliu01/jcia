@@ -12,7 +12,13 @@ adapters/
 ├── maven/              # Maven build system integration
 ├── test_runners/       # Maven Surefire + JaCoCo execution
 └── tools/              # STARTS, call graphs, CodeQL, reflection, remote call
-    └── remote_call/    # IN PROGRESS: Dubbo, Feign, HttpClient, MQ
+    └── remote_call/    # Microservice remote call adapters
+        ├── composite_adapter.py  # Unifies all adapters
+        ├── dubbo_adapter.py      # Dubbo RPC detection (regex-based)
+        ├── feign_adapter.py      # Feign Client detection (regex-based)
+        ├── http_adapter.py       # RestTemplate/WebClient/OkHttp
+        ├── mq_adapter.py         # RabbitMQ/Kafka/RocketMQ
+        └── __init__.py
 ```
 
 ## WHERE TO LOOK
@@ -28,12 +34,21 @@ adapters/
 | Reflection detection | `tools/reflection_patterns.py` |
 | SkyWalking traces | `ai/skywalking_adapter.py` |
 | Maven Surefire exec | `test_runners/maven_surefire_test_executor.py` |
+| **Remote call composite** | `tools/remote_call/composite_adapter.py` |
+| **Remote call patterns** | `tools/remote_call_patterns.py` |
+| **Dubbo detection** | `tools/remote_call/dubbo_adapter.py` |
+| **Feign detection** | `tools/remote_call/feign_adapter.py` |
+| **HTTP detection** | `tools/remote_call/http_adapter.py` |
+| **MQ detection** | `tools/remote_call/mq_adapter.py` |
 
 ## CONVENTIONS (adapter-specific)
 - Implement interfaces from `jcia/core/interfaces/`
 - Transform external data → domain entities
 - All adapters must implement the corresponding ABC
-- Remote call adapters (`remote_call/`) are IN PROGRESS
+- Remote call adapters (`remote_call/`) implement `RemoteCallAnalyzer` ABC
+  - Each adapter uses `RemoteCallPatternMatcher` for regex-based detection
+  - Cross-service chain tracing defined in interface but NOT fully implemented yet
+  - Current state: 2022-level regex matching; 2026 target: AST/Tree-sitter parsing
 
 ## ANTI-PATTERNS (adapter-specific)
 - **KNOWN** `database/sqlite_adapter.py` is confusing — it wraps `jcia/infrastructure/database/sqlite_adapter.py`. Same name, different layer.
