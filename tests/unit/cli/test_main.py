@@ -283,21 +283,21 @@ class TestCLI:
 
     def test_config_command_set(self, runner: CliRunner) -> None:
         """测试config命令设置配置."""
-        result = runner.invoke(cli, ["config", "--set", "project.path=/new/path"])
+        result = runner.invoke(cli, ["config", "--config-set", "project.path=/new/path"])
 
         assert result.exit_code == 0
         assert "设置配置: project.path = /new/path" in result.output
 
     def test_config_command_set_invalid_format(self, runner: CliRunner) -> None:
         """测试config命令设置配置格式错误."""
-        result = runner.invoke(cli, ["config", "--set", "invalid_format_no_equals"])
+        result = runner.invoke(cli, ["config", "--config-set", "invalid_format_no_equals"])
 
         assert result.exit_code != 0
         assert "格式错误" in result.output
 
     def test_config_command_set_single_key(self, runner: CliRunner) -> None:
         """测试config命令设置单级键."""
-        result = runner.invoke(cli, ["config", "--set", "debug=true"])
+        result = runner.invoke(cli, ["config", "--config-set", "debug=true"])
 
         assert result.exit_code == 0
         assert "设置配置: debug = true" in result.output
@@ -306,8 +306,8 @@ class TestCLI:
         """测试config命令显示已有配置."""
         with runner.isolated_filesystem():
             # 先设置配置
-            runner.invoke(cli, ["config", "--set", "project.path=/test/path"])
-            runner.invoke(cli, ["config", "--set", "logging.level=DEBUG"])
+            runner.invoke(cli, ["config", "--config-set", "project.path=/test/path"])
+            runner.invoke(cli, ["config", "--config-set", "logging.level=DEBUG"])
 
             # 显示配置
             result = runner.invoke(cli, ["config", "--show"])
@@ -320,11 +320,11 @@ class TestCLI:
         result = runner.invoke(cli, ["config"])
 
         assert result.exit_code == 0
-        assert "--show" in result.output or "--set" in result.output
+        assert "--show" in result.output or "--config-set" in result.output
 
     def test_config_command_set_three_level_key(self, runner: CliRunner) -> None:
         """测试config命令设置三级键（应该报错）."""
-        result = runner.invoke(cli, ["config", "--set", "a.b.c=value"])
+        result = runner.invoke(cli, ["config", "--config-set", "a.b.c=value"])
 
         assert result.exit_code != 0
         assert "一级和二级" in result.output or "不支持" in result.output
@@ -333,8 +333,8 @@ class TestCLI:
         """测试config命令显示嵌套配置."""
         with runner.isolated_filesystem():
             # 先设置嵌套配置
-            runner.invoke(cli, ["config", "--set", "project.path=/test/path"])
-            runner.invoke(cli, ["config", "--set", "project.name=TestProject"])
+            runner.invoke(cli, ["config", "--config-set", "project.path=/test/path"])
+            runner.invoke(cli, ["config", "--config-set", "project.name=TestProject"])
 
             # 显示配置
             result = runner.invoke(cli, ["config", "--show"])
@@ -347,8 +347,8 @@ class TestCLI:
         """测试config命令显示扁平配置."""
         with runner.isolated_filesystem():
             # 设置单级键
-            runner.invoke(cli, ["config", "--set", "debug=true"])
-            runner.invoke(cli, ["config", "--set", "verbose=false"])
+            runner.invoke(cli, ["config", "--config-set", "debug=true"])
+            runner.invoke(cli, ["config", "--config-set", "verbose=false"])
 
             # 显示配置
             result = runner.invoke(cli, ["config", "--show"])

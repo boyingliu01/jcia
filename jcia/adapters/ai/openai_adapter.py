@@ -141,10 +141,10 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
             )
 
         except Exception as e:
-            logger.error(f"Failed to generate tests: {e}")
+            logger.exception("Failed to generate tests: ")
             return TestGenerationResponse(
                 test_cases=[],
-                explanations=[f"生成失败: {str(e)}"],
+                explanations=[f"生成失败: {e!s}"],
                 confidence=0.0,
                 tokens_used=0,
             )
@@ -272,8 +272,8 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
 
             logger.info("Test case refined successfully")
 
-        except Exception as e:
-            logger.error(f"Failed to refine test case: {e}")
+        except Exception:
+            logger.exception("Failed to refine test case: ")
 
         return test_case
 
@@ -342,9 +342,9 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
             )
 
         except Exception as e:
-            logger.error(f"Failed to analyze code: {e}")
+            logger.exception("Failed to analyze code: ")
             return CodeAnalysisResponse(
-                findings=[{"content": f"分析失败: {str(e)}", "severity": "ERROR"}],
+                findings=[{"content": f"分析失败: {e!s}", "severity": "ERROR"}],
                 suggestions=["请检查代码并重试"],
                 risk_level="HIGH",
             )
@@ -404,15 +404,14 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
                 temperature=kwargs.get("temperature", 0.3),
             )
 
-            impact_explanation = (
+            return (
                 response.get("choices", [{}])[0].get("message", {}).get("content", "")
             )
 
-            return impact_explanation
 
         except Exception as e:
-            logger.error(f"Failed to explain change impact: {e}")
-            return f"影响分析失败: {str(e)}"
+            logger.exception("Failed to explain change impact: ")
+            return f"影响分析失败: {e!s}"
 
     def _call_openai_api(self, messages: list[dict[str, Any]], **kwargs: Any) -> dict[str, Any]:
         """调用 OpenAI API.
@@ -477,7 +476,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
                     raise RuntimeError(f"OpenAI API rate limit: {e}") from e
 
             except openai.APIError as e:  # type: ignore[attr-defined]
-                logger.error(f"OpenAI API error: {e}")
+                logger.exception("OpenAI API error: ")
                 raise RuntimeError(f"OpenAI API error: {e}") from e
 
         raise RuntimeError("Max retries exceeded") from None
@@ -640,9 +639,8 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
         """
         # 匹配 @Test 注解的方法
         pattern = r"@Test\s*\n?\s*(?:public|private|protected)?\s*void\s+(\w+)\s*\("
-        matches = re.findall(pattern, test_code)
+        return re.findall(pattern, test_code)
 
-        return matches
 
     def _extract_uncovered_segments(
         self, coverage_data: dict[str, Any], project_path: Path
@@ -727,12 +725,11 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
         # 基于token数量估算置信度
         if total_tokens < 100:
             return 0.3
-        elif total_tokens < 500:
+        if total_tokens < 500:
             return 0.5
-        elif total_tokens < 1000:
+        if total_tokens < 1000:
             return 0.7
-        else:
-            return 0.9
+        return 0.9
 
     def _parse_code_findings(self, content: str) -> list[dict[str, Any]]:
         """解析代码分析结果.

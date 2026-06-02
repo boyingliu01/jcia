@@ -80,29 +80,27 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
 
     def _scan_project(self) -> None:
         """扫描项目，收集所有 Java 类和方法信息."""
-        src_dirs = [
+        main_src_dirs = [
             self._repo_path / "src" / "main" / "java",
-            self._repo_path / "src" / "test" / "java",
             self._repo_path / "core" / "src" / "main" / "java",
+        ]
+        test_src_dirs = [
+            self._repo_path / "src" / "test" / "java",
             self._repo_path / "core" / "src" / "test" / "java",
         ]
 
-        # 查找所有 Java 文件
         java_files: list[Path] = []
-        for src_dir in src_dirs:
+        all_found = False
+        for src_dir in main_src_dirs + test_src_dirs:
             if src_dir.exists():
                 java_files.extend(src_dir.rglob("*.java"))
+                all_found = True
 
-        # 如果上面的目录不存在，尝试直接在 repo_path 下查找
-        if not java_files:
+        if not all_found:
             java_files = list(self._repo_path.rglob("*.java"))
-
-        # 过滤掉测试文件
-        java_files = [f for f in java_files if "/test/" not in str(f)]
 
         logger.info(f"Found {len(java_files)} Java source files")
 
-        # 分析每个文件
         for java_file in java_files:
             self._analyze_java_file(java_file)
 
@@ -272,7 +270,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
         """
         results: list[ReflectionCallInfo] = []
 
-        for _source_class, calls in self._reflection_calls_cache.items():
+        for calls in self._reflection_calls_cache.values():
             for call in calls:
                 # 检查是否匹配目标类
                 if call.target_class == class_name:
@@ -501,7 +499,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
 
         return graph
 
-    def analyze_class_dependencies(self, class_name: str) -> dict[str, Any]:  # noqa: C901
+    def analyze_class_dependencies(self, class_name: str) -> dict[str, Any]:
         """分析类的依赖关系.
 
         Args:
@@ -521,7 +519,6 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
             calls: set[str] = self._method_calls_cache[class_name]
             for target_class in self._class_methods_cache:
                 for called_method in calls:
-                    # noqa: SIM102
                     target_methods = self._class_methods_cache.get(target_class, {})
                     if called_method in target_methods and target_class != class_name:
                         dependencies["dependencies"].append(target_class)
@@ -530,9 +527,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
         for other_class, calls in self._method_calls_cache.items():
             if other_class == class_name:
                 continue
-            calls: set[str] = calls
             for called_method in calls:
-                # noqa: SIM102
                 class_methods = self._class_methods_cache.get(class_name, {})
                 if called_method in class_methods and other_class not in dependencies["dependents"]:
                     dependencies["dependents"].append(other_class)
@@ -549,7 +544,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
             List[str]: 测试类列表
         """
         # 简单模式：类名 + Test 或 Test + 类名
-        simple_class_name = class_name.split(".")[-1]
+        simple_class_name = class_name.rsplit(".", maxsplit=1)[-1]
 
         test_patterns = [
             f"{simple_class_name}Test",

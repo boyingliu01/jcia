@@ -2,7 +2,7 @@
 
 基于字节码的 Java 静态调用链分析器，支持远程调用识别。
 """
-# ruff: noqa: S324,S310  # md5 for cache keys, file: URLs for local files
+# md5 for cache keys, file: URLs for local files
 
 import hashlib
 import json
@@ -127,7 +127,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             return self._call_cache[cache_key]
 
         # 解析方法
-        class_name, method_name = self._parse_method(method)
+        _class_name, _method_name = self._parse_method(method)
 
         # 使用 JACG 分析上游调用
         call_chain = self._analyze_with_jacg(method, "upstream", max_depth)
@@ -155,7 +155,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             return self._call_cache[cache_key]
 
         # 解析方法
-        class_name, method_name = self._parse_method(method)
+        _class_name, _method_name = self._parse_method(method)
 
         # 使用 JACG 分析下游调用
         call_chain = self._analyze_with_jacg(method, "downstream", max_depth)
@@ -214,15 +214,14 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
                 with open(output_file) as f:
                     data = json.load(f)
                 return self._parse_full_graph(data)
-            else:
-                logger.warning("JACG output file not found")
-                return self._create_empty_graph("root", 10)
+            logger.warning("JACG output file not found")
+            return self._create_empty_graph("root", 10)
 
         except subprocess.TimeoutExpired:
-            logger.error("JACG analysis timed out")
+            logger.exception("JACG analysis timed out")
             return self._create_empty_graph("root", 10)
-        except Exception as e:
-            logger.error(f"JACG analysis error: {e}")
+        except Exception:
+            logger.exception("JACG analysis error: ")
             return self._create_empty_graph("root", 10)
 
     def _parse_method(self, method: str) -> tuple[str, str]:
@@ -295,15 +294,14 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
                 with open(output_file) as f:
                     data = json.load(f)
                 return self._parse_jacg_output(data, method, direction, max_depth)
-            else:
-                logger.warning("JACG output file not found")
-                return self._create_empty_graph(method, max_depth)
+            logger.warning("JACG output file not found")
+            return self._create_empty_graph(method, max_depth)
 
         except subprocess.TimeoutExpired:
-            logger.error("JACG analysis timed out")
+            logger.exception("JACG analysis timed out")
             return self._create_empty_graph(method, max_depth)
-        except Exception as e:
-            logger.error(f"JACG analysis error: {e}")
+        except Exception:
+            logger.exception("JACG analysis error: ")
             return self._create_empty_graph(method, max_depth)
 
     def _parse_jacg_output(
@@ -607,7 +605,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         """
         # 简化处理：假设接口名与类名相似
         # 实际应该从配置文件或注解参数中解析
-        simple_name = class_name.split(".")[-1]
+        simple_name = class_name.rsplit(".", maxsplit=1)[-1]
         return f"I{simple_name}"  # 例如: UserService -> IUserService
 
     def _identify_grpc_call(self, class_name: str, method_name: str) -> str | None:
@@ -754,7 +752,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             download_url = f"{JACG_RELEASE_URL}/{JACG_JAR_NAME}"
 
             # 使用 urllib 下载
-            with urllib.request.urlopen(download_url) as response, open(jar_path, "wb") as out_file:
+            with urllib.request.urlopen(download_url) as response, open(jar_path, "wb") as out_file:  # noqa: S310
                 data = response.read()
                 out_file.write(data)
 
@@ -762,7 +760,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
             return jar_path
 
         except Exception as e:
-            logger.error(f"Failed to download JACG: {e}")
+            logger.exception("Failed to download JACG: ")
             raise RuntimeError(f"Cannot download JACG: {e}") from e
 
     def build_service_topology(self) -> dict[str, Any]:

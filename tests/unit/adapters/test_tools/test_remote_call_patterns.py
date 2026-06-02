@@ -7,9 +7,9 @@ in Java source code, including Dubbo, Feign, HTTP clients, and message queues.
 import pytest
 
 from jcia.adapters.tools.remote_call_patterns import (
-    RemoteCallPatternMatcher,
-    RemoteCallPattern,
     ConfidenceLevel,
+    RemoteCallPattern,
+    RemoteCallPatternMatcher,
 )
 
 
@@ -299,6 +299,7 @@ class TestRemoteCallPattern:
     def test_pattern_creation(self) -> None:
         """Create a pattern with all fields."""
         import re
+
         from jcia.core.entities.remote_call import RemoteCallType
 
         pattern = RemoteCallPattern(

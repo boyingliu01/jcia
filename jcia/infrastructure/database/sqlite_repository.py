@@ -277,7 +277,7 @@ class SQLiteTestResultRepository(TestResultRepository):
             for r in results
         ]
 
-        connection = self._adapter._connection
+        connection = self._adapter._connection  # noqa: SLF001  # noqa: SLF001
         if connection is None:
             raise RuntimeError("Database not connected")
 
@@ -401,7 +401,7 @@ class SQLiteTestDiffRepository(TestDiffRepository):
             for diff in diffs
         ]
 
-        connection = self._adapter._connection
+        connection = self._adapter._connection  # noqa: SLF001  # noqa: SLF001
         if connection is None:
             raise RuntimeError("Database not connected")
 

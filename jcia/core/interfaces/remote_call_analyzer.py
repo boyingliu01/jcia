@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from jcia.core.entities.remote_call import RemoteCallInfo, RemoteCallType, RemoteCallChain
+    from jcia.core.entities.remote_call import RemoteCallChain, RemoteCallInfo, RemoteCallType
 
 
 @dataclass
@@ -80,7 +80,6 @@ class RemoteCallAnalyzer(ABC):
         Returns:
             List of detected remote call information
         """
-        pass
 
     @abstractmethod
     def analyze_cross_service_chain(
@@ -97,7 +96,6 @@ class RemoteCallAnalyzer(ABC):
         Returns:
             List of cross-service call chains
         """
-        pass
 
     @property
     @abstractmethod
@@ -107,7 +105,6 @@ class RemoteCallAnalyzer(ABC):
         Returns:
             List of RemoteCallType enums this analyzer can detect
         """
-        pass
 
     @property
     @abstractmethod
@@ -117,4 +114,3 @@ class RemoteCallAnalyzer(ABC):
         Returns:
             True if analyzer can trace calls across service boundaries
         """
-        pass

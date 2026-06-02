@@ -15,7 +15,7 @@ class TestLLMAdapterFactory:
         adapter = LLMAdapterFactory.create_adapter(
             provider=AIProvider.VOLCENGINE,
             access_key="test_ak",
-            secret_key="test_sk",  # noqa: S106
+            secret_key="test_sk",
             app_id="test_app",
         )
 
@@ -27,7 +27,7 @@ class TestLLMAdapterFactory:
         adapter = LLMAdapterFactory.create_adapter(
             provider="volcengine",
             access_key="test_ak",
-            secret_key="test_sk",  # noqa: S106
+            secret_key="test_sk",
             app_id="test_app",
         )
 

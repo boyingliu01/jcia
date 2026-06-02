@@ -87,8 +87,7 @@ class PyDrillerAdapter(ChangeAnalyzer):
         if ".." in commit_range:
             from_commit, to_commit = commit_range.split("..", 1)
             return self.analyze_commits(from_commit.strip(), to_commit.strip())
-        else:
-            return self.analyze_commits(commit_range.strip())
+        return self.analyze_commits(commit_range.strip())
 
     def get_changed_methods(self, commit_hash: str) -> list[str]:
         """获取指定提交中变更的方法列表.

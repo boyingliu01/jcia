@@ -5,6 +5,10 @@
 """
 
 import logging
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from jcia.core.entities.remote_call import RemoteCallInfo
 
 from jcia.core.entities.impact_graph import (
     ImpactEdge,
@@ -96,18 +100,17 @@ class AnalysisFusionService:
 
         if strategy == FusionStrategy.BAYESIAN:
             return self._bayesian_fusion_upstream(method, static_graph, dynamic_graph, max_depth)
-        elif strategy == FusionStrategy.VOTING:
+        if strategy == FusionStrategy.VOTING:
             return self._voting_fusion_upstream(method, static_graph, dynamic_graph, max_depth)
-        elif strategy == FusionStrategy.WEIGHTED:
+        if strategy == FusionStrategy.WEIGHTED:
             return self._weighted_fusion_upstream(method, static_graph, dynamic_graph, max_depth)
-        elif strategy == FusionStrategy.UNION:
+        if strategy == FusionStrategy.UNION:
             return self._union_fusion_upstream(method, static_graph, dynamic_graph, max_depth)
-        elif strategy == FusionStrategy.INTERSECTION:
+        if strategy == FusionStrategy.INTERSECTION:
             return self._intersection_fusion_upstream(
                 method, static_graph, dynamic_graph, max_depth
             )
-        else:
-            return self._bayesian_fusion_upstream(method, static_graph, dynamic_graph, max_depth)
+        return self._bayesian_fusion_upstream(method, static_graph, dynamic_graph, max_depth)
 
     def fuse_downstream(
         self,
@@ -142,18 +145,17 @@ class AnalysisFusionService:
 
         if strategy == FusionStrategy.BAYESIAN:
             return self._bayesian_fusion_downstream(method, static_graph, dynamic_graph, max_depth)
-        elif strategy == FusionStrategy.VOTING:
+        if strategy == FusionStrategy.VOTING:
             return self._voting_fusion_downstream(method, static_graph, dynamic_graph, max_depth)
-        elif strategy == FusionStrategy.WEIGHTED:
+        if strategy == FusionStrategy.WEIGHTED:
             return self._weighted_fusion_downstream(method, static_graph, dynamic_graph, max_depth)
-        elif strategy == FusionStrategy.UNION:
+        if strategy == FusionStrategy.UNION:
             return self._union_fusion_downstream(method, static_graph, dynamic_graph, max_depth)
-        elif strategy == FusionStrategy.INTERSECTION:
+        if strategy == FusionStrategy.INTERSECTION:
             return self._intersection_fusion_downstream(
                 method, static_graph, dynamic_graph, max_depth
             )
-        else:
-            return self._bayesian_fusion_downstream(method, static_graph, dynamic_graph, max_depth)
+        return self._bayesian_fusion_downstream(method, static_graph, dynamic_graph, max_depth)
 
     def _calculate_posterior(self, prior: float, likelihood: float, conditional: float) -> float:
         """计算贝叶斯后验概率.
@@ -186,7 +188,7 @@ class AnalysisFusionService:
         Returns:
             ImpactNode: 根节点
         """
-        class_name, method_name = self._parse_method(method)
+        class_name, _method_name = self._parse_method(method)
 
         return ImpactNode(
             method_name=method,
@@ -352,7 +354,7 @@ class AnalysisFusionService:
         Returns:
             ImpactNode: 融合节点
         """
-        class_name, method_name = self._parse_method(method)
+        class_name, _method_name = self._parse_method(method)
 
         severity = self._determine_fusion_severity(
             confidence, static_methods, dynamic_methods, method
@@ -422,10 +424,9 @@ class AnalysisFusionService:
 
         if score >= 80:
             return ImpactSeverity.HIGH
-        elif score >= 50:
+        if score >= 50:
             return ImpactSeverity.MEDIUM
-        else:
-            return ImpactSeverity.LOW
+        return ImpactSeverity.LOW
 
     # ==================== 投票融合策略 ====================
 
@@ -836,7 +837,6 @@ class AnalysisFusionService:
         Returns:
             ImpactGraph: Enhanced impact graph with cross-service nodes
         """
-        from jcia.core.entities.remote_call import RemoteCallType
 
         if not remote_calls:
             return impact_graph

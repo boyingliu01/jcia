@@ -47,31 +47,31 @@ __all__ = [
     "ChangeStatus",
     "ChangeType",
     "CommitInfo",
+    # 测试运行
+    "CoverageData",
     "FileChange",
-    "MethodChange",
     # 影响图
     "ImpactEdge",
     "ImpactGraph",
     "ImpactNode",
     "ImpactSeverity",
     "ImpactType",
+    "MethodChange",
     # 远程调用
     "RemoteCallChain",
     "RemoteCallInfo",
     "RemoteCallType",
     "RemoteEndpoint",
-    # 测试用例
-    "TestCase",
-    "TestPriority",
-    "TestSuite",
-    "TestType",
-    # 测试运行
-    "CoverageData",
     "RunStatus",
     "RunType",
+    # 测试用例
+    "TestCase",
     "TestComparison",
     "TestDiff",
+    "TestPriority",
     "TestResult",
     "TestRun",
     "TestStatus",
+    "TestSuite",
+    "TestType",
 ]

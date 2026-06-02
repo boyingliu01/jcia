@@ -6,10 +6,10 @@ This module tests the RemoteCallType, RemoteEndpoint, and RemoteCallInfo entitie
 import pytest
 
 from jcia.core.entities.remote_call import (
+    RemoteCallChain,
     RemoteCallInfo,
     RemoteCallType,
     RemoteEndpoint,
-    RemoteCallChain,
 )
 
 

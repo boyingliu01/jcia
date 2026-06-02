@@ -16,7 +16,10 @@ if TYPE_CHECKING:
         TestResultRepository,
         TestRunRepository,
     )
-    from jcia.core.interfaces.test_runner import TestExecutor
+    from jcia.core.interfaces.test_runner import (
+        TestExecutor,
+        TestSuiteResult,
+    )
 
 
 @dataclass
@@ -232,9 +235,6 @@ class RunRegressionUseCase:
             TestResult,
             TestRun,
             TestStatus,
-        )
-        from jcia.core.interfaces.test_runner import (  # noqa: TCH001
-            TestSuiteResult,
         )
 
         # 执行测试

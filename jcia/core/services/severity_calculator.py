@@ -349,10 +349,9 @@ class MultiDimensionalSeverityCalculator:
         """
         if depth >= self.DEPTH_THRESHOLDS["deep"]:
             return 100.0
-        elif depth >= self.DEPTH_THRESHOLDS["moderate"]:
+        if depth >= self.DEPTH_THRESHOLDS["moderate"]:
             return 70.0 + (depth - self.DEPTH_THRESHOLDS["moderate"]) * 15
-        else:
-            return 30.0 + depth * 13.33
+        return 30.0 + depth * 13.33
 
     def _calculate_coverage_score(self, coverage: float) -> float:
         """根据测试覆盖率计算分数.
@@ -368,14 +367,13 @@ class MultiDimensionalSeverityCalculator:
         # 未覆盖 = 最高风险
         if coverage == 0:
             return 100.0
-        elif coverage < 0.3:
+        if coverage < 0.3:
             return 90.0 + (0.3 - coverage) * 33.33
-        elif coverage < 0.6:
+        if coverage < 0.6:
             return 70.0 + (0.6 - coverage) * 66.67
-        elif coverage < 0.8:
+        if coverage < 0.8:
             return 40.0 + (0.8 - coverage) * 150
-        else:
-            return max(0, 20.0 - (coverage - 0.8) * 100)
+        return max(0, 20.0 - (coverage - 0.8) * 100)
 
     def _calculate_frequency_score(self, frequency: int) -> float:
         """根据变更频率计算分数.
@@ -390,12 +388,11 @@ class MultiDimensionalSeverityCalculator:
         """
         if frequency >= 10:
             return 100.0
-        elif frequency >= 5:
+        if frequency >= 5:
             return 80.0 + (frequency - 5) * 4
-        elif frequency >= 2:
+        if frequency >= 2:
             return 50.0 + (frequency - 2) * 10
-        else:
-            return max(0, frequency * 25)
+        return max(0, frequency * 25)
 
     def _calculate_business_criticality(
         self, class_name: str, method_name: str
@@ -456,12 +453,11 @@ class MultiDimensionalSeverityCalculator:
         """
         if cross_service_calls >= 5:
             return 100.0
-        elif cross_service_calls >= 3:
+        if cross_service_calls >= 3:
             return 80.0 + (cross_service_calls - 3) * 10
-        elif cross_service_calls >= 1:
+        if cross_service_calls >= 1:
             return 50.0 + (cross_service_calls - 1) * 15
-        else:
-            return 0.0
+        return 0.0
 
     def _calculate_final_score(self, dimension_scores: list[DimensionScore]) -> float:
         """计算最终分数.
@@ -494,10 +490,9 @@ class MultiDimensionalSeverityCalculator:
         """
         if score >= 70:
             return ImpactSeverity.HIGH
-        elif score >= 40:
+        if score >= 40:
             return ImpactSeverity.MEDIUM
-        else:
-            return ImpactSeverity.LOW
+        return ImpactSeverity.LOW
 
     def update_weights(self, weights: dict[SeverityDimension, float]) -> None:
         """更新权重配置.

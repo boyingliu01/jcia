@@ -3,9 +3,10 @@
 This module tests all remote call adapters including Dubbo, Feign, HTTP, and MQ.
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from jcia.adapters.tools.remote_call import (
     CompositeRemoteCallAdapter,

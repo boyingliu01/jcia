@@ -540,8 +540,7 @@ class RemoteCallPatternMatcher:
             Class name (file name without .java extension)
         """
         path = Path(file_path)
-        class_name = path.stem  # filename without extension
-        return class_name
+        return path.stem  # filename without extension
 
     def analyze_file(self, file_path: Path) -> list[RemoteCallInfo]:
         """Analyze a Java file for remote call patterns.
@@ -558,8 +557,8 @@ class RemoteCallPatternMatcher:
 
         try:
             content = file_path.read_text(encoding="utf-8", errors="ignore")
-        except Exception as e:
-            logger.error(f"Failed to read file {file_path}: {e}")
+        except Exception:
+            logger.exception("Failed to read file {file_path}: ")
             return []
 
         return self.find_patterns(content, str(file_path))

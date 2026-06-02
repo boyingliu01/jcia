@@ -2,7 +2,7 @@
 
 基于 Maven Surefire Plugin 的测试执行器，支持选择性测试执行和覆盖率收集。
 """
-# ruff: noqa: N817  # defusedxml.ElementTree is official import style
+# defusedxml.ElementTree is official import style
 
 import logging
 from dataclasses import dataclass
@@ -330,8 +330,8 @@ class MavenSurefireTestExecutor(TestExecutor):
 
             return test_suite
 
-        except Exception as e:
-            logger.error(f"Failed to parse test suite XML {xml_path}: {e}")
+        except Exception:
+            logger.exception("Failed to parse test suite XML {xml_path}: ")
             return {
                 "total": 0,
                 "passed": 0,
@@ -342,7 +342,7 @@ class MavenSurefireTestExecutor(TestExecutor):
                 "cases": [],
             }
 
-    def _parse_test_case(self, element: Any) -> TestExecutionResult:  # noqa: ANN401
+    def _parse_test_case(self, element: Any) -> TestExecutionResult:
         """解析单个测试用例.
 
         Args:
@@ -440,8 +440,8 @@ class MavenSurefireTestExecutor(TestExecutor):
             else:
                 logger.debug("JaCoCo plugin already configured")
 
-        except Exception as e:
-            logger.error(f"Failed to configure JaCoCo: {e}")
+        except Exception:
+            logger.exception("Failed to configure JaCoCo: ")
 
     def _parse_jacoco_coverage(self) -> dict:
         """解析 JaCoCo 覆盖率数据.
@@ -484,8 +484,8 @@ class MavenSurefireTestExecutor(TestExecutor):
                 "covered_lines": covered_lines,
             }
 
-        except Exception as e:
-            logger.error(f"Failed to parse JaCoCo coverage: {e}")
+        except Exception:
+            logger.exception("Failed to parse JaCoCo coverage: ")
             return {"line_coverage": 0.0, "total_lines": 0, "covered_lines": 0}
 
     def execute_incremental_tests(
@@ -526,8 +526,8 @@ class MavenSurefireTestExecutor(TestExecutor):
         try:
             with open(baseline_file) as f:
                 return json.load(f)  # type: ignore[return-value]
-        except Exception as e:
-            logger.error(f"Failed to load baseline: {e}")
+        except Exception:
+            logger.exception("Failed to load baseline: ")
             return {"test_results": []}
 
     def _select_affected_tests(

@@ -37,7 +37,6 @@ def cli() -> None:
 
     分析Java代码变更的影响范围，智能选择测试用例，执行回归测试。
     """
-    pass
 
 
 @cli.command()
@@ -217,14 +216,14 @@ def test(
 @cli.command()
 @click.option("--output-dir", type=str, required=True, help="输出目录")
 @click.option(
-    "--format",
+    "--format", "report_format",
     type=click.Choice(["json", "html", "markdown", "console"]),
     default="json",
     show_default=True,
     help="报告格式",
 )
 @click.option("--include-details", is_flag=True, help="包含详细信息")
-def report(output_dir: str, format: str, include_details: bool) -> None:
+def report(output_dir: str, report_format: str, include_details: bool) -> None:
     """生成测试报告.
 
     生成多种格式的测试报告（JSON、HTML、Markdown、控制台）。
@@ -233,15 +232,15 @@ def report(output_dir: str, format: str, include_details: bool) -> None:
     click.echo("生成测试报告")
     click.echo("=" * 60)
     click.echo(f"输出目录: {output_dir}")
-    click.echo(f"报告格式: {format}")
+    click.echo(f"报告格式: {report_format}")
     click.echo(f"包含详细信息: {include_details}")
     click.echo("\n报告功能已实现 - 使用GenerateReportUseCase")
 
 
 @cli.command()
 @click.option("--show", is_flag=True, help="显示配置项")
-@click.option("--set", type=str, help="设置设置项（格式：key=value）")
-def config(show: bool, set: str | None) -> None:  # noqa: C901
+@click.option("--config-set", "config_set", type=str, help="设置设置项（格式：key=value）")
+def config(show: bool, config_set: str | None) -> None:
     """配置管理.
 
     查看、设置或管理配置。
@@ -285,11 +284,11 @@ def config(show: bool, set: str | None) -> None:  # noqa: C901
             click.echo("  logging.level: 日志级别（DEBUG/INFO/WARNING/ERROR）")
             click.echo("  maven.skip_tests: 跳过测试（true/false）")
 
-        elif set:
-            if "=" not in set:
+        elif config_set:
+            if "=" not in config_set:
                 raise click.ClickException("配置格式错误，使用 KEY=VALUE")
 
-            key, value = set.split("=", 1)
+            key, value = config_set.split("=", 1)
 
             # 更新或创建配置文件
             import yaml

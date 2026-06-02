@@ -3,9 +3,10 @@
 This module tests the SkyWalking call chain adapter.
 """
 
-import pytest
-from unittest.mock import MagicMock, Mock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 from jcia.adapters.tools.skywalking_call_chain_adapter import (
     DubboCall,

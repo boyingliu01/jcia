@@ -109,7 +109,7 @@ class CallChainBuilder:
                 elif edge.source == node and edge.target in rec_stack and rec_stack[edge.target]:
                     # 找到循环
                     cycle_start = path.index(edge.target)
-                    cycle = path[cycle_start:] + [edge.target]
+                    cycle = [*path[cycle_start:], edge.target]
                     if cycle not in cycles:
                         cycles.append(cycle)
 
@@ -192,7 +192,7 @@ class CallChainBuilder:
 
         def traverse(node: CallChainNode, depth: int) -> None:
             """递归遍历调用链."""
-            if node is None:
+            if node is None:  # pyright: ignore[reportUnnecessaryComparison]
                 return
 
             method_name = node.full_name

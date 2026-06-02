@@ -29,7 +29,7 @@ from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
 from jcia.adapters.tools.source_code_call_graph_adapter import SourceCodeCallGraphAnalyzer
 from jcia.core.use_cases.analyze_impact import AnalyzeImpactRequest, AnalyzeImpactUseCase
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 

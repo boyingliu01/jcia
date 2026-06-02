@@ -6,8 +6,8 @@ This module tests the RemoteCallAnalyzer abstract interface and related data str
 import pytest
 
 from jcia.core.interfaces.remote_call_analyzer import (
-    RemoteCallAnalyzer,
     RemoteCallAnalysisResult,
+    RemoteCallAnalyzer,
 )
 
 
@@ -126,7 +126,7 @@ class TestRemoteCallAnalyzerInterface:
 
     def test_interface_can_be_subclassed(self) -> None:
         """Verify interface can be properly subclassed."""
-        from jcia.core.entities.remote_call import RemoteCallInfo, RemoteCallType, RemoteCallChain
+        from jcia.core.entities.remote_call import RemoteCallChain, RemoteCallInfo, RemoteCallType
 
         class MockRemoteCallAnalyzer(RemoteCallAnalyzer):
             @property
@@ -153,7 +153,7 @@ class TestRemoteCallAnalyzerInterface:
 
     def test_interface_method_signatures(self) -> None:
         """Verify interface method signatures are correct."""
-        from jcia.core.entities.remote_call import RemoteCallInfo, RemoteCallType, RemoteCallChain
+        from jcia.core.entities.remote_call import RemoteCallChain, RemoteCallInfo, RemoteCallType
 
         # Check detect_remote_calls has correct parameter types
         # Note: get_type_hints on abstract methods with TYPE_CHECKING imports

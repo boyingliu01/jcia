@@ -207,7 +207,7 @@ class CodeQLCallGraph:
         """
         callers = []
         for call in self.calls:
-            if call.callee.full_name == method_name or call.callee.name == method_name:
+            if method_name in (call.callee.full_name, call.callee.name):
                 callers.append(call.caller)
         return callers
 
@@ -222,7 +222,7 @@ class CodeQLCallGraph:
         """
         callees = []
         for call in self.calls:
-            if call.caller.full_name == method_name or call.caller.name == method_name:
+            if method_name in (call.caller.full_name, call.caller.name):
                 callees.append(call.callee)
         return callees
 

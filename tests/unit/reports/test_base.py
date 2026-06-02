@@ -47,7 +47,7 @@ class TestReportData:
 
     def test_to_dict_with_test_run(self) -> None:
         """测试带 test_run 的数据转换为字典."""
-        from jcia.core.entities.test_run import TestRun, RunType
+        from jcia.core.entities.test_run import RunType, TestRun
 
         test_run = TestRun(
             id=1,
@@ -62,7 +62,7 @@ class TestReportData:
 
     def test_to_dict_with_baseline_run(self) -> None:
         """测试带 baseline_run 的数据转换为字典."""
-        from jcia.core.entities.test_run import TestRun, RunType
+        from jcia.core.entities.test_run import RunType, TestRun
 
         baseline_run = TestRun(
             id=1,

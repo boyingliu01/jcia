@@ -3,19 +3,20 @@
 This module tests the remote call detection service.
 """
 
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from jcia.core.services.remote_call_detection_service import (
-    RemoteCallDetectionService,
-    RemoteCallDetectionResult,
-)
+import pytest
+
 from jcia.core.entities.remote_call import (
+    RemoteCallChain,
     RemoteCallInfo,
     RemoteCallType,
     RemoteEndpoint,
-    RemoteCallChain,
+)
+from jcia.core.services.remote_call_detection_service import (
+    RemoteCallDetectionResult,
+    RemoteCallDetectionService,
 )
 
 

@@ -110,7 +110,7 @@ class ImpactAnalysisService:
             change_set_id=impact_graph.change_set_id,
         )
 
-        for _method_name, node in impact_graph.nodes.items():
+        for node in impact_graph.nodes.values():
             if class_name in node.class_name:
                 filtered.add_node(node)
 

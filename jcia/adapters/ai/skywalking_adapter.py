@@ -132,8 +132,8 @@ class SkyWalkingAdapter:
 
             return endpoint_ids
 
-        except Exception as e:
-            logger.error(f"Failed to find related endpoints: {e}")
+        except Exception:
+            logger.exception("Failed to find related endpoints: ")
             return []
 
     def _analyze_endpoint_stats(
@@ -183,8 +183,8 @@ class SkyWalkingAdapter:
 
             return self._process_endpoint_stats(stats_data, endpoint_ids)
 
-        except Exception as e:
-            logger.error(f"Failed to analyze endpoint stats: {e}")
+        except Exception:
+            logger.exception("Failed to analyze endpoint stats: ")
             return []
 
     def _process_endpoint_stats(
@@ -341,8 +341,8 @@ class SkyWalkingAdapter:
 
             return self._process_exception_logs(exceptions_data)
 
-        except Exception as e:
-            logger.error(f"Failed to analyze exceptions: {e}")
+        except Exception:
+            logger.exception("Failed to analyze exceptions: ")
             return []
 
     def _process_exception_logs(self, logs: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -435,8 +435,8 @@ class SkyWalkingAdapter:
 
             return {"services": filtered_services}
 
-        except Exception as e:
-            logger.error(f"Failed to get service health: {e}")
+        except Exception:
+            logger.exception("Failed to get service health: ")
             return {"services": []}
 
     def analyze_performance_trends(self, service_name: str, time_range: int = 30) -> dict[str, Any]:
@@ -487,8 +487,8 @@ class SkyWalkingAdapter:
                 "time_range_days": time_range,
             }
 
-        except Exception as e:
-            logger.error(f"Failed to analyze performance trends: {e}")
+        except Exception:
+            logger.exception("Failed to analyze performance trends: ")
             return {"service_name": service_name, "metrics": []}
 
     def _execute_graphql(self, query: str, variables: dict[str, Any]) -> dict[Any, Any]:
@@ -537,7 +537,7 @@ class SkyWalkingAdapter:
             return data.get("data", {})
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"GraphQL request failed: {e}")
+            logger.exception("GraphQL request failed: ")
             raise RuntimeError(f"Failed to execute GraphQL query: {e}") from e
 
     def export_test_recommendations(

@@ -23,8 +23,8 @@ from jcia.core.interfaces.call_chain_analyzer import (
 )
 from jcia.core.interfaces.file_system import FileSystemService
 from jcia.core.interfaces.remote_call_analyzer import (
-    RemoteCallAnalyzer,
     RemoteCallAnalysisResult,
+    RemoteCallAnalyzer,
 )
 from jcia.core.interfaces.repository import (
     ChangeImpactRepository,
@@ -50,44 +50,44 @@ from jcia.core.interfaces.tool_wrapper import (
 )
 
 __all__ = [
-    # 分析器接口
-    "ChangeAnalyzer",
-    "ImpactAnalyzer",
+    # AI 服务接口
+    "AIAnalyzer",
+    "AIProvider",
+    "AITestGenerator",
     # 调用链分析器接口
     "AnalyzerType",
     "CallChainAnalyzer",
     "CallChainDirection",
     "CallChainGraph",
     "CallChainNode",
-    # 远程调用分析器接口
-    "RemoteCallAnalyzer",
-    "RemoteCallAnalysisResult",
-    # AI 服务接口
-    "AIAnalyzer",
-    "AIProvider",
-    "AITestGenerator",
-    "CodeAnalysisRequest",
-    "CodeAnalysisResponse",
-    "TestGenerationRequest",
-    "TestGenerationResponse",
+    # 分析器接口
+    "ChangeAnalyzer",
     # 仓储接口
     "ChangeImpactRepository",
-    "TestDiffRepository",
-    "TestResultRepository",
-    "TestRunRepository",
-    # 测试运行器接口
-    "TestExecutionResult",
-    "TestExecutor",
-    "TestGenerator",
-    "TestSelector",
-    "TestSelectionStrategy",
-    "TestSuiteResult",
+    "CodeAnalysisRequest",
+    "CodeAnalysisResponse",
+    "FileSystemService",
+    "ImpactAnalyzer",
     # 工具封装接口
     "JavaToolWrapper",
     "MavenPluginWrapper",
+    "RemoteCallAnalysisResult",
+    # 远程调用分析器接口
+    "RemoteCallAnalyzer",
+    "TestDiffRepository",
+    # 测试运行器接口
+    "TestExecutionResult",
+    "TestExecutor",
+    "TestGenerationRequest",
+    "TestGenerationResponse",
+    "TestGenerator",
+    "TestResultRepository",
+    "TestRunRepository",
+    "TestSelectionStrategy",
+    "TestSelector",
+    "TestSuiteResult",
     "ToolResult",
     "ToolStatus",
     "ToolType",
     "ToolWrapper",
-    "FileSystemService",
 ]

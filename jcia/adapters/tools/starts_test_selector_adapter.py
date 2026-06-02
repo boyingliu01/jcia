@@ -2,7 +2,7 @@
 
 基于 STARTS (Static Test Assignment for Regression Test Selection) 算法的测试选择器。
 """
-# ruff: noqa: N817  # defusedxml.ElementTree is official import style
+# defusedxml.ElementTree is official import style
 
 import json
 import logging

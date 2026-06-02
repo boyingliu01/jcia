@@ -270,12 +270,12 @@ class TestReflectionWithRealWorldPatterns:
         """Test Spring-style reflection patterns."""
         matcher = ReflectionPatternMatcher()
 
-        content = '''
+        content = """
         // Spring-style reflection
         Class<?> controllerClass = Class.forName("com.example.controller.UserController");
         Method handleMethod = controllerClass.getMethod("handleRequest", HttpServletRequest.class);
         Object result = handleMethod.invoke(controller, request);
-        '''
+        """
 
         matches = matcher.find_patterns(content, "SpringTest.java")
 
@@ -288,11 +288,11 @@ class TestReflectionWithRealWorldPatterns:
         """Test MyBatis-style mapper reflection."""
         matcher = ReflectionPatternMatcher()
 
-        content = '''
+        content = """
         // MyBatis mapper proxy
         SqlSession session = sqlSessionFactory.openSession();
         UserMapper mapper = session.getMapper(UserMapper.class);
-        '''
+        """
 
         # This doesn't directly use reflection in the typical sense,
         # but we should not produce false positives
@@ -307,11 +307,11 @@ class TestReflectionWithRealWorldPatterns:
         """Test Dubbo SPI-style reflection."""
         matcher = ReflectionPatternMatcher()
 
-        content = '''
+        content = """
         // Dubbo ExtensionLoader uses reflection internally
         ExtensionLoader<Protocol> loader = ExtensionLoader.getExtensionLoader(Protocol.class);
         Protocol protocol = loader.getExtension("dubbo");
-        '''
+        """
 
         # Should not produce false positives
         matches = matcher.find_patterns(content, "DubboTest.java")
@@ -322,7 +322,7 @@ class TestReflectionWithRealWorldPatterns:
         """Test complex reflection scenario with multiple patterns."""
         matcher = ReflectionPatternMatcher()
 
-        content = '''
+        content = """
         public class DynamicInvoker {
             public Object invoke(String className, String methodName, Object... args) throws Exception {
                 Class<?> clazz = Class.forName(className);
@@ -339,7 +339,7 @@ class TestReflectionWithRealWorldPatterns:
                 return types;
             }
         }
-        '''
+        """
 
         matches = matcher.find_patterns(content, "DynamicInvoker.java")
 

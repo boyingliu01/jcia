@@ -290,7 +290,7 @@ class TestOpenAIAdapterCodeAnalysis:
         """Set up test fixtures."""
         self.adapter = OpenAIAdapter(api_key="test-key")
 
-    @patch.object(OpenAIAdapter, '_call_openai_api')
+    @patch.object(OpenAIAdapter, "_call_openai_api")
     def test_analyze_code_success(self, mock_call_api):
         """Test successful code analysis."""
         mock_call_api.return_value = {
@@ -316,7 +316,7 @@ class TestOpenAIAdapterCodeAnalysis:
         assert len(response.findings) > 0
         assert response.risk_level == "HIGH"
 
-    @patch.object(OpenAIAdapter, '_call_openai_api')
+    @patch.object(OpenAIAdapter, "_call_openai_api")
     def test_analyze_code_failure(self, mock_call_api):
         """Test code analysis failure handling."""
         mock_call_api.side_effect = Exception("API Error")
@@ -341,7 +341,7 @@ class TestOpenAIAdapterImpactExplanation:
         """Set up test fixtures."""
         self.adapter = OpenAIAdapter(api_key="test-key")
 
-    @patch.object(OpenAIAdapter, '_call_openai_api')
+    @patch.object(OpenAIAdapter, "_call_openai_api")
     def test_explain_change_impact_success(self, mock_call_api):
         """Test successful impact explanation."""
         mock_call_api.return_value = {
@@ -359,7 +359,7 @@ class TestOpenAIAdapterImpactExplanation:
 
         assert "authentication" in result
 
-    @patch.object(OpenAIAdapter, '_call_openai_api')
+    @patch.object(OpenAIAdapter, "_call_openai_api")
     def test_explain_change_impact_failure(self, mock_call_api):
         """Test impact explanation failure handling."""
         mock_call_api.side_effect = Exception("API Error")
@@ -374,7 +374,7 @@ class TestOpenAIAdapterImpactExplanation:
 class TestOpenAIAdapterMockMode:
     """Tests for mock mode when openai is not installed."""
 
-    @patch.object(OpenAIAdapter, '_call_openai_api')
+    @patch.object(OpenAIAdapter, "_call_openai_api")
     def test_generate_tests_with_mock(self, mock_call_api):
         """Test test generation with mocked API."""
         mock_call_api.return_value = {

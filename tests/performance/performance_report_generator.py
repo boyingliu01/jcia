@@ -450,25 +450,25 @@ def generate_markdown_report(report: PerformanceReport, output_path: Path) -> No
         f.write(f"**总预计时长**: {plan.get('total_duration', 'N/A')}\n\n")
         f.write(f"**预期最终改进**: {plan.get('expected_final_improvement', 'N/A')}\n\n")
 
-        for phase in plan.get('phases', []):
+        for phase in plan.get("phases", []):
             f.write(f"### {phase['phase']} ({phase['duration']})\n\n")
             f.write(f"**预期改进**: {phase['total_expected_improvement']}\n\n")
             f.write("**任务列表**:\n\n")
 
-            for task in phase['tasks']:
+            for task in phase["tasks"]:
                 f.write(f"- **{task['title']}**\n")
                 f.write(f"  - 优先级: {task['priority']}\n")
                 f.write(f"  - 工作量: {task['effort']}\n")
                 f.write(f"  - 预期改进: {task['expected_improvement']}\n\n")
 
         # 风险评估
-        risk = plan.get('risk_assessment', {})
+        risk = plan.get("risk_assessment", {})
         f.write("### 风险评估\n\n")
         f.write("**高风险任务**:\n")
-        for task in risk.get('high_risk_tasks', []):
+        for task in risk.get("high_risk_tasks", []):
             f.write(f"- {task}\n")
         f.write("\n**缓解措施**:\n")
-        for measure in risk.get('mitigation', []):
+        for measure in risk.get("mitigation", []):
             f.write(f"- {measure}\n")
 
         f.write("\n---\n\n")
@@ -501,7 +501,7 @@ def main() -> int:
 
     # 生成报告
     generator = PerformanceReportGenerator(benchmark_data)
-    generator.generate_report()  # noqa: F841
+    generator.generate_report()
 
     # 保存报告
     report_path = generate_full_report(benchmark_data, args.output)

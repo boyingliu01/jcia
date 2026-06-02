@@ -94,7 +94,7 @@ class MavenAdapter:
             )
 
         normalized_args = self._normalize_args(args or [])
-        cmd = [mvn_path] + normalized_args
+        cmd = [mvn_path, *normalized_args]
 
         try:
             result = subprocess.run(  # nosec B603
@@ -103,6 +103,7 @@ class MavenAdapter:
                 capture_output=True,
                 text=True,
                 timeout=timeout,
+                check=False,
             )
             return ToolResult(
                 success=result.returncode == 0,
@@ -140,7 +141,7 @@ class MavenAdapter:
     def build_maven_args(self, **kwargs: bool) -> list[str]:
         """构建 Maven 参数列表。"""
         args = ["clean", "test"]
-        if "skip_tests" in kwargs and kwargs["skip_tests"]:
+        if kwargs.get("skip_tests"):
             # 正确的 Maven 跳过测试参数是 -DskipTests
             args.append("-DskipTests")
         return args

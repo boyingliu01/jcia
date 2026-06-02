@@ -8,10 +8,6 @@ import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from jcia.adapters.tools.remote_call.composite_adapter import CompositeRemoteCallAdapter
 
 from jcia.core.entities.remote_call import (
     RemoteCallChain,
@@ -104,7 +100,7 @@ class RemoteCallDetectionService:
             )
 
         except Exception as e:
-            logger.error(f"Error detecting remote calls in {file_path}: {e}")
+            logger.exception("Error detecting remote calls in {file_path}: ")
             elapsed_ms = (time.time() - start_time) * 1000
             return RemoteCallDetectionResult(
                 file_path=file_path,
@@ -243,7 +239,7 @@ class RemoteCallDetectionService:
         Returns:
             Dictionary with summary information
         """
-        stats = result.get_statistics()
+        stats: dict[str, int | float | str] = result.get_statistics()  # pyright: ignore[reportAssignmentType]
         stats["file_path"] = result.file_path
         if result.error:
             stats["error"] = result.error

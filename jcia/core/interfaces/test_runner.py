@@ -58,7 +58,7 @@ class TestSuiteResult:
 
     def __post_init__(self) -> None:
         """初始化后处理."""
-        if self.test_results is None:
+        if self.test_results is None:  # pyright: ignore[reportUnnecessaryComparison]
             self.test_results = []
 
     @property
@@ -86,12 +86,10 @@ class TestSelector(ABC):
         Returns:
             List[TestCase]: 选中的测试用例列表
         """
-        pass
 
     @abstractmethod
     def get_selection_strategy(self) -> TestSelectionStrategy:
         """获取选择策略."""
-        pass
 
 
 class TestGenerator(ABC):
@@ -116,7 +114,6 @@ class TestGenerator(ABC):
         Returns:
             List[TestCase]: 生成的测试用例列表
         """
-        pass
 
     @abstractmethod
     def generate_for_uncovered(
@@ -132,7 +129,6 @@ class TestGenerator(ABC):
         Returns:
             List[TestCase]: 生成的测试用例列表
         """
-        pass
 
 
 class TestExecutor(ABC):
@@ -155,7 +151,6 @@ class TestExecutor(ABC):
         Returns:
             TestSuiteResult: 测试结果
         """
-        pass
 
     @abstractmethod
     def execute_with_coverage(
@@ -174,7 +169,6 @@ class TestExecutor(ABC):
         Returns:
             TestSuiteResult: 包含覆盖率的测试结果
         """
-        pass
 
     @abstractmethod
     def get_coverage_report(self, project_path: Path, report_format: str = "xml") -> dict[str, Any]:
@@ -187,4 +181,3 @@ class TestExecutor(ABC):
         Returns:
             Dict[str, Any]: 覆盖率数据
         """
-        pass

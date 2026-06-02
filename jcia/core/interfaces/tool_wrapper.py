@@ -74,7 +74,6 @@ class ToolWrapper(ABC):
         Returns:
             str: 工具标识名称
         """
-        pass
 
     @property
     @abstractmethod
@@ -84,7 +83,6 @@ class ToolWrapper(ABC):
         Returns:
             ToolType: 工具类型枚举
         """
-        pass
 
     @abstractmethod
     def check_status(self) -> ToolStatus:
@@ -93,7 +91,6 @@ class ToolWrapper(ABC):
         Returns:
             ToolStatus: 工具当前状态
         """
-        pass
 
     @abstractmethod
     def install(self) -> bool:
@@ -102,7 +99,6 @@ class ToolWrapper(ABC):
         Returns:
             bool: 是否成功
         """
-        pass
 
     @abstractmethod
     def get_version(self) -> str | None:
@@ -111,7 +107,6 @@ class ToolWrapper(ABC):
         Returns:
             Optional[str]: 版本字符串，未安装返回None
         """
-        pass
 
     @abstractmethod
     def execute(
@@ -127,7 +122,6 @@ class ToolWrapper(ABC):
         Returns:
             ToolResult: 执行结果
         """
-        pass
 
 
 class JavaToolWrapper(ToolWrapper, ABC):
@@ -144,7 +138,6 @@ class JavaToolWrapper(ToolWrapper, ABC):
         Returns:
             Path: JAR文件路径
         """
-        pass
 
     @abstractmethod
     def build_classpath(self) -> str:
@@ -153,7 +146,6 @@ class JavaToolWrapper(ToolWrapper, ABC):
         Returns:
             str: 类路径字符串
         """
-        pass
 
 
 class MavenPluginWrapper(ToolWrapper, ABC):
@@ -166,20 +158,16 @@ class MavenPluginWrapper(ToolWrapper, ABC):
     @abstractmethod
     def plugin_group_id(self) -> str:
         """返回插件groupId."""
-        pass
 
     @property
     @abstractmethod
     def plugin_artifact_id(self) -> str:
         """返回插件artifactId."""
-        pass
 
     @abstractmethod
     def get_maven_goal(self) -> str:
         """返回Maven目标（如"starts:select"）."""
-        pass
 
     @abstractmethod
     def build_maven_args(self, **kwargs: Any) -> list[str]:
         """构建Maven参数列表."""
-        pass

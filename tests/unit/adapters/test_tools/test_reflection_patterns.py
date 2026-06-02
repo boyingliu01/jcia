@@ -43,11 +43,11 @@ class TestReflectionPatternMatcher:
 
     def test_match_class_for_name_multiline(self, matcher: ReflectionPatternMatcher) -> None:
         """Test Class.forName spanning multiple lines."""
-        content = '''
+        content = """
         Class.forName(
             "com.example.MyClass"
         )
-        '''
+        """
         matches = matcher.find_patterns(content, "Test.java")
         assert len(matches) == 1
         assert matches[0].target_class == "com.example.MyClass"
@@ -87,7 +87,7 @@ class TestReflectionPatternMatcher:
 
     def test_match_invoke_no_args(self, matcher: ReflectionPatternMatcher) -> None:
         """Test Method.invoke with no arguments."""
-        content = 'method.invoke(obj)'
+        content = "method.invoke(obj)"
         matches = matcher.find_patterns(content, "Test.java")
         assert len(matches) == 1
         assert matches[0].call_type == ReflectionType.INVOKE
@@ -95,7 +95,7 @@ class TestReflectionPatternMatcher:
     # Proxy tests
     def test_match_proxy_new_instance(self, matcher: ReflectionPatternMatcher) -> None:
         """Test Proxy.newProxyInstance."""
-        content = 'Proxy.newProxyInstance(classLoader, interfaces, handler)'
+        content = "Proxy.newProxyInstance(classLoader, interfaces, handler)"
         matches = matcher.find_patterns(content, "Test.java")
         assert len(matches) == 1
         assert matches[0].call_type == ReflectionType.PROXY
@@ -103,7 +103,7 @@ class TestReflectionPatternMatcher:
     # Constructor tests
     def test_match_get_constructor(self, matcher: ReflectionPatternMatcher) -> None:
         """Test getConstructor."""
-        content = 'clazz.getConstructor(String.class)'
+        content = "clazz.getConstructor(String.class)"
         matches = matcher.find_patterns(content, "Test.java")
         assert len(matches) == 1
         assert matches[0].call_type == ReflectionType.CONSTRUCTOR
@@ -117,7 +117,7 @@ class TestReflectionPatternMatcher:
 
     def test_match_get_declared_constructor(self, matcher: ReflectionPatternMatcher) -> None:
         """Test getDeclaredConstructor."""
-        content = 'clazz.getDeclaredConstructor()'
+        content = "clazz.getDeclaredConstructor()"
         matches = matcher.find_patterns(content, "Test.java")
         assert len(matches) == 1
         assert matches[0].call_type == ReflectionType.CONSTRUCTOR
@@ -140,14 +140,14 @@ class TestReflectionPatternMatcher:
 
     def test_match_field_get(self, matcher: ReflectionPatternMatcher) -> None:
         """Test Field.get."""
-        content = 'field.get(obj)'
+        content = "field.get(obj)"
         matches = matcher.find_patterns(content, "Test.java")
         assert len(matches) == 1
         assert matches[0].call_type == ReflectionType.FIELD
 
     def test_match_field_set(self, matcher: ReflectionPatternMatcher) -> None:
         """Test Field.set."""
-        content = 'field.set(obj, value)'
+        content = "field.set(obj, value)"
         matches = matcher.find_patterns(content, "Test.java")
         assert len(matches) == 1
         assert matches[0].call_type == ReflectionType.FIELD
@@ -175,7 +175,7 @@ class TestReflectionPatternMatcher:
     # Edge cases
     def test_no_false_positives(self, matcher: ReflectionPatternMatcher) -> None:
         """Test that regular code doesn't trigger false positives."""
-        content = '''
+        content = """
         public void process() {
             String name = "test";
             int value = 42;
@@ -184,7 +184,7 @@ class TestReflectionPatternMatcher:
                 System.out.println("Positive");
             }
         }
-        '''
+        """
         matches = matcher.find_patterns(content, "Test.java")
         # Should not detect any reflection patterns
         assert len(matches) == 0
@@ -197,7 +197,7 @@ class TestReflectionPatternMatcher:
 
     def test_multiple_patterns_in_one_file(self, matcher: ReflectionPatternMatcher) -> None:
         """Test detecting multiple reflection patterns in one file."""
-        content = '''
+        content = """
         public class ReflectionExample {
             public void example() {
                 Class<?> clazz = Class.forName("com.example.Service");
@@ -206,7 +206,7 @@ class TestReflectionPatternMatcher:
                 Field field = clazz.getField("name");
             }
         }
-        '''
+        """
         matches = matcher.find_patterns(content, "Test.java")
         assert len(matches) >= 4
         call_types = {m.call_type for m in matches}
@@ -217,13 +217,13 @@ class TestReflectionPatternMatcher:
 
     def test_line_number_calculation(self, matcher: ReflectionPatternMatcher) -> None:
         """Test that line numbers are calculated correctly."""
-        content = '''
+        content = """
         public class Test {
             public void method() {
                 Class.forName("com.example.Test");
             }
         }
-        '''
+        """
         matches = matcher.find_patterns(content, "Test.java")
         assert len(matches) == 1
         # The Class.forName is on line 4 (0-indexed would be 3)
@@ -237,7 +237,7 @@ class TestReflectionPatternMatcher:
         assert literal_matches[0].is_high_confidence()
 
         # Variable should have medium confidence
-        variable_content = 'Class.forName(className)'
+        variable_content = "Class.forName(className)"
         variable_matches = matcher.find_patterns(variable_content, "Test.java")
         assert not variable_matches[0].is_high_confidence()
 

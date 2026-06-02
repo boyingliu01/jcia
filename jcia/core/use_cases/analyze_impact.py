@@ -12,7 +12,9 @@ from jcia.core.entities.impact_graph import ImpactGraph
 
 if TYPE_CHECKING:
     from jcia.core.interfaces.analyzer import ChangeAnalyzer
-    from jcia.core.interfaces.call_chain_analyzer import CallChainAnalyzer
+    from jcia.core.interfaces.call_chain_analyzer import (
+        CallChainAnalyzer,
+    )
 
 
 @dataclass
@@ -177,9 +179,6 @@ class AnalyzeImpactUseCase:
             Exception: 分析过程中发生错误
         """
         # 导入ImpactAnalysisService避免和循环依赖
-        from jcia.core.interfaces.call_chain_analyzer import (  # noqa: TCH001
-            CallChainAnalyzer,
-        )
         from jcia.core.services.impact_analysis_service import ImpactAnalysisService
 
         # 使用提供的调用链分析器

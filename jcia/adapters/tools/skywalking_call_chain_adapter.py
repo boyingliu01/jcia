@@ -152,8 +152,8 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
             traces_data = response.get("getTrace", {})
             return self._build_upstream_graph(traces_data, method, max_depth)
 
-        except Exception as e:
-            logger.error(f"Failed to analyze upstream: {e}")
+        except Exception:
+            logger.exception("Failed to analyze upstream: ")
             return self._create_empty_graph(method, max_depth)
 
     def analyze_downstream(self, method: str, max_depth: int = 10) -> CallChainGraph:
@@ -219,8 +219,8 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
             traces_data = response.get("getTrace", {})
             return self._build_downstream_graph(traces_data, method, max_depth)
 
-        except Exception as e:
-            logger.error(f"Failed to analyze downstream: {e}")
+        except Exception:
+            logger.exception("Failed to analyze downstream: ")
             return self._create_empty_graph(method, max_depth)
 
     def analyze_both_directions(
@@ -274,8 +274,8 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
 
             return self._build_full_graph_from_topology(topology)
 
-        except Exception as e:
-            logger.error(f"Failed to build full graph: {e}")
+        except Exception:
+            logger.exception("Failed to build full graph: ")
             return self._create_empty_graph("root", 10)
 
     def _parse_method_to_endpoint(self, method: str) -> tuple[str, str]:
@@ -342,7 +342,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
             return data.get("data", {})
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"GraphQL request failed: {e}")
+            logger.exception("GraphQL request failed: ")
             raise RuntimeError(f"Failed to execute GraphQL query: {e}") from e
 
     def _build_upstream_graph(
@@ -455,7 +455,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
                 )
 
                 # 识别调用类型
-                call_type, service_info = self._identify_call_type_from_span(span)
+                call_type, _service_info = self._identify_call_type_from_span(span)
 
                 child.metadata = {
                     "call_type": call_type,
@@ -697,8 +697,8 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
                 "topology": response.get("topology", {}),
             }
 
-        except Exception as e:
-            logger.error(f"Failed to get service topology: {e}")
+        except Exception:
+            logger.exception("Failed to get service topology: ")
             return {"services": [], "topology": {}}
 
     def _create_empty_graph(self, method: str, max_depth: int) -> CallChainGraph:

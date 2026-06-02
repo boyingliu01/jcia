@@ -106,9 +106,7 @@ class FileChange:
         # 统一路径分隔符为正斜杠进行判断，增加 Windows 兼容性
         normalized_path = self.file_path.replace("\\", "/").lower()
         return (
-            normalized_path.endswith("test.java")
-            or normalized_path.endswith("tests.java")
-            or "/test/" in normalized_path
+            normalized_path.endswith(("test.java", "tests.java")) or "/test/" in normalized_path
         )
 
     @property

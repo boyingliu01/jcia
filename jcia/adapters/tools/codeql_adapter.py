@@ -240,6 +240,7 @@ class CodeQLAdapter(CallChainAnalyzer):
                 text=True,
                 timeout=timeout,
                 cwd=self._repo_path,
+                check=False,
             )
 
             if result.returncode != 0:
@@ -299,6 +300,7 @@ class CodeQLAdapter(CallChainAnalyzer):
                 capture_output=True,
                 text=True,
                 timeout=300,
+                check=False,
             )
 
             if result.returncode != 0:
@@ -307,8 +309,7 @@ class CodeQLAdapter(CallChainAnalyzer):
 
             # Read results
             if output_file.exists():
-                results = json.loads(output_file.read_text())
-                return results
+                return json.loads(output_file.read_text())
 
             return {}
 
@@ -447,6 +448,7 @@ class CodeQLAdapter(CallChainAnalyzer):
                 capture_output=True,
                 text=True,
                 timeout=600,
+                check=False,
             )
 
             if result.returncode == 0:
