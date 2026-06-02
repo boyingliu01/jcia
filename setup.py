@@ -30,7 +30,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "jcia=jcia.cli:main",
+            "jcia=jcia.cli.main:cli",
         ],
     },
     python_requires=">=3.10",

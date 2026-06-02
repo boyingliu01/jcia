@@ -1,0 +1,91 @@
+{
+  "id": "sprint-2026-06-02-01",
+  "phase": 1,
+  "status": "completed",
+  "isolation": {
+    "worktree_path": ".worktrees/sprint/sprint-2026-06-02-01",
+    "branch": "sprint/2026-06-02-01",
+    "created_from": "master",
+    "created_from_commit": "4c1bd1afc8b330f4c1a50d23013aa6743deefece"
+  },
+  "task_description": "处理所有遗留的open issues，参考 .omo/open-issues-next-iteration.md",
+  "open_issues_doc": ".omo/open-issues-next-iteration.md",
+  "metrics": {
+    "baseline_tests_passed": 811,
+    "baseline_tests_skipped": 1,
+    "baseline_tests_failed": 0
+  },
+  "auto_estimate": {
+    "change_type": "修改已存在代码",
+    "metrics": {
+      "ref_count": 15,
+      "cross_module_count": 5,
+      "modules": ["adapters/tools/remote_call", "infrastructure/database", "core/services", "cli", "adapters/database"],
+      "circular_dep": true,
+      "public_api_count": 6,
+      "test_file_count": 2
+    },
+    "estimated_level": "复杂",
+    "recommended_flow": "完整 Sprint Flow (Phase 0-8)",
+    "risk_warnings": ["analysis_fusion_service.py 高 CCN 函数", "所有 4 个 remote_call adapters 需要 service registry 集成"],
+    "user_decision": "accepted"
+  },
+  "delphi_review": {
+    "verdict": "APPROVED",
+    "consensus_ratio": 1.0,
+    "round": 1,
+    "experts": {
+      "A": {"verdict": "APPROVED", "confidence": 8},
+      "B": {"verdict": "APPROVED", "confidence": 8}
+    },
+    "critical_issues": 0,
+    "major_concerns": [
+      "I2 rename - use LSP find_references",
+      "I4 depends on I7 interface stability",
+      "I5 investigation scope unbounded",
+      "I9 47 uncovered lines need identification",
+      "I12 refactoring risk"
+    ]
+  },
+  "vertical_slices": [
+    {
+      "name": "S1-Foundation",
+      "issues": ["I1-CLI-ENTRY", "I2-SQLITE-DUPLICATE", "I3-GRPC-ADAPTER", "I5-PRECOMMIT-HOOK"],
+      "execution_order": 1,
+      "status": "pending"
+    },
+    {
+      "name": "S2-CrossService",
+      "issues": ["I7-SERVICE-REGISTRY", "I4-CROSS-SERVICE-CHAIN", "I6-TREESITTER"],
+      "execution_order": 2,
+      "status": "pending"
+    },
+    {
+      "name": "S3-Quality",
+      "issues": ["I9-COVERAGE-FUSION", "I10-COVERAGE-BUILDER", "I12-COMPLEXITY"],
+      "execution_order": 3,
+      "status": "pending"
+    },
+    {
+      "name": "S4-Future",
+      "issues": ["I8-K8S-TOPOLOGY", "I11-ASYNC-MQ"],
+      "execution_order": 4,
+      "status": "deferred"
+    }
+  ],
+  "taste_decisions": [
+    {"id": "TD-I2-1", "decision": "sqlite_adapter rename", "value": "database_adapter.py"},
+    {"id": "TD-I5-1", "decision": "pre-commit hook investigation", "value": "investigate first"},
+    {"id": "TD-I7-1", "decision": "Service registry backend", "value": "Mock only, defer"},
+    {"id": "TD-I8-1", "decision": "K8s library", "value": "Defer to future"},
+    {"id": "TD-I11-1", "decision": "MQ async library", "value": "Defer to future"}
+  ],
+  "outputs": {
+    "phase_minus_1_summary": ".sprint-state/phase-outputs/phase-minus-1-summary.md",
+    "phase_0_summary": ".sprint-state/phase-outputs/phase-0-summary.md",
+    "specification": ".sprint-state/phase-outputs/specification.yaml",
+    "slices_manifest": ".sprint-state/phase-outputs/slices-manifest.json",
+    "delphi_reviewed": ".sprint-state/delphi-reviewed.json",
+    "phase_1_summary": ".sprint-state/phase-outputs/phase-1-summary.md"
+  }
+}
