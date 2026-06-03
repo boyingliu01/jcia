@@ -52,7 +52,7 @@ ai = [
 ]
 
 [project.scripts]
-jcia = "jcia.cli:main"
+jcia = "jcia.cli.main:cli"
 
 [project.urls]
 Homepage = "https://github.com/your-org/jcia"

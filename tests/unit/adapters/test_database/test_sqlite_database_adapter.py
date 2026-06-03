@@ -1,6 +1,6 @@
 """SQLiteDatabaseAdapter 单元测试."""
 
-from jcia.adapters.database.sqlite_adapter import SQLiteDatabaseAdapter
+from jcia.adapters.database.database_adapter import SQLiteDatabaseAdapter
 from jcia.core.entities.test_run import DiffType, RunStatus, RunType, TestRun, TestStatus
 
 

@@ -5,6 +5,7 @@ Detects Spring Cloud OpenFeign client calls in Java source code.
 
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from jcia.core.entities.remote_call import (
     RemoteCallChain,
@@ -12,6 +13,9 @@ from jcia.core.entities.remote_call import (
     RemoteCallType,
 )
 from jcia.core.interfaces.remote_call_analyzer import RemoteCallAnalyzer
+
+if TYPE_CHECKING:
+    from jcia.core.interfaces.service_registry import ServiceRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +36,20 @@ class FeignRemoteCallAdapter(RemoteCallAnalyzer):
         ```
     """
 
-    def __init__(self) -> None:
-        """Initialize the Feign adapter."""
+    def __init__(
+        self, service_registry: "ServiceRegistry | None" = None
+    ) -> None:
+        """Initialize the Feign adapter.
+
+        Args:
+            service_registry: Optional service registry for cross-service
+                chain analysis. If not provided, cross-service analysis
+                will return empty results.
+        """
         from jcia.adapters.tools.remote_call_patterns import RemoteCallPatternMatcher
 
         self._matcher = RemoteCallPatternMatcher()
+        self._registry = service_registry
 
     @property
     def supported_call_types(self) -> list[RemoteCallType]:
