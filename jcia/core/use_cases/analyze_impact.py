@@ -3,6 +3,7 @@
 负责协调变更分析和影响分析的完整流程。
 """
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -11,8 +12,17 @@ from jcia.core.entities.change_set import ChangeSet
 from jcia.core.entities.impact_graph import ImpactGraph
 
 if TYPE_CHECKING:
+    from jcia.core.entities.remote_call import RemoteCallInfo
     from jcia.core.interfaces.analyzer import ChangeAnalyzer
     from jcia.core.interfaces.call_chain_analyzer import CallChainAnalyzer
+    from jcia.core.services.analysis_fusion_service import AnalysisFusionService
+    from jcia.core.services.remote_call_detection_service import (
+        RemoteCallDetectionResult,
+        RemoteCallDetectionService,
+    )
+    from jcia.core.services.severity_enhancer import SeverityEnhancer
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -26,6 +36,7 @@ class AnalyzeImpactRequest:
         commit_range: 提交范围（替代from/to）
         max_depth: 最大追溯深度
         include_test_files: 是否包含测试文件
+        detect_remote_calls: 是否检测并融合跨服务远程调用（Phase 4，默认关闭）
     """
 
     repo_path: Path
@@ -34,6 +45,7 @@ class AnalyzeImpactRequest:
     commit_range: str | None = None
     max_depth: int = 10
     include_test_files: bool = False
+    detect_remote_calls: bool = False
 
 
 @dataclass
@@ -66,16 +78,25 @@ class AnalyzeImpactUseCase:
         self,
         change_analyzer: "ChangeAnalyzer",
         call_chain_analyzer: "CallChainAnalyzer | None" = None,
+        remote_call_detector: "RemoteCallDetectionService | None" = None,
+        fusion_service: "AnalysisFusionService | None" = None,
+        severity_enhancer: "SeverityEnhancer | None" = None,
     ) -> None:
         """初始化用例.
 
         Args:
             change_analyzer: 变更分析器
             call_chain_analyzer: 调用链分析器（可选，某些实现可能同时实现两个接口）
+            remote_call_detector: 远程调用检测服务（可选，Phase 4 跨服务分析）
+            fusion_service: 分析融合服务（可选，Phase 4 将远程调用融合进影响图）
+            severity_enhancer: 多维度严重度增强器（可选，Phase 4 精细化严重度评分）
         """
         self._analyzer = change_analyzer
         # 某些适配器可能同时实现两个接口
         self._call_chain_analyzer = call_chain_analyzer
+        self._remote_call_detector = remote_call_detector
+        self._fusion_service = fusion_service
+        self._severity_enhancer = severity_enhancer
 
     def execute(self, request: AnalyzeImpactRequest) -> AnalyzeImpactResponse:
         """执行分析影响用例.
@@ -103,8 +124,17 @@ class AnalyzeImpactUseCase:
         # 分析影响
         impact_graph = self._analyze_impact(change_set, request.max_depth)
 
+        # Phase 4: 可选地检测并融合跨服务远程调用
+        remote_call_stats: dict[str, Any] | None = None
+        if request.detect_remote_calls:
+            impact_graph, remote_call_stats = self._detect_and_fuse_remote_calls(
+                change_set, impact_graph, request.repo_path
+            )
+
         # 生成摘要
         summary = self._generate_summary(change_set, impact_graph)
+        if remote_call_stats is not None:
+            summary["remote_calls"] = remote_call_stats
 
         return AnalyzeImpactResponse(
             change_set=change_set,
@@ -191,10 +221,57 @@ class AnalyzeImpactUseCase:
             raise ValueError(msg)
 
         try:
-            impact_service = ImpactAnalysisService(call_chain_analyzer=analyzer)
+            impact_service = ImpactAnalysisService(
+                call_chain_analyzer=analyzer,
+                severity_enhancer=self._severity_enhancer,
+            )
             return impact_service.analyze(change_set, max_depth=max_depth)
         except Exception as e:
             raise Exception(f"影响分析失败: {e}") from e
+
+    def _detect_and_fuse_remote_calls(
+        self,
+        change_set: ChangeSet,
+        impact_graph: ImpactGraph,
+        repo_path: Path,
+    ) -> tuple[ImpactGraph, dict[str, Any] | None]:
+        """检测变更文件中的远程调用并融合进影响图（Phase 4）.
+
+        仅当同时注入了远程调用检测器与融合服务时生效；否则优雅降级，
+        返回原始影响图且不产生统计信息。
+
+        Args:
+            change_set: 变更集合
+            impact_graph: 原始影响图
+            repo_path: 仓库根路径，用于解析变更文件的绝对路径
+
+        Returns:
+            tuple[ImpactGraph, dict | None]: (可能被增强的影响图, 远程调用统计或 None)
+        """
+        if self._remote_call_detector is None or self._fusion_service is None:
+            logger.warning("已请求远程调用检测，但未配置检测器或融合服务，跳过跨服务分析")
+            return impact_graph, None
+
+        # 对变更的 Java 文件逐个检测远程调用
+        results: list[RemoteCallDetectionResult] = []
+        all_calls: list[RemoteCallInfo] = []
+        for java_file in change_set.changed_java_files:
+            file_path = repo_path / java_file
+            result = self._remote_call_detector.detect_from_file(str(file_path))
+            results.append(result)
+            all_calls.extend(result.calls)
+
+        # 融合进影响图（添加跨服务节点）
+        fused_graph = self._fusion_service.fuse_with_remote_calls(impact_graph, all_calls)
+
+        # 汇总统计信息
+        stats = self._remote_call_detector.aggregate_results(results)
+        logger.info(
+            "远程调用检测完成: %s 个调用, %s 个跨服务依赖",
+            stats.get("total_calls", 0),
+            stats.get("unique_services", 0),
+        )
+        return fused_graph, dict(stats)
 
     def _generate_summary(self, change_set: ChangeSet, impact_graph: ImpactGraph) -> dict[str, Any]:
         """生成摘要.

@@ -3,7 +3,7 @@
 协调变更分析和调用链分析，计算代码变更的完整影响范围。
 """
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jcia.core.entities.change_set import ChangeSet
 from jcia.core.entities.impact_graph import (
@@ -17,6 +17,9 @@ from jcia.core.interfaces.call_chain_analyzer import (
     CallChainAnalyzer,
 )
 
+if TYPE_CHECKING:
+    from jcia.core.services.severity_enhancer import SeverityEnhancer
+
 
 class ImpactAnalysisService:
     """影响分析服务.
@@ -24,13 +27,20 @@ class ImpactAnalysisService:
     根据变更集合和调用链分析，计算代码变更的影响范围。
     """
 
-    def __init__(self, call_chain_analyzer: CallChainAnalyzer) -> None:
+    def __init__(
+        self,
+        call_chain_analyzer: CallChainAnalyzer,
+        severity_enhancer: "SeverityEnhancer | None" = None,
+    ) -> None:
         """初始化服务.
 
         Args:
             call_chain_analyzer: 调用链分析器
+            severity_enhancer: 可选的多维度严重度增强器。注入后使用多维度
+                评分判定严重程度；未注入时回退到基于类名关键词的启发式判定。
         """
         self._analyzer = call_chain_analyzer
+        self._severity_enhancer = severity_enhancer
 
     def analyze(self, change_set: ChangeSet, max_depth: int = 10) -> ImpactGraph:
         """分析变更的影响范围.
@@ -58,7 +68,7 @@ class ImpactAnalysisService:
                 method_name=method_name,
                 class_name=class_name,
                 impact_type=ImpactType.DIRECT,
-                severity=self._determine_severity(class_name),
+                severity=self._determine_severity(class_name, method_name, call_depth=0),
                 depth=0,
             )
             impact_graph.add_node(node)
@@ -184,7 +194,7 @@ class ImpactAnalysisService:
                     method_name=method_name,
                     class_name=class_name,
                     impact_type=ImpactType.INDIRECT,
-                    severity=self._determine_severity(class_name),
+                    severity=self._determine_severity(class_name, method_name, call_depth=depth),
                     depth=depth,
                 )
                 impact_graph.add_node(impact_node)
@@ -222,15 +232,29 @@ class ImpactAnalysisService:
             return ".".join(parts[:-1])
         return ""
 
-    def _determine_severity(self, class_name: str) -> ImpactSeverity:
-        """根据类名确定影响严重程度.
+    def _determine_severity(
+        self, class_name: str, method_name: str = "", call_depth: int = 0
+    ) -> ImpactSeverity:
+        """根据类名及上下文确定影响严重程度.
+
+        当注入了 SeverityEnhancer 时，使用多维度评分综合判定严重程度；
+        否则回退到基于类名关键词的启发式判定（向后兼容）。
 
         Args:
             class_name: 类名
+            method_name: 方法全限定名（用于多维度业务关键性评分）
+            call_depth: 调用链深度（用于多维度评分）
 
         Returns:
             ImpactSeverity: 影响严重程度
         """
+        if self._severity_enhancer is not None:
+            return self._severity_enhancer.determine_severity(
+                class_name=class_name,
+                method_name=method_name,
+                call_depth=call_depth,
+            )
+
         class_name_lower = class_name.lower()
 
         # 高严重程度：核心业务类

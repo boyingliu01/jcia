@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 完整的 CLI 命令行工具（analyze, test, regression, report, config）
 - 完整的报告生成模块（HTML, JSON, Markdown）
 - 完整的集成测试
+- Phase 4 跨服务远程调用集成：`analyze` 命令新增 `--detect-remote-calls` 开关，将远程调用检测（Dubbo/Feign/HTTP/MQ）融合进影响图并启用多维度严重度评分；采用向后兼容的可选依赖注入（默认关闭），涉及 analyze_impact 用例、ImpactAnalysisService 与 CLI
 
 ### Fixed
 - 修复 TestSuiteResult 类的 pytest 收集警告

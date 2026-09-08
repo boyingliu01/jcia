@@ -37,7 +37,6 @@ def cli() -> None:
 
     分析Java代码变更的影响范围，智能选择测试用例，执行回归测试。
     """
-    pass
 
 
 @cli.command()
@@ -52,12 +51,19 @@ def cli() -> None:
     show_default=True,
     help="最大追溯深度",
 )
+@click.option(
+    "--detect-remote-calls",
+    is_flag=True,
+    default=False,
+    help="检测并融合跨服务远程调用（Dubbo/Feign/HTTP/MQ），启用多维度严重度评分",
+)
 def analyze(
     repo_path: str,
     from_commit: str | None,
     to_commit: str | None,
     commit_range: str | None,
     max_depth: int,
+    detect_remote_calls: bool,
 ) -> None:
     """分析变更影响范围.
 
@@ -72,16 +78,36 @@ def analyze(
     elif from_commit:
         click.echo(f"从提交: {from_commit} 到提交: {to_commit or 'HEAD'}")
     click.echo(f"最大深度: {max_depth}")
+    if detect_remote_calls:
+        click.echo("跨服务远程调用检测: 已启用")
 
     try:
         # 创建适配器
         change_analyzer = PyDrillerAdapter(repo_path=repo_path)
         call_chain_analyzer = MockCallChainAnalyzer(repo_path=repo_path)
 
+        # Phase 4: 可选地创建跨服务分析与多维度严重度服务
+        remote_call_detector = None
+        fusion_service = None
+        severity_enhancer = None
+        if detect_remote_calls:
+            from jcia.core.services import (
+                AnalysisFusionService,
+                RemoteCallDetectionService,
+                SeverityEnhancer,
+            )
+
+            remote_call_detector = RemoteCallDetectionService()
+            fusion_service = AnalysisFusionService()
+            severity_enhancer = SeverityEnhancer()
+
         # 创建用例
         use_case = AnalyzeImpactUseCase(
             change_analyzer=change_analyzer,
             call_chain_analyzer=call_chain_analyzer,
+            remote_call_detector=remote_call_detector,
+            fusion_service=fusion_service,
+            severity_enhancer=severity_enhancer,
         )
 
         # 构建请求
@@ -93,6 +119,7 @@ def analyze(
             to_commit=to_commit,
             commit_range=commit_range,
             max_depth=max_depth,
+            detect_remote_calls=detect_remote_calls,
         )
 
         # 执行分析
@@ -110,6 +137,29 @@ def analyze(
         click.echo(f"  间接影响: {response.summary.get('indirect_impacts', 0)}")
         click.echo(f"  受影响类: {response.summary.get('affected_classes', 0)}")
         click.echo(f"  高严重程度: {response.summary.get('high_severity_count', 0)}")
+
+        # Phase 4: 显示跨服务远程调用信息
+        remote_calls = response.summary.get("remote_calls")
+        if remote_calls:
+            click.echo("\n跨服务远程调用:")
+            click.echo(f"  远程调用总数: {remote_calls.get('total_calls', 0)}")
+            click.echo(f"  RPC调用: {remote_calls.get('rpc_calls', 0)}")
+            click.echo(f"  消息队列: {remote_calls.get('mq_calls', 0)}")
+            click.echo(f"  高置信度: {remote_calls.get('high_confidence', 0)}")
+            click.echo(f"  涉及服务数: {remote_calls.get('unique_services', 0)}")
+
+            # 列出影响图中的跨服务节点
+            cross_service_nodes = [
+                node
+                for node in response.impact_graph.nodes.values()
+                if node.metadata.get("is_cross_service")
+            ]
+            if cross_service_nodes:
+                click.echo("\n  跨服务依赖节点:")
+                for node in cross_service_nodes:
+                    call_type = node.metadata.get("call_type", "unknown")
+                    endpoint = node.metadata.get("endpoint", "")
+                    click.echo(f"    - {node.class_name} [{call_type}] {endpoint}")
 
     except Exception as e:
         click.echo(f"\n错误: {e}", err=True)
