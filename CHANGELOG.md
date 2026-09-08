@@ -35,9 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 为 codeql / starts / java_all_call_graph / skywalking 适配器补充类型注解，消除 mypy 严格模式报错
 - 创建 jcia/cli/__init__.py，修复 AGENTS.md 记录的 CLI 入口点缺失问题（entry point 指向 jcia.cli.main:cli）
 - 补齐 jcia/infrastructure/database/__init__.py 包标记
+- 修复 PyDrillerAdapter 变更文件路径缺陷：原用 `ModifiedFile.filename`（仅 basename，如 `CspFilter.java`）作为 `file_path`，导致下游 `repo_path / file_path` 无法定位磁盘文件，远程调用检测恒报 "File not found" 并返回 0 结果；改用 `new_path`（相对仓库根的完整路径）并统一分隔符为正斜杠，缺失时回退 `filename`。该缺陷此前因单测 mock 把 `filename` 设为完整路径而被掩盖
 
 ### Testing
-- 测试套件：857 passed / 31 skipped（原记录 332 已过时）
+- 测试套件：861 passed / 31 skipped（新增 4 个 PyDriller 路径回归测试）
 - 实测总覆盖率 81.40%（目标 ≥ 80%）
 - 重构 pydriller 集成测试改用可靠的 GitPython commit range，消除 3 个 flaky 用例
 - 测试 fixture 做 hermetic 隔离，移除对真实外部环境的隐式依赖

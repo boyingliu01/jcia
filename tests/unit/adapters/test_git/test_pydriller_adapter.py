@@ -84,7 +84,9 @@ class TestPyDrillerAdapter:
         mock_git = MagicMock()
         mock_file = MagicMock()
         mock_file.change_type = "ADD"
-        mock_file.filename = "src/Service.java"
+        mock_file.filename = "Service.java"  # PyDriller 的 filename 是 basename
+        mock_file.new_path = "src/Service.java"  # 完整路径来自 new_path
+        mock_file.old_path = None
         mock_file.added_lines = 10
         mock_file.deleted_lines = 2
 
@@ -123,12 +125,16 @@ class TestPyDrillerAdapter:
         file_with_enum = MagicMock()
         file_with_enum.change_type = DummyChangeType.RENAME
         file_with_enum.filename = "Service.java"
+        file_with_enum.new_path = "src/Service.java"
+        file_with_enum.old_path = "src/Old.java"
         file_with_enum.added_lines = 1
         file_with_enum.deleted_lines = 2
 
         file_unknown = MagicMock()
         file_unknown.change_type = "WEIRD"
         file_unknown.filename = "Other.java"
+        file_unknown.new_path = "src/Other.java"
+        file_unknown.old_path = None
         file_unknown.added_lines = 0
         file_unknown.deleted_lines = 0
 
@@ -175,6 +181,8 @@ class TestPyDrillerAdapter:
         adapter = PyDrillerAdapter(repo_path="/fake/repo")
         mock_file = MagicMock()
         mock_file.filename = "Service.java"
+        mock_file.new_path = "src/main/java/Service.java"
+        mock_file.old_path = None
         mock_file.change_type = "MODIFY"
         mock_file.added_lines = 5
         mock_file.deleted_lines = 1
@@ -188,9 +196,78 @@ class TestPyDrillerAdapter:
 
         result = adapter._convert_file_change(mock_file)
 
-        assert result.file_path == "Service.java"
+        assert result.file_path == "src/main/java/Service.java"
         assert len(result.method_changes) == 1
         assert result.method_changes[0].method_name == "save"
+
+    def test_convert_file_change_uses_new_path_not_basename(self) -> None:
+        """回归：file_path 必须取 new_path 完整路径，而非 filename basename.
+
+        真实 PyDriller 的 ``filename`` 仅返回 basename（如 ``CspFilter.java``），
+        若直接用作 file_path，下游 ``repo_path / file_path`` 无法定位磁盘文件，
+        导致远程调用检测恒报 "File not found" 并返回 0 结果。
+        """
+        adapter = PyDrillerAdapter(repo_path="/fake/repo")
+        mock_file = MagicMock()
+        mock_file.filename = "CspFilter.java"
+        mock_file.new_path = "core/src/main/java/jenkins/security/CspFilter.java"
+        mock_file.old_path = None
+        mock_file.change_type = "MODIFY"
+        mock_file.added_lines = 0
+        mock_file.deleted_lines = 0
+
+        result = adapter._convert_file_change(mock_file)
+
+        assert result.file_path == "core/src/main/java/jenkins/security/CspFilter.java"
+        assert result.is_java_file is True
+
+    def test_convert_file_change_normalizes_windows_backslashes(self) -> None:
+        """new_path/old_path 中的 Windows 反斜杠应归一化为正斜杠."""
+        adapter = PyDrillerAdapter(repo_path="/fake/repo")
+        mock_file = MagicMock()
+        mock_file.filename = "Service.java"
+        mock_file.new_path = "core\\src\\main\\java\\Service.java"
+        mock_file.old_path = "core\\src\\main\\java\\Old.java"
+        mock_file.change_type = "RENAME"
+        mock_file.added_lines = 0
+        mock_file.deleted_lines = 0
+
+        result = adapter._convert_file_change(mock_file)
+
+        assert result.file_path == "core/src/main/java/Service.java"
+        assert result.old_path == "core/src/main/java/Old.java"
+        assert "\\" not in result.file_path
+
+    def test_convert_file_change_falls_back_to_filename_when_new_path_missing(self) -> None:
+        """new_path 缺失时回退到 filename，old_path 缺失时为 None."""
+        adapter = PyDrillerAdapter(repo_path="/fake/repo")
+        mock_file = MagicMock()
+        mock_file.filename = "Legacy.java"
+        mock_file.new_path = None
+        mock_file.old_path = None
+        mock_file.change_type = "MODIFY"
+        mock_file.added_lines = 0
+        mock_file.deleted_lines = 0
+
+        result = adapter._convert_file_change(mock_file)
+
+        assert result.file_path == "Legacy.java"
+        assert result.old_path is None
+
+    def test_convert_file_change_detects_test_file_from_full_path(self) -> None:
+        """完整路径使 is_test_file 的 /test/ 判断得以生效."""
+        adapter = PyDrillerAdapter(repo_path="/fake/repo")
+        mock_file = MagicMock()
+        mock_file.filename = "ServiceTest.java"
+        mock_file.new_path = "src/test/java/com/demo/ServiceTest.java"
+        mock_file.old_path = None
+        mock_file.change_type = "MODIFY"
+        mock_file.added_lines = 0
+        mock_file.deleted_lines = 0
+
+        result = adapter._convert_file_change(mock_file)
+
+        assert result.is_test_file is True
 
     @patch("jcia.adapters.git.pydriller_adapter.Path.exists", return_value=True)
     @patch("jcia.adapters.git.pydriller_adapter.Git")

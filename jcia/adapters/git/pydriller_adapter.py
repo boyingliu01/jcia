@@ -192,10 +192,22 @@ class PyDrillerAdapter(ChangeAnalyzer):
         """
         change_type = self._map_change_type(getattr(pydriller_file, "change_type", None))
 
+        # PyDriller 的 filename 仅为 basename（如 "Service.java"），无法用于
+        # 定位磁盘文件；new_path 才是相对仓库根目录的完整路径。统一分隔符为
+        # 正斜杠，保证跨平台一致、下游 ``repo_path / file_path`` 拼接正确，
+        # 并使 is_test_file 的 "/test/" 判断生效。缺失时回退 filename。
+        raw_path = getattr(pydriller_file, "new_path", None) or getattr(
+            pydriller_file, "filename", ""
+        )
+        file_path = raw_path.replace("\\", "/") if raw_path else ""
+
+        raw_old_path = getattr(pydriller_file, "old_path", None)
+        old_path = raw_old_path.replace("\\", "/") if raw_old_path else None
+
         file_change = FileChange(
-            file_path=getattr(pydriller_file, "filename", ""),
+            file_path=file_path,
             change_type=change_type,
-            old_path=getattr(pydriller_file, "old_path", None),
+            old_path=old_path,
             insertions=getattr(pydriller_file, "added_lines", 0) or 0,
             deletions=getattr(pydriller_file, "deleted_lines", 0) or 0,
         )
