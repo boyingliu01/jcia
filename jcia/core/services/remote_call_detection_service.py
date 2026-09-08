@@ -8,10 +8,6 @@ import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from jcia.adapters.tools.remote_call.composite_adapter import CompositeRemoteCallAdapter
 
 from jcia.core.entities.remote_call import (
     RemoteCallChain,
@@ -234,7 +230,9 @@ class RemoteCallDetectionService:
 
         return chains
 
-    def get_detection_summary(self, result: RemoteCallDetectionResult) -> dict[str, int | float | str]:
+    def get_detection_summary(
+        self, result: RemoteCallDetectionResult
+    ) -> dict[str, int | float | str]:
         """Get a summary of detection results.
 
         Args:
@@ -243,15 +241,13 @@ class RemoteCallDetectionService:
         Returns:
             Dictionary with summary information
         """
-        stats = result.get_statistics()
+        stats: dict[str, int | float | str] = dict(result.get_statistics())
         stats["file_path"] = result.file_path
         if result.error:
             stats["error"] = result.error
         return stats
 
-    def aggregate_results(
-        self, results: list[RemoteCallDetectionResult]
-    ) -> dict[str, int | float]:
+    def aggregate_results(self, results: list[RemoteCallDetectionResult]) -> dict[str, int | float]:
         """Aggregate statistics from multiple results.
 
         Args:

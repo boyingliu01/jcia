@@ -93,7 +93,7 @@ class ReflectionPatternMatcher:
             ReflectionPattern(
                 pattern_type=ReflectionType.FOR_NAME,
                 regex=re.compile(
-                    r'Class\.forName\s*\(\s*(\w+)\s*\)',
+                    r"Class\.forName\s*\(\s*(\w+)\s*\)",
                     re.MULTILINE,
                 ),
                 extractor=self._extract_for_name_variable,
@@ -119,7 +119,7 @@ class ReflectionPatternMatcher:
             ReflectionPattern(
                 pattern_type=ReflectionType.GET_METHOD,
                 regex=re.compile(
-                    r'\.get(?:Declared)?Method\s*\(\s*(\w+)',
+                    r"\.get(?:Declared)?Method\s*\(\s*(\w+)",
                     re.MULTILINE,
                 ),
                 extractor=self._extract_get_method_variable,
@@ -132,7 +132,7 @@ class ReflectionPatternMatcher:
             ReflectionPattern(
                 pattern_type=ReflectionType.INVOKE,
                 regex=re.compile(
-                    r'\.invoke\s*\(\s*(\w+)\s*(?:,\s*(.+?))?\s*\)',
+                    r"\.invoke\s*\(\s*(\w+)\s*(?:,\s*(.+?))?\s*\)",
                     re.MULTILINE,
                 ),
                 extractor=self._extract_invoke,
@@ -145,7 +145,7 @@ class ReflectionPatternMatcher:
             ReflectionPattern(
                 pattern_type=ReflectionType.PROXY,
                 regex=re.compile(
-                    r'Proxy\.newProxyInstance\s*\(',
+                    r"Proxy\.newProxyInstance\s*\(",
                     re.MULTILINE,
                 ),
                 extractor=self._extract_proxy,
@@ -158,7 +158,7 @@ class ReflectionPatternMatcher:
             ReflectionPattern(
                 pattern_type=ReflectionType.CONSTRUCTOR,
                 regex=re.compile(
-                    r'\.get(?:Declared)?Constructor\s*\(',
+                    r"\.get(?:Declared)?Constructor\s*\(",
                     re.MULTILINE,
                 ),
                 extractor=self._extract_constructor,
@@ -171,7 +171,7 @@ class ReflectionPatternMatcher:
             ReflectionPattern(
                 pattern_type=ReflectionType.CONSTRUCTOR,
                 regex=re.compile(
-                    r'\.newInstance\s*\(',
+                    r"\.newInstance\s*\(",
                     re.MULTILINE,
                 ),
                 extractor=self._extract_new_instance,
@@ -197,7 +197,7 @@ class ReflectionPatternMatcher:
             ReflectionPattern(
                 pattern_type=ReflectionType.FIELD,
                 regex=re.compile(
-                    r'\.get\s*\(\s*(\w+)\s*\)',
+                    r"\.get\s*\(\s*(\w+)\s*\)",
                     re.MULTILINE,
                 ),
                 extractor=self._extract_field_get,
@@ -210,7 +210,7 @@ class ReflectionPatternMatcher:
             ReflectionPattern(
                 pattern_type=ReflectionType.FIELD,
                 regex=re.compile(
-                    r'\.set\s*\(\s*(\w+)\s*,',
+                    r"\.set\s*\(\s*(\w+)\s*,",
                     re.MULTILINE,
                 ),
                 extractor=self._extract_field_set,
@@ -283,7 +283,7 @@ class ReflectionPatternMatcher:
         chain_pattern = re.compile(
             r'Class\.forName\s*\(\s*"([^"]+)"\s*\)'
             r'(?:\s*\.\s*get(?:Declared)?Method\s*\(\s*"([^"]+)"\s*[^)]*\))?'
-            r'(?:\s*\.\s*invoke\s*\([^)]+\))?',
+            r"(?:\s*\.\s*invoke\s*\([^)]+\))?",
             re.MULTILINE,
         )
 

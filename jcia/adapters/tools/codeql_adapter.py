@@ -127,9 +127,7 @@ class CodeQLAdapter(CallChainAnalyzer):
         # Find CodeQL CLI
         self._codeql_path = codeql_path or self._find_codeql()
         if not self._codeql_path:
-            logger.warning(
-                "CodeQL CLI not found. Please install CodeQL or provide codeql_path."
-            )
+            logger.warning("CodeQL CLI not found. Please install CodeQL or provide codeql_path.")
 
         # Database path
         self._database_path: Path | None = None
@@ -240,6 +238,7 @@ class CodeQLAdapter(CallChainAnalyzer):
                 text=True,
                 timeout=timeout,
                 cwd=self._repo_path,
+                check=False,
             )
 
             if result.returncode != 0:
@@ -289,8 +288,10 @@ class CodeQLAdapter(CallChainAnalyzer):
             "run-queries",
             str(self._database_path),
             str(query_file),
-            "--format", output_format,
-            "--output", str(output_file),
+            "--format",
+            output_format,
+            "--output",
+            str(output_file),
         ]
 
         try:
@@ -299,6 +300,7 @@ class CodeQLAdapter(CallChainAnalyzer):
                 capture_output=True,
                 text=True,
                 timeout=300,
+                check=False,
             )
 
             if result.returncode != 0:
@@ -407,9 +409,9 @@ class CodeQLAdapter(CallChainAnalyzer):
             entry_results = self._run_query(ENTRY_POINTS_QUERY)
 
             for row in entry_results.get("tuples", []):
-                method = call_graph.find_method(row.get("name", ""))
-                if method:
-                    call_graph.entry_points.append(method)
+                entry_method = call_graph.find_method(row.get("name", ""))
+                if entry_method:
+                    call_graph.entry_points.append(entry_method)
         except Exception as e:
             logger.warning(f"Failed to extract entry points: {e}")
 
@@ -437,8 +439,10 @@ class CodeQLAdapter(CallChainAnalyzer):
             "analyze",
             str(self._database_path),
             "java-security-and-quality",
-            "--format", "json",
-            "--output", str(self._working_dir / "security_results.json"),
+            "--format",
+            "json",
+            "--output",
+            str(self._working_dir / "security_results.json"),
         ]
 
         try:
@@ -447,6 +451,7 @@ class CodeQLAdapter(CallChainAnalyzer):
                 capture_output=True,
                 text=True,
                 timeout=600,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -736,9 +741,7 @@ class CodeQLAdapter(CallChainAnalyzer):
             return parts[0], parts[1]
         return None, method
 
-    def _create_empty_graph(
-        self, method: str, direction: CallChainDirection
-    ) -> CallChainGraph:
+    def _create_empty_graph(self, method: str, direction: CallChainDirection) -> CallChainGraph:
         """Create an empty call graph with just the root node.
 
         Args:

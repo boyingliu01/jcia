@@ -5,6 +5,7 @@
 """
 
 import logging
+from typing import TYPE_CHECKING
 
 from jcia.core.entities.impact_graph import (
     ImpactEdge,
@@ -17,6 +18,9 @@ from jcia.core.interfaces.call_chain_analyzer import (
     CallChainAnalyzer,
     CallChainGraph,
 )
+
+if TYPE_CHECKING:
+    from jcia.core.entities.remote_call import RemoteCallInfo
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +190,7 @@ class AnalysisFusionService:
         Returns:
             ImpactNode: 根节点
         """
-        class_name, method_name = self._parse_method(method)
+        class_name, _ = self._parse_method(method)
 
         return ImpactNode(
             method_name=method,
@@ -352,7 +356,7 @@ class AnalysisFusionService:
         Returns:
             ImpactNode: 融合节点
         """
-        class_name, method_name = self._parse_method(method)
+        class_name, _ = self._parse_method(method)
 
         severity = self._determine_fusion_severity(
             confidence, static_methods, dynamic_methods, method
@@ -836,8 +840,6 @@ class AnalysisFusionService:
         Returns:
             ImpactGraph: Enhanced impact graph with cross-service nodes
         """
-        from jcia.core.entities.remote_call import RemoteCallType
-
         if not remote_calls:
             return impact_graph
 

@@ -36,7 +36,6 @@ class ChangeAnalyzer(ABC):
             AnalysisError: 分析过程中发生错误
             GitError: Git操作失败
         """
-        pass
 
     @abstractmethod
     def analyze_commit_range(self, commit_range: str) -> ChangeSet:
@@ -48,7 +47,6 @@ class ChangeAnalyzer(ABC):
         Returns:
             ChangeSet: 变更集合
         """
-        pass
 
     @abstractmethod
     def get_changed_methods(self, commit_hash: str) -> list[str]:
@@ -60,7 +58,6 @@ class ChangeAnalyzer(ABC):
         Returns:
             List[str]: 变更的方法全限定名列表
         """
-        pass
 
     @property
     @abstractmethod
@@ -70,7 +67,6 @@ class ChangeAnalyzer(ABC):
         Returns:
             str: 分析器标识名称（如"pydriller", "gitpython"）
         """
-        pass
 
 
 class ImpactAnalyzer(ABC):
@@ -89,7 +85,6 @@ class ImpactAnalyzer(ABC):
         Returns:
             ImpactGraph: 影响图，包含所有受影响的方法
         """
-        pass
 
     @abstractmethod
     def get_upstream_impact(self, method: str, max_depth: int = 10) -> list[str]:
@@ -102,7 +97,6 @@ class ImpactAnalyzer(ABC):
         Returns:
             List[str]: 上游方法列表
         """
-        pass
 
     @abstractmethod
     def get_downstream_impact(self, method: str, max_depth: int = 10) -> list[str]:
@@ -115,4 +109,3 @@ class ImpactAnalyzer(ABC):
         Returns:
             List[str]: 下游方法列表
         """
-        pass

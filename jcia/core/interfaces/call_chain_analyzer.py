@@ -102,7 +102,6 @@ class CallChainAnalyzer(ABC):
         Returns:
             CallChainGraph: 上游调用链图
         """
-        pass
 
     @abstractmethod
     def analyze_downstream(self, method: str, max_depth: int = 10) -> CallChainGraph:
@@ -115,7 +114,6 @@ class CallChainAnalyzer(ABC):
         Returns:
             CallChainGraph: 下游调用链图
         """
-        pass
 
     @abstractmethod
     def analyze_both_directions(
@@ -130,7 +128,6 @@ class CallChainAnalyzer(ABC):
         Returns:
             tuple[CallChainGraph, CallChainGraph]: (上游图, 下游图)
         """
-        pass
 
     @abstractmethod
     def build_full_graph(self) -> CallChainGraph:
@@ -139,7 +136,6 @@ class CallChainAnalyzer(ABC):
         Returns:
             CallChainGraph: 完整调用链图
         """
-        pass
 
     @property
     @abstractmethod
@@ -149,7 +145,6 @@ class CallChainAnalyzer(ABC):
         Returns:
             AnalyzerType: 分析器类型
         """
-        pass
 
     @property
     @abstractmethod
@@ -159,4 +154,3 @@ class CallChainAnalyzer(ABC):
         Returns:
             bool: 是否支持
         """
-        pass

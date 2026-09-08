@@ -1,0 +1,53 @@
+# JCIA (Java Code Impact Analyzer) —— Clean Architecture 分层约束声明
+#
+# 本文件供 xp-gate Gate 6（Architecture）识别项目已显式声明架构约束。
+# 依赖规则（依赖只能指向内层，来源：AGENTS.md / PROJECT_CONSTITUTION.md）：
+#     adapters → infrastructure → use_cases → services → entities
+#
+# 强制方式说明：
+#   - Python 侧的实际类型/分层校验由 pyright（strict，0 errors）+ 单元测试承担。
+#   - 若需机器强制“分层导入”约束，可另配 import-linter（.import-linter.yml）；
+#     Gate 6 的 python 分支在检测到该文件时会运行 `lint-imports` 强制校验。
+#   - 未配置 import-linter 时，Gate 6 对 python 优雅跳过（不做机器校验），
+#     本文件即作为架构约束的权威文档声明。
+
+layers:
+  # —— 最内层：领域实体，无外部依赖 ——
+  - name: entities
+    paths: ["jcia/core/entities/**"]
+    allowed_imports: [entities]
+
+  # —— 抽象接口（ABC），仅依赖实体 ——
+  - name: interfaces
+    paths: ["jcia/core/interfaces/**"]
+    allowed_imports: [entities, interfaces]
+
+  # —— 领域服务，协调实体，不依赖 adapters/infrastructure ——
+  - name: services
+    paths: ["jcia/core/services/**"]
+    allowed_imports: [entities, interfaces, services]
+
+  # —— 应用用例，编排业务，依赖接口而非实现 ——
+  - name: use_cases
+    paths: ["jcia/core/use_cases/**"]
+    allowed_imports: [entities, interfaces, services, use_cases]
+
+  # —— 基础设施：实现 core 接口（持久化/配置/日志/文件系统）——
+  - name: infrastructure
+    paths: ["jcia/infrastructure/**"]
+    allowed_imports: [entities, interfaces, infrastructure]
+
+  # —— 适配器：桥接外部系统（Git/Maven/AI/DB/工具），可依赖所有内层 ——
+  - name: adapters
+    paths: ["jcia/adapters/**"]
+    allowed_imports: [entities, interfaces, services, use_cases, infrastructure, adapters]
+
+  # —— 报告输出：依赖实体/接口 ——
+  - name: reports
+    paths: ["jcia/reports/**"]
+    allowed_imports: [entities, interfaces, reports]
+
+  # —— 最外层：CLI 入口，编排用例与适配器 ——
+  - name: cli
+    paths: ["jcia/cli/**"]
+    allowed_imports: [entities, interfaces, services, use_cases, infrastructure, adapters, reports, cli]

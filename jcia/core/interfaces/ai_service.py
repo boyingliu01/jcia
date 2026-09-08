@@ -115,7 +115,6 @@ class AITestGenerator(ABC):
         Returns:
             TestGenerationResponse: 生成响应
         """
-        pass
 
     @abstractmethod
     def generate_for_uncovered(
@@ -134,7 +133,6 @@ class AITestGenerator(ABC):
         Returns:
             TestGenerationResponse: 生成响应
         """
-        pass
 
     @abstractmethod
     def refine_test(
@@ -155,19 +153,16 @@ class AITestGenerator(ABC):
         Returns:
             TestCase: 优化后的测试用例
         """
-        pass
 
     @property
     @abstractmethod
     def provider(self) -> AIProvider:
         """返回 AI 服务提供商."""
-        pass
 
     @property
     @abstractmethod
     def model(self) -> str:
         """返回使用的模型名称."""
-        pass
 
 
 class AIAnalyzer(ABC):
@@ -191,7 +186,6 @@ class AIAnalyzer(ABC):
         Returns:
             CodeAnalysisResponse: 分析响应
         """
-        pass
 
     @abstractmethod
     def explain_change_impact(
@@ -210,16 +204,13 @@ class AIAnalyzer(ABC):
         Returns:
             str: 影响说明
         """
-        pass
 
     @property
     @abstractmethod
     def provider(self) -> AIProvider:
         """返回 AI 服务提供商."""
-        pass
 
     @property
     @abstractmethod
     def model(self) -> str:
         """返回使用的模型名称."""
-        pass

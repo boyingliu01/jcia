@@ -1,6 +1,7 @@
 """SQLite 数据库适配器实现."""
 
 import sqlite3
+from collections.abc import Sequence
 from typing import Any
 
 
@@ -91,6 +92,25 @@ class SQLiteAdapter:
             raise RuntimeError("Database not connected")
         cursor = self._connection.cursor()
         cursor.execute(query, params)
+        self._connection.commit()
+        affected = cursor.rowcount or 0
+        cursor.close()
+        return int(affected)
+
+    def execute_many(self, query: str, params_seq: Sequence[tuple[Any, ...]]) -> int:
+        """批量执行写入并返回影响行数.
+
+        Args:
+            query: SQL 写入语句（含占位符）
+            params_seq: 参数序列，每个元素为一行的参数元组
+
+        Returns:
+            int: 影响行数
+        """
+        if self._connection is None:
+            raise RuntimeError("Database not connected")
+        cursor = self._connection.cursor()
+        cursor.executemany(query, params_seq)
         self._connection.commit()
         affected = cursor.rowcount or 0
         cursor.close()

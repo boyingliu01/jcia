@@ -105,9 +105,8 @@ class RemoteEndpoint:
         Returns:
             True if service name and at least interface or method are set
         """
-        return (
-            self.service_name is not None
-            and (self.interface is not None or self.method is not None)
+        return self.service_name is not None and (
+            self.interface is not None or self.method is not None
         )
 
 
@@ -158,7 +157,9 @@ class RemoteCallInfo:
         Returns:
             Signature in format: CallerClass.method -> service.endpointMethod
         """
-        caller = f"{self.caller_class}.{self.caller_method}" if self.caller_method else self.caller_class
+        caller = (
+            f"{self.caller_class}.{self.caller_method}" if self.caller_method else self.caller_class
+        )
         target = self.endpoint.full_identifier
         return f"{caller} -> {target}"
 

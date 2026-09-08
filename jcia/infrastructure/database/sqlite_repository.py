@@ -277,12 +277,7 @@ class SQLiteTestResultRepository(TestResultRepository):
             for r in results
         ]
 
-        connection = self._adapter._connection
-        if connection is None:
-            raise RuntimeError("Database not connected")
-
-        cursor = connection.cursor()
-        cursor.executemany(
+        return self._adapter.execute_many(
             """
             INSERT INTO test_results (
                 run_id,
@@ -298,10 +293,6 @@ class SQLiteTestResultRepository(TestResultRepository):
             """,
             rows,
         )
-        connection.commit()
-        rowcount = cursor.rowcount or 0
-        cursor.close()
-        return int(rowcount)
 
     def find_by_run_id(self, run_id: int) -> list[TestResult]:
         """根据运行ID查询测试结果."""
@@ -401,12 +392,7 @@ class SQLiteTestDiffRepository(TestDiffRepository):
             for diff in diffs
         ]
 
-        connection = self._adapter._connection
-        if connection is None:
-            raise RuntimeError("Database not connected")
-
-        cursor = connection.cursor()
-        cursor.executemany(
+        return self._adapter.execute_many(
             """
             INSERT INTO test_diffs (
                 baseline_run_id,
@@ -424,10 +410,6 @@ class SQLiteTestDiffRepository(TestDiffRepository):
             """,
             rows,
         )
-        connection.commit()
-        rowcount = cursor.rowcount or 0
-        cursor.close()
-        return int(rowcount)
 
     def find_by_run_ids(self, baseline_run_id: int, regression_run_id: int) -> list[TestDiff]:
         """根据基线和回归运行ID查询差异."""

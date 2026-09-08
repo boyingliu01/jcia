@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from pydriller import Repository  # type: ignore[import-untyped]
+from pydriller import Git  # type: ignore[import-untyped]
 
 from jcia.core.entities.change_set import (
     ChangeSet,
@@ -47,30 +47,26 @@ class PyDrillerAdapter(ChangeAnalyzer):
             to_commit=to_commit,
         )
 
-        commits = list(
-            Repository(
-                path_to_repo=self._repo_path,
-                from_commit=from_commit,
-                to_commit=to_commit or "HEAD",
-            ).traverse_commits()
-        )
+        git = Git(self._repo_path)
+        try:
+            for commit in self._collect_commits(git, from_commit, to_commit):
+                author = getattr(commit, "author", None)
+                parents = getattr(commit, "parents", []) or []
+                commit_info = CommitInfo(
+                    hash=getattr(commit, "hash", ""),
+                    message=getattr(commit, "msg", "") or "",
+                    author=getattr(author, "name", "") or "",
+                    email=getattr(author, "email", "") or "",
+                    timestamp=getattr(commit, "author_date", datetime.min) or datetime.min,
+                    parents=[getattr(p, "hash", "") for p in parents],
+                )
+                change_set.commits.append(commit_info)
 
-        for commit in commits:
-            author = getattr(commit, "author", None)
-            parents = getattr(commit, "parents", []) or []
-            commit_info = CommitInfo(
-                hash=getattr(commit, "hash", ""),
-                message=getattr(commit, "msg", "") or "",
-                author=getattr(author, "name", "") or "",
-                email=getattr(author, "email", "") or "",
-                timestamp=getattr(commit, "author_date", datetime.min) or datetime.min,
-                parents=[getattr(p, "hash", "") for p in parents],
-            )
-            change_set.commits.append(commit_info)
-
-            for file_change in getattr(commit, "modified_files", []) or []:
-                file_entity = self._convert_file_change(file_change)
-                change_set.add_file_change(file_entity)
+                for file_change in getattr(commit, "modified_files", []) or []:
+                    file_entity = self._convert_file_change(file_change)
+                    change_set.add_file_change(file_entity)
+        finally:
+            git.clear()
 
         return change_set
 
@@ -102,13 +98,11 @@ class PyDrillerAdapter(ChangeAnalyzer):
         self._ensure_repo_exists()
 
         methods: list[str] = []
+        git: Any = None
 
         try:
-            for commit in Repository(
-                path_to_repo=self._repo_path,
-                from_commit=commit_hash,
-                to_commit=commit_hash,
-            ).traverse_commits():
+            git = Git(self._repo_path)
+            for commit in self._collect_commits(git, commit_hash, commit_hash):
                 changed_methods = getattr(commit, "changed_methods", None)
                 if not changed_methods:
                     continue
@@ -120,6 +114,9 @@ class PyDrillerAdapter(ChangeAnalyzer):
         except Exception:
             # 返回空列表而不是抛出异常，处理不存在的提交等情况
             return []
+        finally:
+            if git is not None:
+                git.clear()
 
         return methods
 
@@ -136,6 +133,33 @@ class PyDrillerAdapter(ChangeAnalyzer):
         """校验仓库路径是否存在."""
         if not Path(self._repo_path).exists():
             raise FileNotFoundError(f"Repository path not found: {self._repo_path}")
+
+    def _collect_commits(self, git: Any, from_commit: str, to_commit: str | None) -> list[Any]:
+        """可靠枚举闭区间 [from_commit, to_commit] 内的 PyDriller Commit 对象.
+
+        绕过 ``Repository.traverse_commits()`` 的 ``--ancestry-path`` rev 构造：
+        该构造在 Windows 新建仓库上会间歇性地把 from_commit 解析出错误的父提交
+        数量，进而生成含 ``<from>^`` 的非法 rev，使 ``git rev-list`` 返回空结果
+        （实测约 30% 概率，且对同一仓库粘滞复现、重试无效）。改用 GitPython 的
+        简单 range ``<from>..<to>``（实测 100% 可靠）枚举，再前置 from_commit
+        本身以复现 PyDriller 的闭区间语义；随后用 PyDriller 的
+        ``get_commit_from_gitpython`` 包装，完整保留 modified_files /
+        changed_methods 等 Java 解析能力。
+
+        Args:
+            git: 已打开的 PyDriller Git 对象（由调用方负责 clear）
+            from_commit: 起始提交（闭区间，包含自身）
+            to_commit: 结束提交（默认 HEAD）
+
+        Returns:
+            list[Any]: 按时间升序排列的 PyDriller Commit 对象列表
+        """
+        repo = git.repo
+        start = repo.commit(from_commit)
+        to_ref = to_commit or "HEAD"
+        raw_commits: list[Any] = [start]
+        raw_commits.extend(repo.iter_commits(rev=f"{start.hexsha}..{to_ref}", reverse=True))
+        return [git.get_commit_from_gitpython(rc) for rc in raw_commits]
 
     def _map_change_type(self, change_type_value: Any) -> ChangeType:
         """兼容字符串或枚举的变更类型映射."""

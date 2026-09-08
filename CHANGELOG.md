@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修复 AnalyzeImpactUseCase 的 is_empty() 方法调用
 - 修复测试文件中的重复代码和错误断言
 - 修复 CLI 中的类型错误和 lint 问题
+- 修复 openai_adapter 的 None 安全隐患（构建 messages 时的潜在解引用）
+- 为 codeql / starts / java_all_call_graph / skywalking 适配器补充类型注解，消除 mypy 严格模式报错
+- 创建 jcia/cli/__init__.py，修复 AGENTS.md 记录的 CLI 入口点缺失问题（entry point 指向 jcia.cli.main:cli）
+- 补齐 jcia/infrastructure/database/__init__.py 包标记
 
 ### Testing
 - 所有单元测试通过（332 个测试）
@@ -44,6 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pre-commit hooks 配置
 - 代码质量工具（Ruff, Pyright, Bandit）
 - Makefile 自动化命令
+- 覆盖率门配置：omit 根目录一次性脚本，对齐 source=["jcia"]（实测总覆盖率 81%）
+- mypy 配置对齐项目主类型检查器 pyright 的既定放宽策略
+- 新增 architecture.yaml，以机器可读形式记录 Clean Architecture 分层依赖规则
 
 ---
 

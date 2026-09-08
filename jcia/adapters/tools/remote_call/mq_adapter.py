@@ -87,9 +87,7 @@ class MessageQueueRemoteCallAdapter(RemoteCallAnalyzer):
         logger.debug(f"Found {len(mq_calls)} MQ calls in {source_path}")
         return mq_calls
 
-    def analyze_cross_service_chain(
-        self, method: str, max_hops: int = 5
-    ) -> list[RemoteCallChain]:
+    def analyze_cross_service_chain(self, method: str, max_hops: int = 5) -> list[RemoteCallChain]:
         """Analyze cross-service call chain from a method.
 
         For MQ, this traces producer-consumer relationships.
@@ -101,9 +99,7 @@ class MessageQueueRemoteCallAdapter(RemoteCallAnalyzer):
         Returns:
             List of cross-service call chains
         """
-        logger.debug(
-            f"Analyzing cross-service chain from {method}, max_hops={max_hops}"
-        )
+        logger.debug(f"Analyzing cross-service chain from {method}, max_hops={max_hops}")
         return []
 
     def detect_from_directory(self, directory: Path) -> list[RemoteCallInfo]:
@@ -127,7 +123,9 @@ class MessageQueueRemoteCallAdapter(RemoteCallAnalyzer):
         logger.info(f"Found {len(all_calls)} MQ calls in {directory}")
         return all_calls
 
-    def get_calls_by_broker(self, calls: list[RemoteCallInfo]) -> dict[RemoteCallType, list[RemoteCallInfo]]:
+    def get_calls_by_broker(
+        self, calls: list[RemoteCallInfo]
+    ) -> dict[RemoteCallType, list[RemoteCallInfo]]:
         """Group calls by message broker type.
 
         Args:

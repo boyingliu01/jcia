@@ -103,6 +103,7 @@ class MavenAdapter:
                 capture_output=True,
                 text=True,
                 timeout=timeout,
+                check=False,
             )
             return ToolResult(
                 success=result.returncode == 0,

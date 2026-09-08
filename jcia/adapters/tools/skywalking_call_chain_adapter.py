@@ -318,7 +318,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
         if self._token:
             headers["SW-TOKEN"] = self._token
 
-        payload = {
+        payload: dict[str, Any] = {
             "query": query,
             "variables": variables,
         }
@@ -455,7 +455,7 @@ class SkyWalkingCallChainAdapter(CallChainAnalyzer):
                 )
 
                 # 识别调用类型
-                call_type, service_info = self._identify_call_type_from_span(span)
+                call_type, _ = self._identify_call_type_from_span(span)
 
                 child.metadata = {
                     "call_type": call_type,

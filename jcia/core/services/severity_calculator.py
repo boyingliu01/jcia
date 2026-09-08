@@ -247,9 +247,7 @@ class MultiDimensionalSeverityCalculator:
         )
 
         # 6. 业务关键性评分（基于方法名和类名推断）
-        business_score = self._calculate_business_criticality(
-            class_name, method_name
-        )
+        business_score = self._calculate_business_criticality(class_name, method_name)
         dimension_scores.append(
             DimensionScore(
                 dimension=SeverityDimension.BUSINESS_CRITICALITY,
@@ -397,9 +395,7 @@ class MultiDimensionalSeverityCalculator:
         else:
             return max(0, frequency * 25)
 
-    def _calculate_business_criticality(
-        self, class_name: str, method_name: str
-    ) -> float:
+    def _calculate_business_criticality(self, class_name: str, method_name: str) -> float:
         """根据业务关键性计算分数.
 
         基于类名和方法名推断业务关键性。
@@ -416,18 +412,52 @@ class MultiDimensionalSeverityCalculator:
 
         # 高业务关键性关键词
         critical_keywords = [
-            "payment", "pay", "transaction", "order", "user", "account",
-            "auth", "login", "security", "billing", "checkout", "trade",
-            "transfer", "withdraw", "deposit", "balance", "credit",
-            "create", "delete", "update", "save", "process",
+            "payment",
+            "pay",
+            "transaction",
+            "order",
+            "user",
+            "account",
+            "auth",
+            "login",
+            "security",
+            "billing",
+            "checkout",
+            "trade",
+            "transfer",
+            "withdraw",
+            "deposit",
+            "balance",
+            "credit",
+            "create",
+            "delete",
+            "update",
+            "save",
+            "process",
         ]
 
         # 中业务关键性关键词
         medium_keywords = [
-            "query", "get", "find", "search", "list", "count",
-            "validate", "check", "verify", "parse", "convert",
-            "calculate", "compute", "aggregate", "summarize",
-            "send", "receive", "notify", "push", "pull",
+            "query",
+            "get",
+            "find",
+            "search",
+            "list",
+            "count",
+            "validate",
+            "check",
+            "verify",
+            "parse",
+            "convert",
+            "calculate",
+            "compute",
+            "aggregate",
+            "summarize",
+            "send",
+            "receive",
+            "notify",
+            "push",
+            "pull",
         ]
 
         for keyword in critical_keywords:

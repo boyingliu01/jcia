@@ -513,7 +513,7 @@ class SkyWalkingAdapter:
         if self._token:
             headers["SW-TOKEN"] = self._token
 
-        payload = {
+        payload: dict[str, Any] = {
             "query": query,
             "variables": variables,
         }

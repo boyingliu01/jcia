@@ -118,17 +118,35 @@ class SeverityEnhancer:
 
         # 高严重程度关键词
         high_keywords = [
-            "core", "kernel", "manager", "handler", "service",
-            "controller", "business", "domain", "entity",
-            "repository", "dao", "mapper", "adapter",
+            "core",
+            "kernel",
+            "manager",
+            "handler",
+            "service",
+            "controller",
+            "business",
+            "domain",
+            "entity",
+            "repository",
+            "dao",
+            "mapper",
+            "adapter",
         ]
         if any(keyword in class_name_lower for keyword in high_keywords):
             return ImpactSeverity.HIGH
 
         # 低严重程度关键词
         low_keywords = [
-            "config", "constant", "enum", "dto", "vo",
-            "pojo", "model", "exception", "error", "util",
+            "config",
+            "constant",
+            "enum",
+            "dto",
+            "vo",
+            "pojo",
+            "model",
+            "exception",
+            "error",
+            "util",
         ]
         if any(keyword in class_name_lower for keyword in low_keywords):
             return ImpactSeverity.LOW

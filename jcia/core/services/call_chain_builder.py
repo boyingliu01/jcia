@@ -190,7 +190,7 @@ class CallChainBuilder:
         """
         visited = set()
 
-        def traverse(node: CallChainNode, depth: int) -> None:
+        def traverse(node: CallChainNode | None, depth: int) -> None:
             """递归遍历调用链."""
             if node is None:
                 return

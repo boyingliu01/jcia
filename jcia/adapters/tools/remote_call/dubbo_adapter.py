@@ -78,9 +78,7 @@ class DubboRemoteCallAdapter(RemoteCallAnalyzer):
         logger.debug(f"Found {len(dubbo_calls)} Dubbo calls in {source_path}")
         return dubbo_calls
 
-    def analyze_cross_service_chain(
-        self, method: str, max_hops: int = 5
-    ) -> list[RemoteCallChain]:
+    def analyze_cross_service_chain(self, method: str, max_hops: int = 5) -> list[RemoteCallChain]:
         """Analyze cross-service call chain from a method.
 
         For Dubbo, this traces service-to-service calls via Dubbo interfaces.
@@ -94,9 +92,7 @@ class DubboRemoteCallAdapter(RemoteCallAnalyzer):
         """
         # Basic implementation - would need service registry integration
         # for full cross-service chain analysis
-        logger.debug(
-            f"Analyzing cross-service chain from {method}, max_hops={max_hops}"
-        )
+        logger.debug(f"Analyzing cross-service chain from {method}, max_hops={max_hops}")
         return []
 
     def detect_from_directory(self, directory: Path) -> list[RemoteCallInfo]:

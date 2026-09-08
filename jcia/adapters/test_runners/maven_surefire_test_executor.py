@@ -305,7 +305,7 @@ class MavenSurefireTestExecutor(TestExecutor):
             tree = ET.parse(xml_path)
             root = tree.getroot()
 
-            test_suite = {
+            test_suite: dict[str, Any] = {
                 "total": int(root.get("tests", 0) or 0) if root is not None else 0,
                 "passed": 0,
                 "failed": 0,
@@ -342,7 +342,7 @@ class MavenSurefireTestExecutor(TestExecutor):
                 "cases": [],
             }
 
-    def _parse_test_case(self, element: Any) -> TestExecutionResult:  # noqa: ANN401
+    def _parse_test_case(self, element: Any) -> TestExecutionResult:
         """解析单个测试用例.
 
         Args:

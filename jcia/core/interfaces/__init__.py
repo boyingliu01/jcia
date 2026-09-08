@@ -23,8 +23,8 @@ from jcia.core.interfaces.call_chain_analyzer import (
 )
 from jcia.core.interfaces.file_system import FileSystemService
 from jcia.core.interfaces.remote_call_analyzer import (
-    RemoteCallAnalyzer,
     RemoteCallAnalysisResult,
+    RemoteCallAnalyzer,
 )
 from jcia.core.interfaces.repository import (
     ChangeImpactRepository,

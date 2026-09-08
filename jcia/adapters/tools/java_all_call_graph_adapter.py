@@ -126,9 +126,6 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         if cache_key in self._call_cache:
             return self._call_cache[cache_key]
 
-        # 解析方法
-        class_name, method_name = self._parse_method(method)
-
         # 使用 JACG 分析上游调用
         call_chain = self._analyze_with_jacg(method, "upstream", max_depth)
 
@@ -153,9 +150,6 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         cache_key = f"downstream:{method}:{max_depth}"
         if cache_key in self._call_cache:
             return self._call_cache[cache_key]
-
-        # 解析方法
-        class_name, method_name = self._parse_method(method)
 
         # 使用 JACG 分析下游调用
         call_chain = self._analyze_with_jacg(method, "downstream", max_depth)
@@ -771,7 +765,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         Returns:
             Dict[str, Any]: 服务拓扑数据
         """
-        topology = {"services": {}, "dependencies": {}, "endpoints": {}}
+        topology: dict[str, Any] = {"services": {}, "dependencies": {}, "endpoints": {}}
 
         # 扫描所有 Java 文件
         for java_file in self._repo_path.rglob("*.java"):

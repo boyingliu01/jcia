@@ -77,9 +77,7 @@ class FeignRemoteCallAdapter(RemoteCallAnalyzer):
         logger.debug(f"Found {len(feign_calls)} Feign calls in {source_path}")
         return feign_calls
 
-    def analyze_cross_service_chain(
-        self, method: str, max_hops: int = 5
-    ) -> list[RemoteCallChain]:
+    def analyze_cross_service_chain(self, method: str, max_hops: int = 5) -> list[RemoteCallChain]:
         """Analyze cross-service call chain from a method.
 
         For Feign, this traces service-to-service calls via HTTP interfaces.
@@ -91,9 +89,7 @@ class FeignRemoteCallAdapter(RemoteCallAnalyzer):
         Returns:
             List of cross-service call chains
         """
-        logger.debug(
-            f"Analyzing cross-service chain from {method}, max_hops={max_hops}"
-        )
+        logger.debug(f"Analyzing cross-service chain from {method}, max_hops={max_hops}")
         return []
 
     def detect_from_directory(self, directory: Path) -> list[RemoteCallInfo]:

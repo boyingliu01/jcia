@@ -210,9 +210,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
 
         if all_reflection_calls:
             self._reflection_calls_cache[class_name] = all_reflection_calls
-            logger.debug(
-                f"Found {len(all_reflection_calls)} reflection calls in {class_name}"
-            )
+            logger.debug(f"Found {len(all_reflection_calls)} reflection calls in {class_name}")
 
     def _infer_reflection_target(
         self, reflection_call: ReflectionCallInfo
@@ -501,7 +499,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
 
         return graph
 
-    def analyze_class_dependencies(self, class_name: str) -> dict[str, Any]:  # noqa: C901
+    def analyze_class_dependencies(self, class_name: str) -> dict[str, Any]:
         """分析类的依赖关系.
 
         Args:
@@ -510,7 +508,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
         Returns:
             Dict[str, Any]: 依赖分析结果
         """
-        dependencies = {
+        dependencies: dict[str, Any] = {
             "class_name": class_name,
             "dependencies": [],
             "dependents": [],
@@ -521,7 +519,6 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
             calls: set[str] = self._method_calls_cache[class_name]
             for target_class in self._class_methods_cache:
                 for called_method in calls:
-                    # noqa: SIM102
                     target_methods = self._class_methods_cache.get(target_class, {})
                     if called_method in target_methods and target_class != class_name:
                         dependencies["dependencies"].append(target_class)
@@ -530,9 +527,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
         for other_class, calls in self._method_calls_cache.items():
             if other_class == class_name:
                 continue
-            calls: set[str] = calls
             for called_method in calls:
-                # noqa: SIM102
                 class_methods = self._class_methods_cache.get(class_name, {})
                 if called_method in class_methods and other_class not in dependencies["dependents"]:
                     dependencies["dependents"].append(other_class)

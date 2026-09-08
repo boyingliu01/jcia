@@ -92,9 +92,7 @@ class CompositeRemoteCallAdapter(RemoteCallAnalyzer):
         logger.debug(f"Found {len(all_calls)} total remote calls in {source_path}")
         return all_calls
 
-    def analyze_cross_service_chain(
-        self, method: str, max_hops: int = 5
-    ) -> list[RemoteCallChain]:
+    def analyze_cross_service_chain(self, method: str, max_hops: int = 5) -> list[RemoteCallChain]:
         """Analyze cross-service call chain from a method.
 
         Combines chains from all sub-adapters.
@@ -113,9 +111,7 @@ class CompositeRemoteCallAdapter(RemoteCallAnalyzer):
                 chains = adapter.analyze_cross_service_chain(method, max_hops)
                 all_chains.extend(chains)
             except Exception as e:
-                logger.warning(
-                    f"Adapter {adapter.__class__.__name__} chain analysis failed: {e}"
-                )
+                logger.warning(f"Adapter {adapter.__class__.__name__} chain analysis failed: {e}")
 
         return all_chains
 

@@ -154,8 +154,16 @@ class CodeQLFinding:
 
     def is_security_finding(self) -> bool:
         """Check if this is a security-related finding."""
-        security_prefixes = ("java/sql", "java/command", "java/xss", "java/csrf",
-                           "java/path", "java/ldap", "java/ssrf", "java/unsafe")
+        security_prefixes = (
+            "java/sql",
+            "java/command",
+            "java/xss",
+            "java/csrf",
+            "java/path",
+            "java/ldap",
+            "java/ssrf",
+            "java/unsafe",
+        )
         return any(self.rule_id.startswith(prefix) for prefix in security_prefixes)
 
 

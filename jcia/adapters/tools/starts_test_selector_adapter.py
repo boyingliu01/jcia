@@ -402,7 +402,7 @@ class STARTSTestSelectorAdapter:
         Args:
             output_path: 输出文件路径
         """
-        graph = {"nodes": [], "edges": []}
+        graph: dict[str, list[Any]] = {"nodes": [], "edges": []}
 
         # 添加节点
         for class_name in self._dependency_cache:

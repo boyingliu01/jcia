@@ -144,7 +144,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
             logger.error(f"Failed to generate tests: {e}")
             return TestGenerationResponse(
                 test_cases=[],
-                explanations=[f"生成失败: {str(e)}"],
+                explanations=[f"生成失败: {e!s}"],
                 confidence=0.0,
                 tokens_used=0,
             )
@@ -344,7 +344,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
         except Exception as e:
             logger.error(f"Failed to analyze code: {e}")
             return CodeAnalysisResponse(
-                findings=[{"content": f"分析失败: {str(e)}", "severity": "ERROR"}],
+                findings=[{"content": f"分析失败: {e!s}", "severity": "ERROR"}],
                 suggestions=["请检查代码并重试"],
                 risk_level="HIGH",
             )
@@ -412,7 +412,7 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
 
         except Exception as e:
             logger.error(f"Failed to explain change impact: {e}")
-            return f"影响分析失败: {str(e)}"
+            return f"影响分析失败: {e!s}"
 
     def _call_openai_api(self, messages: list[dict[str, Any]], **kwargs: Any) -> dict[str, Any]:
         """调用 OpenAI API.
@@ -448,17 +448,19 @@ class OpenAIAdapter(AITestGenerator, AIAnalyzer):
             try:
                 response = client.chat.completions.create(
                     model=self._model,
-                    messages=messages,
+                    # openai 为可选依赖，messages 为动态构造；pyright 放行，mypy 对无存根联合过严
+                    messages=messages,  # type: ignore[arg-type]
                     temperature=kwargs.get("temperature", self._temperature),
                     max_tokens=kwargs.get("max_tokens", self._max_tokens),
                 )
 
+                usage = response.usage
                 return {
                     "choices": [{"message": {"content": response.choices[0].message.content}}],
                     "usage": {
-                        "prompt_tokens": response.usage.prompt_tokens,
-                        "completion_tokens": response.usage.completion_tokens,
-                        "total_tokens": response.usage.total_tokens,
+                        "prompt_tokens": usage.prompt_tokens if usage else 0,
+                        "completion_tokens": usage.completion_tokens if usage else 0,
+                        "total_tokens": usage.total_tokens if usage else 0,
                     },
                 }
 
