@@ -41,9 +41,7 @@ def benchmark_project_scan(repo_path: Path) -> dict:
         # 获取统计信息
         java_files = list(repo_path.rglob("*.java"))
         cached_classes = len(analyzer._class_methods_cache)
-        cached_methods = sum(
-            len(methods) for methods in analyzer._class_methods_cache.values()
-        )
+        cached_methods = sum(len(methods) for methods in analyzer._class_methods_cache.values())
 
         result = {
             "success": True,
@@ -88,7 +86,7 @@ def main() -> int:
     test_paths = [
         Path("./jenkins"),
         Path("./tests/test_data/jenkins_test_repo"),
-        Path("."),  # 自身项目
+        Path(),  # 自身项目
     ]
 
     all_results = []

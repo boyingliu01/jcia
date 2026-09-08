@@ -6,10 +6,10 @@ This module tests the RemoteCallType, RemoteEndpoint, and RemoteCallInfo entitie
 import pytest
 
 from jcia.core.entities.remote_call import (
+    RemoteCallChain,
     RemoteCallInfo,
     RemoteCallType,
     RemoteEndpoint,
-    RemoteCallChain,
 )
 
 
@@ -214,7 +214,9 @@ class TestRemoteCallInfo:
             caller_class="OrderService",
             caller_method="processOrder",
         )
-        assert call_info.full_call_signature == "OrderService.processOrder -> user-service.getUserById"
+        assert (
+            call_info.full_call_signature == "OrderService.processOrder -> user-service.getUserById"
+        )
 
     def test_full_call_signature_without_caller_method(self) -> None:
         """Verify full_call_signature without caller method."""
@@ -347,15 +349,9 @@ class TestRemoteCallChain:
         endpoint2 = RemoteEndpoint(service_name="svc2")
         endpoint3 = RemoteEndpoint(service_name="svc3")
 
-        call1 = RemoteCallInfo(
-            call_type=RemoteCallType.DUBBO, endpoint=endpoint1, caller_class="A"
-        )
-        call2 = RemoteCallInfo(
-            call_type=RemoteCallType.FEIGN, endpoint=endpoint2, caller_class="B"
-        )
-        call3 = RemoteCallInfo(
-            call_type=RemoteCallType.REST, endpoint=endpoint3, caller_class="C"
-        )
+        call1 = RemoteCallInfo(call_type=RemoteCallType.DUBBO, endpoint=endpoint1, caller_class="A")
+        call2 = RemoteCallInfo(call_type=RemoteCallType.FEIGN, endpoint=endpoint2, caller_class="B")
+        call3 = RemoteCallInfo(call_type=RemoteCallType.REST, endpoint=endpoint3, caller_class="C")
 
         chain = RemoteCallChain(
             calls=[call1, call2, call3],
@@ -380,15 +376,9 @@ class TestRemoteCallChain:
         endpoint2 = RemoteEndpoint(service_name="svc2")
         endpoint3 = RemoteEndpoint(service_name="svc1")  # Duplicate
 
-        call1 = RemoteCallInfo(
-            call_type=RemoteCallType.DUBBO, endpoint=endpoint1, caller_class="A"
-        )
-        call2 = RemoteCallInfo(
-            call_type=RemoteCallType.FEIGN, endpoint=endpoint2, caller_class="B"
-        )
-        call3 = RemoteCallInfo(
-            call_type=RemoteCallType.REST, endpoint=endpoint3, caller_class="C"
-        )
+        call1 = RemoteCallInfo(call_type=RemoteCallType.DUBBO, endpoint=endpoint1, caller_class="A")
+        call2 = RemoteCallInfo(call_type=RemoteCallType.FEIGN, endpoint=endpoint2, caller_class="B")
+        call3 = RemoteCallInfo(call_type=RemoteCallType.REST, endpoint=endpoint3, caller_class="C")
 
         chain = RemoteCallChain(calls=[call1, call2, call3], source_method="start")
         unique_services = chain.get_unique_services()
@@ -459,15 +449,9 @@ class TestRemoteCallChain:
         endpoint2 = RemoteEndpoint(service_name="shared-svc", method="method2")
         endpoint3 = RemoteEndpoint(service_name="other-svc", method="method3")
 
-        call1 = RemoteCallInfo(
-            call_type=RemoteCallType.DUBBO, endpoint=endpoint1, caller_class="A"
-        )
-        call2 = RemoteCallInfo(
-            call_type=RemoteCallType.DUBBO, endpoint=endpoint2, caller_class="B"
-        )
-        call3 = RemoteCallInfo(
-            call_type=RemoteCallType.FEIGN, endpoint=endpoint3, caller_class="C"
-        )
+        call1 = RemoteCallInfo(call_type=RemoteCallType.DUBBO, endpoint=endpoint1, caller_class="A")
+        call2 = RemoteCallInfo(call_type=RemoteCallType.DUBBO, endpoint=endpoint2, caller_class="B")
+        call3 = RemoteCallInfo(call_type=RemoteCallType.FEIGN, endpoint=endpoint3, caller_class="C")
 
         chain = RemoteCallChain(calls=[call1, call2, call3], source_method="start")
 
@@ -487,12 +471,8 @@ class TestRemoteCallChain:
         endpoint1 = RemoteEndpoint(method="method1")  # No service_name
         endpoint2 = RemoteEndpoint(service_name="svc2", method="method2")
 
-        call1 = RemoteCallInfo(
-            call_type=RemoteCallType.REST, endpoint=endpoint1, caller_class="A"
-        )
-        call2 = RemoteCallInfo(
-            call_type=RemoteCallType.REST, endpoint=endpoint2, caller_class="B"
-        )
+        call1 = RemoteCallInfo(call_type=RemoteCallType.REST, endpoint=endpoint1, caller_class="A")
+        call2 = RemoteCallInfo(call_type=RemoteCallType.REST, endpoint=endpoint2, caller_class="B")
 
         chain = RemoteCallChain(calls=[call1, call2], source_method="start")
 

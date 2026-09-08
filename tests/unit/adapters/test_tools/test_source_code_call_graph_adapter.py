@@ -14,7 +14,7 @@ from jcia.core.interfaces.call_chain_analyzer import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_java_project(tmp_path: Path) -> Path:
     """创建临时 Java 项目目录结构."""
     # 创建标准 Maven 项目结构
@@ -26,7 +26,8 @@ def temp_java_project(tmp_path: Path) -> Path:
 
     # 创建主类文件
     service_file = src_main_java / "Service.java"
-    service_file.write_text("""
+    service_file.write_text(
+        """
 package com.example;
 
 public class Service {
@@ -39,11 +40,14 @@ public class Service {
         return "result";
     }
 }
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     # 创建辅助类文件
     helper_file = src_main_java / "Helper.java"
-    helper_file.write_text("""
+    helper_file.write_text(
+        """
 package com.example;
 
 public class Helper {
@@ -55,11 +59,14 @@ public class Helper {
         Service.method1();
     }
 }
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     # 创建工具类文件
     util_file = src_main_java / "Util.java"
-    util_file.write_text("""
+    util_file.write_text(
+        """
 package com.example;
 
 public class Util {
@@ -67,11 +74,14 @@ public class Util {
         // do something
     }
 }
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     # 创建测试类文件
     service_test_file = src_test_java / "ServiceTest.java"
-    service_test_file.write_text("""
+    service_test_file.write_text(
+        """
 package com.example;
 
 public class ServiceTest {
@@ -79,12 +89,14 @@ public class ServiceTest {
         Service.method1();
     }
 }
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     return tmp_path
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_java_project_core_style(tmp_path: Path) -> Path:
     """创建 core 风格的 Java 项目目录结构."""
     core_src_main = tmp_path / "core" / "src" / "main" / "java" / "com" / "core"
@@ -95,7 +107,8 @@ def temp_java_project_core_style(tmp_path: Path) -> Path:
 
     # 创建核心类
     core_file = core_src_main / "CoreService.java"
-    core_file.write_text("""
+    core_file.write_text(
+        """
 package com.core;
 
 public class CoreService {
@@ -103,10 +116,13 @@ public class CoreService {
         Helper.process();
     }
 }
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     helper_file = core_src_main / "Helper.java"
-    helper_file.write_text("""
+    helper_file.write_text(
+        """
 package com.core;
 
 public class Helper {
@@ -114,7 +130,9 @@ public class Helper {
         // do processing
     }
 }
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     return tmp_path
 
@@ -195,9 +213,7 @@ class TestSourceCodeCallGraphAnalyzer:
 
     def test_scan_project_core_style(self, temp_java_project_core_style: Path) -> None:
         """测试扫描 core 风格项目."""
-        analyzer = SourceCodeCallGraphAnalyzer(
-            repo_path=str(temp_java_project_core_style)
-        )
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project_core_style))
 
         assert len(analyzer._class_methods_cache) > 0
 
@@ -245,9 +261,7 @@ class TestSourceCodeCallGraphAnalyzer:
         """测试双向分析."""
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))
 
-        upstream, downstream = analyzer.analyze_both_directions(
-            "Service.method1", max_depth=5
-        )
+        upstream, downstream = analyzer.analyze_both_directions("Service.method1", max_depth=5)
 
         assert isinstance(upstream, CallChainGraph)
         assert isinstance(downstream, CallChainGraph)
@@ -277,9 +291,7 @@ class TestSourceCodeCallGraphAnalyzer:
         assert "dependents" in deps
         assert deps["class_name"] == "Service"
 
-    def test_analyze_class_dependencies_no_dependencies(
-        self, temp_java_project: Path
-    ) -> None:
+    def test_analyze_class_dependencies_no_dependencies(self, temp_java_project: Path) -> None:
         """测试没有依赖的类."""
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))
 
@@ -441,18 +453,15 @@ class TestSourceCodeCallGraphAnalyzerEdgeCases:
         assert isinstance(graph, CallChainGraph)
         assert graph.root.method_name == "method"
 
-    def test_analyze_class_dependencies_with_circular_refs(
-        self, temp_java_project: Path
-    ) -> None:
+    def test_analyze_class_dependencies_with_circular_refs(self, temp_java_project: Path) -> None:
         """测试循环依赖的类."""
         # 创建一个有循环依赖的项目
-        src_dir = (
-            temp_java_project / "src" / "main" / "java" / "com" / "circular"
-        )
+        src_dir = temp_java_project / "src" / "main" / "java" / "com" / "circular"
         src_dir.mkdir(parents=True, exist_ok=True)
 
         class_a = src_dir / "ClassA.java"
-        class_a.write_text("""
+        class_a.write_text(
+            """
 package com.circular;
 
 public class ClassA {
@@ -460,10 +469,13 @@ public class ClassA {
         ClassB.methodB();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         class_b = src_dir / "ClassB.java"
-        class_b.write_text("""
+        class_b.write_text(
+            """
 package com.circular;
 
 public class ClassB {
@@ -471,7 +483,9 @@ public class ClassB {
         ClassA.methodA();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))
 
@@ -479,9 +493,7 @@ public class ClassB {
 
         assert deps["class_name"] == "ClassA"
 
-    def test_analyze_class_dependencies_with_dependents(
-        self, temp_java_project: Path
-    ) -> None:
+    def test_analyze_class_dependencies_with_dependents(self, temp_java_project: Path) -> None:
         """测试有依赖者的类依赖分析."""
         # Helper.process() 调用了 Service.method1
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))
@@ -508,7 +520,8 @@ public class ClassB {
         src_dir.mkdir(parents=True, exist_ok=True)
 
         java_file = src_dir / "MultiCall.java"
-        java_file.write_text("""
+        java_file.write_text(
+            """
 package com.test;
 
 public class MultiCall {
@@ -518,7 +531,9 @@ public class MultiCall {
         Helper.method3();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -530,7 +545,8 @@ public class MultiCall {
         src_dir.mkdir(parents=True, exist_ok=True)
 
         java_file = src_dir / "Outer.java"
-        java_file.write_text("""
+        java_file.write_text(
+            """
 package com.test;
 
 public class Outer {
@@ -540,7 +556,9 @@ public class Outer {
         public void innerMethod() {}
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -553,9 +571,7 @@ class TestSourceCodeCallGraphAnalyzerIntegration:
 
     def test_full_analysis_workflow(self, temp_java_project: Path) -> None:
         """测试完整分析工作流."""
-        analyzer = SourceCodeCallGraphAnalyzer(
-            repo_path=str(temp_java_project), max_depth=10
-        )
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project), max_depth=10)
 
         # 1. 构建完整图
         full_graph = analyzer.build_full_graph()
@@ -589,7 +605,8 @@ class TestSourceCodeCallGraphAnalyzerIntegration:
 
         # 创建包含反射调用的类
         reflector_file = src_dir / "Reflector.java"
-        reflector_file.write_text("""
+        reflector_file.write_text(
+            """
 package com.test;
 
 public class Reflector {
@@ -600,7 +617,9 @@ public class Reflector {
         method.invoke(instance);
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -614,7 +633,8 @@ public class Reflector {
         src_dir.mkdir(parents=True, exist_ok=True)
 
         reflector_file = src_dir / "Reflector.java"
-        reflector_file.write_text("""
+        reflector_file.write_text(
+            """
 package com.test;
 
 public class Reflector {
@@ -622,7 +642,9 @@ public class Reflector {
         Class.forName("com.test.Target");
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -635,7 +657,8 @@ public class Reflector {
         src_dir.mkdir(parents=True, exist_ok=True)
 
         reflector_file = src_dir / "Reflector.java"
-        reflector_file.write_text("""
+        reflector_file.write_text(
+            """
 package com.test;
 
 public class Reflector {
@@ -643,7 +666,9 @@ public class Reflector {
         Class.forName("com.test.Target");
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -658,7 +683,8 @@ public class Reflector {
 
         # 创建调用多个方法的类
         caller_file = src_dir / "Caller.java"
-        caller_file.write_text("""
+        caller_file.write_text(
+            """
 package com.test;
 
 public class Caller {
@@ -668,35 +694,46 @@ public class Caller {
         Util.process();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         # 创建被调用的类
         helper_file = src_dir / "Helper.java"
-        helper_file.write_text("""
+        helper_file.write_text(
+            """
 package com.test;
 
 public class Helper {
     public static void help() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         worker_file = src_dir / "Worker.java"
-        worker_file.write_text("""
+        worker_file.write_text(
+            """
 package com.test;
 
 public class Worker {
     public static void work() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         util_file = src_dir / "Util.java"
-        util_file.write_text("""
+        util_file.write_text(
+            """
 package com.test;
 
 public class Util {
     public static void process() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -713,7 +750,8 @@ public class Util {
         src_dir.mkdir(parents=True, exist_ok=True)
 
         caller_file = src_dir / "Caller.java"
-        caller_file.write_text("""
+        caller_file.write_text(
+            """
 package com.test;
 
 public class Caller {
@@ -722,7 +760,9 @@ public class Caller {
         Object instance = clazz.newInstance();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -737,7 +777,8 @@ public class Caller {
         src_dir.mkdir(parents=True, exist_ok=True)
 
         service_file = src_dir / "Service.java"
-        service_file.write_text("""
+        service_file.write_text(
+            """
 package com.test;
 
 public class Service {
@@ -746,25 +787,33 @@ public class Service {
         Validator.validate();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         repo_file = src_dir / "Repository.java"
-        repo_file.write_text("""
+        repo_file.write_text(
+            """
 package com.test;
 
 public class Repository {
     public static void save() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         validator_file = src_dir / "Validator.java"
-        validator_file.write_text("""
+        validator_file.write_text(
+            """
 package com.test;
 
 public class Validator {
     public static void validate() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -780,16 +829,20 @@ public class Validator {
         src_dir.mkdir(parents=True, exist_ok=True)
 
         service_file = src_dir / "Service.java"
-        service_file.write_text("""
+        service_file.write_text(
+            """
 package com.test;
 
 public class Service {
     public void doSomething() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         client_file = src_dir / "Client.java"
-        client_file.write_text("""
+        client_file.write_text(
+            """
 package com.test;
 
 public class Client {
@@ -798,7 +851,9 @@ public class Client {
         service.doSomething();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -815,7 +870,8 @@ public class Client {
 
         # 创建包含关键字的代码
         keyword_file = src_dir / "KeywordClass.java"
-        keyword_file.write_text("""
+        keyword_file.write_text(
+            """
 package com.test;
 
 public class KeywordClass {
@@ -835,7 +891,9 @@ public class KeywordClass {
     public boolean isValid() { return true; }
     public void realMethod() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -849,7 +907,8 @@ public class KeywordClass {
 
         # 创建多个类调用同名方法
         caller1_file = src_dir / "Caller1.java"
-        caller1_file.write_text("""
+        caller1_file.write_text(
+            """
 package com.test;
 
 public class Caller1 {
@@ -857,10 +916,13 @@ public class Caller1 {
         Target.process();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         caller2_file = src_dir / "Caller2.java"
-        caller2_file.write_text("""
+        caller2_file.write_text(
+            """
 package com.test;
 
 public class Caller2 {
@@ -868,16 +930,21 @@ public class Caller2 {
         Target.process();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         target_file = src_dir / "Target.java"
-        target_file.write_text("""
+        target_file.write_text(
+            """
 package com.test;
 
 public class Target {
     public static void process() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -892,16 +959,20 @@ public class Target {
         src_dir.mkdir(parents=True, exist_ok=True)
 
         target_file = src_dir / "Target.java"
-        target_file.write_text("""
+        target_file.write_text(
+            """
 package com.test;
 
 public class Target {
     public void process() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         caller_file = src_dir / "Caller.java"
-        caller_file.write_text("""
+        caller_file.write_text(
+            """
 package com.test;
 
 public class Caller {
@@ -910,7 +981,9 @@ public class Caller {
         target.process();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -925,7 +998,8 @@ public class Caller {
         src_dir.mkdir(parents=True, exist_ok=True)
 
         reflector_file = src_dir / "Reflector.java"
-        reflector_file.write_text("""
+        reflector_file.write_text(
+            """
 package com.test;
 
 public class Reflector {
@@ -934,7 +1008,9 @@ public class Reflector {
         Class<?> clazz = Class.forName(className);
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -952,7 +1028,8 @@ public class Reflector {
         src_dir.mkdir(parents=True, exist_ok=True)
 
         reflector_file = src_dir / "Reflector.java"
-        reflector_file.write_text("""
+        reflector_file.write_text(
+            """
 package com.test;
 
 public class Reflector {
@@ -962,16 +1039,21 @@ public class Reflector {
         method.invoke(null);
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         target_file = src_dir / "Target.java"
-        target_file.write_text("""
+        target_file.write_text(
+            """
 package com.test;
 
 public class Target {
     public static void targetMethod() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -985,7 +1067,8 @@ public class Target {
         src_dir.mkdir(parents=True, exist_ok=True)
 
         service_file = src_dir / "Service.java"
-        service_file.write_text("""
+        service_file.write_text(
+            """
 package com.test;
 
 public class Service {
@@ -994,25 +1077,33 @@ public class Service {
         Worker.work();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         helper_file = src_dir / "Helper.java"
-        helper_file.write_text("""
+        helper_file.write_text(
+            """
 package com.test;
 
 public class Helper {
     public static void help() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         worker_file = src_dir / "Worker.java"
-        worker_file.write_text("""
+        worker_file.write_text(
+            """
 package com.test;
 
 public class Worker {
     public static void work() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -1044,23 +1135,29 @@ public class Worker {
 
         # 在 main 中创建主类
         main_class = src_main / "MyService.java"
-        main_class.write_text("""
+        main_class.write_text(
+            """
 package com.example;
 
 public class MyService {
     public void serve() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         # 在 test 中创建测试类
         test_class = src_test / "MyServiceTest.java"
-        test_class.write_text("""
+        test_class.write_text(
+            """
 package com.example;
 
 public class MyServiceTest {
     public void testServe() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -1096,7 +1193,8 @@ class TestSourceCodeCallGraphAnalyzerCoverage:
 
         # 创建一个包含关键字的 Java 文件
         java_file = src_dir / "Service.java"
-        java_file.write_text("""
+        java_file.write_text(
+            """
 package com.example;
 
 public class Service {
@@ -1108,7 +1206,9 @@ public class Service {
         try {} catch (Exception e) {}
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -1127,13 +1227,16 @@ public class Service {
 
         # 创建类
         target_file = src_dir / "Target.java"
-        target_file.write_text("""
+        target_file.write_text(
+            """
 package com.example;
 
 public class Target {
     public void doSomething() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -1153,13 +1256,16 @@ public class Target {
 
         # 创建一个没有调用者的类
         java_file = src_dir / "Orphan.java"
-        java_file.write_text("""
+        java_file.write_text(
+            """
 package com.example;
 
 public class Orphan {
     public void standalone() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -1175,7 +1281,8 @@ public class Orphan {
 
         # 创建一个只调用自己的类
         java_file = src_dir / "SelfOnly.java"
-        java_file.write_text("""
+        java_file.write_text(
+            """
 package com.example;
 
 public class SelfOnly {
@@ -1183,7 +1290,9 @@ public class SelfOnly {
         // 仅调用自身方法
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -1199,7 +1308,8 @@ public class SelfOnly {
 
         # 创建调用者
         caller_file = src_dir / "Caller.java"
-        caller_file.write_text("""
+        caller_file.write_text(
+            """
 package com.example;
 
 public class Caller {
@@ -1207,16 +1317,21 @@ public class Caller {
         Target.method();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         target_file = src_dir / "Target.java"
-        target_file.write_text("""
+        target_file.write_text(
+            """
 package com.example;
 
 public class Target {
     public void method() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
         graph = analyzer.analyze_upstream("com.example.Target.method")
@@ -1231,7 +1346,8 @@ public class Target {
 
         # 创建被调用者
         target_file = src_dir / "Target.java"
-        target_file.write_text("""
+        target_file.write_text(
+            """
 package com.example;
 
 public class Target {
@@ -1239,16 +1355,21 @@ public class Target {
         Helper.help();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         helper_file = src_dir / "Helper.java"
-        helper_file.write_text("""
+        helper_file.write_text(
+            """
 package com.example;
 
 public class Helper {
     public static void help() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
         graph = analyzer.analyze_downstream("com.example.Target.method")
@@ -1263,7 +1384,8 @@ public class Helper {
 
         # 创建主类
         main_file = src_dir / "Main.java"
-        main_file.write_text("""
+        main_file.write_text(
+            """
 package com.example;
 
 public class Main {
@@ -1271,10 +1393,13 @@ public class Main {
         Helper.process();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         helper_file = src_dir / "Helper.java"
-        helper_file.write_text("""
+        helper_file.write_text(
+            """
 package com.example;
 
 public class Helper {
@@ -1282,16 +1407,21 @@ public class Helper {
         Util.format();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         util_file = src_dir / "Util.java"
-        util_file.write_text("""
+        util_file.write_text(
+            """
 package com.example;
 
 public class Util {
     public static void format() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
         deps = analyzer.analyze_class_dependencies("com.example.Main")
@@ -1305,7 +1435,8 @@ public class Util {
         src_dir.mkdir(parents=True, exist_ok=True)
 
         java_file = src_dir / "Keywords.java"
-        java_file.write_text("""
+        java_file.write_text(
+            """
 package com.example;
 
 public class Keywords {
@@ -1313,7 +1444,9 @@ public class Keywords {
     public void if() {}
     public void for() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -1330,16 +1463,20 @@ public class Keywords {
 
         # 创建目标类和调用者
         target_file = src_dir / "Target.java"
-        target_file.write_text("""
+        target_file.write_text(
+            """
 package com.example;
 
 public class Target {
     public void targetMethod() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         caller_file = src_dir / "Caller.java"
-        caller_file.write_text("""
+        caller_file.write_text(
+            """
 package com.example;
 
 public class Caller {
@@ -1347,7 +1484,9 @@ public class Caller {
         Target.targetMethod();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -1363,7 +1502,8 @@ public class Caller {
 
         # 创建类和它的被调用者
         source_file = src_dir / "Source.java"
-        source_file.write_text("""
+        source_file.write_text(
+            """
 package com.example;
 
 public class Source {
@@ -1371,16 +1511,21 @@ public class Source {
         Helper.help();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         helper_file = src_dir / "Helper.java"
-        helper_file.write_text("""
+        helper_file.write_text(
+            """
 package com.example;
 
 public class Helper {
     public static void help() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 
@@ -1396,7 +1541,8 @@ public class Helper {
 
         # 创建有明确方法定义的类
         main_file = src_dir / "Main.java"
-        main_file.write_text("""
+        main_file.write_text(
+            """
 package com.example;
 
 public class Main {
@@ -1404,16 +1550,21 @@ public class Main {
         Helper.doSomething();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         helper_file = src_dir / "Helper.java"
-        helper_file.write_text("""
+        helper_file.write_text(
+            """
 package com.example;
 
 public class Helper {
     public void doSomething() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
         deps = analyzer.analyze_class_dependencies("com.example.Main")
@@ -1428,7 +1579,8 @@ public class Helper {
 
         # 创建调用者和被调用者
         provider_file = src_dir / "Provider.java"
-        provider_file.write_text("""
+        provider_file.write_text(
+            """
 package com.example;
 
 public class Provider {
@@ -1436,16 +1588,21 @@ public class Provider {
         Helper.help();
     }
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         helper_file = src_dir / "Helper.java"
-        helper_file.write_text("""
+        helper_file.write_text(
+            """
 package com.example;
 
 public class Helper {
     public void help() {}
 }
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
 

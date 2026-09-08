@@ -13,14 +13,14 @@ from jcia.core.entities.test_case import TestPriority
 from jcia.core.interfaces.test_runner import TestSelectionStrategy
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_maven_adapter() -> MavenAdapter:
     """Mock Maven adapter."""
     adapter = MagicMock(spec=MavenAdapter)
     return adapter
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_project_dir(tmp_path: Path) -> Path:
     """Create temporary project directory structure."""
     # Create source directory structure
@@ -29,14 +29,16 @@ def temp_project_dir(tmp_path: Path) -> Path:
 
     # Create a simple Java file
     java_file = src_dir / "Service.java"
-    java_file.write_text("""
+    java_file.write_text(
+        """
 public class Service {
     public void method1() {}
     public void method2() {
         helper.method();
     }
 }
-""")
+"""
+    )
 
     return tmp_path
 
@@ -101,9 +103,7 @@ class TestSTARTSTestSelectorAdapter:
 
         assert result == []
 
-    def test_select_tests_selects_affected(
-        self, mock_maven_adapter: MagicMock
-    ) -> None:
+    def test_select_tests_selects_affected(self, mock_maven_adapter: MagicMock) -> None:
         """测试选择受影响的测试."""
         adapter = STARTSTestSelectorAdapter(
             project_path=Path("/test/project"),
@@ -273,6 +273,7 @@ public void test() {
 
         # Mock dependency analysis to always return new methods
         call_count = [0]
+
         def mock_analysis(class_name: str) -> list[str]:
             call_count[0] += 1
             if call_count[0] > 15:  # More than max_depth * 2
@@ -288,9 +289,7 @@ public void test() {
         # Should stop at max_depth (10)
         assert len(result) <= 20  # Approximately max_depth * 2
 
-    def test_analyze_class_dependencies_cached(
-        self, mock_maven_adapter: MagicMock
-    ) -> None:
+    def test_analyze_class_dependencies_cached(self, mock_maven_adapter: MagicMock) -> None:
         """测试依赖分析缓存."""
         adapter = STARTSTestSelectorAdapter(
             project_path=Path("/test/project"),
@@ -326,9 +325,7 @@ public void test() {
         assert result[0].class_name == "com.example.ServiceTest"
         assert result[0].target_class == "Service"
 
-    def test_select_affected_tests_sorted_by_priority(
-        self, mock_maven_adapter: MagicMock
-    ) -> None:
+    def test_select_affected_tests_sorted_by_priority(self, mock_maven_adapter: MagicMock) -> None:
         """测试测试按优先级排序."""
         adapter = STARTSTestSelectorAdapter(
             project_path=Path("/test/project"),

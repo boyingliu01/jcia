@@ -91,10 +91,14 @@ class TestAnalysisFusionServiceBayesianFusion:
         """Test Bayesian fusion upstream with both analyzers."""
         # Create mock graphs
         static_root = CallChainNode("TestClass", "testMethod", "testMethod()")
-        static_graph = CallChainGraph(root=static_root, direction=CallChainDirection.UPSTREAM, max_depth=5)
+        static_graph = CallChainGraph(
+            root=static_root, direction=CallChainDirection.UPSTREAM, max_depth=5
+        )
 
         dynamic_root = CallChainNode("TestClass", "testMethod", "testMethod()")
-        dynamic_graph = CallChainGraph(root=dynamic_root, direction=CallChainDirection.UPSTREAM, max_depth=5)
+        dynamic_graph = CallChainGraph(
+            root=dynamic_root, direction=CallChainDirection.UPSTREAM, max_depth=5
+        )
 
         self.static_analyzer.analyze_upstream.return_value = static_graph
         self.dynamic_analyzer.analyze_upstream.return_value = dynamic_graph
@@ -115,7 +119,9 @@ class TestAnalysisFusionServiceBayesianFusion:
         )
 
         static_root = CallChainNode("TestClass", "testMethod", "testMethod()")
-        static_graph = CallChainGraph(root=static_root, direction=CallChainDirection.UPSTREAM, max_depth=5)
+        static_graph = CallChainGraph(
+            root=static_root, direction=CallChainDirection.UPSTREAM, max_depth=5
+        )
         self.static_analyzer.analyze_upstream.return_value = static_graph
 
         result = service.fuse_upstream("TestClass.testMethod", max_depth=5)
@@ -150,10 +156,14 @@ class TestAnalysisFusionServiceVotingFusion:
     def test_voting_fusion_downstream(self):
         """Test voting fusion downstream."""
         static_root = CallChainNode("TestClass", "testMethod1", "testMethod1()")
-        static_graph = CallChainGraph(root=static_root, direction=CallChainDirection.DOWNSTREAM, max_depth=5)
+        static_graph = CallChainGraph(
+            root=static_root, direction=CallChainDirection.DOWNSTREAM, max_depth=5
+        )
 
         dynamic_root = CallChainNode("TestClass", "testMethod2", "testMethod2()")
-        dynamic_graph = CallChainGraph(root=dynamic_root, direction=CallChainDirection.DOWNSTREAM, max_depth=5)
+        dynamic_graph = CallChainGraph(
+            root=dynamic_root, direction=CallChainDirection.DOWNSTREAM, max_depth=5
+        )
 
         self.static_analyzer.analyze_downstream.return_value = static_graph
         self.dynamic_analyzer.analyze_downstream.return_value = dynamic_graph
@@ -181,7 +191,9 @@ class TestAnalysisFusionServiceWeightedFusion:
     def test_weighted_fusion_upstream(self):
         """Test weighted fusion upstream with coverage data."""
         static_root = CallChainNode("TestClass", "testMethod", "testMethod()")
-        static_graph = CallChainGraph(root=static_root, direction=CallChainDirection.UPSTREAM, max_depth=5)
+        static_graph = CallChainGraph(
+            root=static_root, direction=CallChainDirection.UPSTREAM, max_depth=5
+        )
 
         self.static_analyzer.analyze_upstream.return_value = static_graph
         self.dynamic_analyzer.analyze_upstream.return_value = None
@@ -209,10 +221,14 @@ class TestAnalysisFusionServiceUnionFusion:
     def test_union_fusion_downstream(self):
         """Test union fusion downstream combines all nodes."""
         static_root = CallChainNode("TestClass", "testMethod1", "testMethod1()")
-        static_graph = CallChainGraph(root=static_root, direction=CallChainDirection.DOWNSTREAM, max_depth=5)
+        static_graph = CallChainGraph(
+            root=static_root, direction=CallChainDirection.DOWNSTREAM, max_depth=5
+        )
 
         dynamic_root = CallChainNode("TestClass", "testMethod2", "testMethod2()")
-        dynamic_graph = CallChainGraph(root=dynamic_root, direction=CallChainDirection.DOWNSTREAM, max_depth=5)
+        dynamic_graph = CallChainGraph(
+            root=dynamic_root, direction=CallChainDirection.DOWNSTREAM, max_depth=5
+        )
 
         self.static_analyzer.analyze_downstream.return_value = static_graph
         self.dynamic_analyzer.analyze_downstream.return_value = dynamic_graph
@@ -239,10 +255,14 @@ class TestAnalysisFusionServiceIntersectionFusion:
     def test_intersection_fusion_upstream(self):
         """Test intersection fusion upstream keeps only common nodes."""
         static_root = CallChainNode("TestClass", "testMethod1", "testMethod1()")
-        static_graph = CallChainGraph(root=static_root, direction=CallChainDirection.UPSTREAM, max_depth=5)
+        static_graph = CallChainGraph(
+            root=static_root, direction=CallChainDirection.UPSTREAM, max_depth=5
+        )
 
         dynamic_root = CallChainNode("TestClass", "testMethod1", "testMethod1()")
-        dynamic_graph = CallChainGraph(root=dynamic_root, direction=CallChainDirection.UPSTREAM, max_depth=5)
+        dynamic_graph = CallChainGraph(
+            root=dynamic_root, direction=CallChainDirection.UPSTREAM, max_depth=5
+        )
 
         self.static_analyzer.analyze_upstream.return_value = static_graph
         self.dynamic_analyzer.analyze_upstream.return_value = dynamic_graph
@@ -258,7 +278,9 @@ class TestAnalysisFusionServiceIntersectionFusion:
         service = AnalysisFusionService(static_analyzer=self.static_analyzer)
 
         static_root = CallChainNode("TestClass", "testMethod", "testMethod()")
-        static_graph = CallChainGraph(root=static_root, direction=CallChainDirection.UPSTREAM, max_depth=5)
+        static_graph = CallChainGraph(
+            root=static_root, direction=CallChainDirection.UPSTREAM, max_depth=5
+        )
         self.static_analyzer.analyze_upstream.return_value = static_graph
 
         result = service.fuse_upstream(
@@ -307,7 +329,9 @@ class TestAnalysisFusionServiceEdgeCases:
     def test_invalid_strategy_defaults_to_bayesian(self):
         """Test that invalid strategy defaults to bayesian."""
         static_root = CallChainNode("TestClass", "testMethod", "testMethod()")
-        static_graph = CallChainGraph(root=static_root, direction=CallChainDirection.UPSTREAM, max_depth=5)
+        static_graph = CallChainGraph(
+            root=static_root, direction=CallChainDirection.UPSTREAM, max_depth=5
+        )
 
         self.static_analyzer.analyze_upstream.return_value = static_graph
         self.dynamic_analyzer.analyze_upstream.return_value = None

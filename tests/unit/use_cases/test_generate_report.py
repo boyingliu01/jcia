@@ -10,7 +10,14 @@ import pytest
 
 from jcia.core.entities.change_set import ChangeSet, ChangeType, FileChange, MethodChange
 from jcia.core.entities.impact_graph import ImpactGraph, ImpactNode, ImpactSeverity, ImpactType
-from jcia.core.entities.test_run import CoverageData, RunStatus, RunType, TestRun, TestStatus
+from jcia.core.entities.test_run import (
+    CoverageData,
+    RunStatus,
+    RunType,
+    TestResult,
+    TestRun,
+    TestStatus,
+)
 from jcia.core.use_cases.generate_report import (
     GenerateReportRequest,
     GenerateReportResponse,
@@ -18,7 +25,7 @@ from jcia.core.use_cases.generate_report import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_output_dir(tmp_path: Path) -> Path:
     """创建临时输出目录.
 
@@ -33,7 +40,7 @@ def temp_output_dir(tmp_path: Path) -> Path:
     return output_dir
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_test_run() -> TestRun:
     """创建示例测试运行对象.
 
@@ -63,15 +70,13 @@ def sample_test_run() -> TestRun:
     )
     # Manually set the test results to ensure proper count
     for _ in range(95):
-        from jcia.core.entities.test_run import TestResult
-
         test_run.add_result(TestResult(status=TestStatus.PASSED))
     for _ in range(5):
         test_run.add_result(TestResult(status=TestStatus.FAILED))
     return test_run
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_impact_graph() -> ImpactGraph:
     """创建示例影响图.
 
@@ -91,7 +96,7 @@ def sample_impact_graph() -> ImpactGraph:
     return graph
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_change_set() -> ChangeSet:
     """创建示例变更集合.
 

@@ -11,7 +11,7 @@ from jcia.cli.main import cli
 class TestCLI:
     """测试CLI."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def runner(self) -> CliRunner:
         """创建Click CLI运行器."""
         return CliRunner()
@@ -124,6 +124,38 @@ class TestCLI:
 
         # Will fail because commit doesn't exist, but should show depth
         assert "20" in result.output
+
+    def test_analyze_command_with_detect_remote_calls(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
+        """测试analyze命令启用跨服务远程调用检测（Phase 4）."""
+        # Create a mock git repository
+        git_dir = tmp_path / ".git"
+        git_dir.mkdir()
+        (git_dir / "HEAD").write_text("ref: refs/heads/main\n")
+        (git_dir / "refs" / "heads").mkdir(parents=True)
+
+        result = runner.invoke(
+            cli,
+            [
+                "analyze",
+                "--repo-path",
+                str(tmp_path),
+                "--from-commit",
+                "abc123",
+                "--detect-remote-calls",
+            ],
+        )
+
+        # 启用标志应在分析前回显（即使后续因提交不存在而失败）
+        assert "跨服务远程调用检测: 已启用" in result.output
+
+    def test_analyze_command_detect_remote_calls_in_help(self, runner: CliRunner) -> None:
+        """测试analyze命令帮助包含远程调用检测选项."""
+        result = runner.invoke(cli, ["analyze", "--help"])
+
+        assert result.exit_code == 0
+        assert "--detect-remote-calls" in result.output
 
     def test_test_command_help(self, runner: CliRunner) -> None:
         """测试test命令帮助."""

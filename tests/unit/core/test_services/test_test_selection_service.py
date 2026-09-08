@@ -2,7 +2,7 @@
 
 from jcia.core.entities.impact_graph import ImpactGraph
 from jcia.core.entities.test_case import TestCase, TestPriority
-from jcia.core.services.test_selection_service import TestSelectionStrategy
+from jcia.core.interfaces.test_runner import TestSelectionStrategy
 
 
 class TestTestSelectionService:

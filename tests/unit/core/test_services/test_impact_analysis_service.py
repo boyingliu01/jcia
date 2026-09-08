@@ -1,9 +1,10 @@
 """ImpactAnalysisService 测试."""
 
 from typing import TYPE_CHECKING
+from unittest.mock import Mock
 
 from jcia.core.entities.change_set import ChangeSet, FileChange, MethodChange
-from jcia.core.entities.impact_graph import ImpactType
+from jcia.core.entities.impact_graph import ImpactSeverity, ImpactType
 from jcia.core.interfaces.call_chain_analyzer import (
     CallChainAnalyzer,
     CallChainDirection,
@@ -344,3 +345,68 @@ class TestImpactAnalysisService:
 
         # Assert
         assert isinstance(entry_points, list)
+
+
+class TestImpactAnalysisServiceSeverityEnhancer:
+    """测试 ImpactAnalysisService 与 SeverityEnhancer 的集成（Phase 4）.
+
+    验证可选注入的多维度严重度增强器被使用，且未注入时保持原有
+    基于类名关键词的启发式判定（向后兼容）。
+    """
+
+    def _create_service_change_set(self, class_name: str = "com.example.OrderService") -> ChangeSet:
+        """创建包含单个服务方法变更的变更集."""
+        change_set = ChangeSet()
+        change_set.add_file_change(
+            FileChange(
+                file_path="com/example/OrderService.java",
+                method_changes=[
+                    MethodChange(
+                        class_name=class_name,
+                        method_name="process",
+                        signature="():void",
+                    ),
+                ],
+            )
+        )
+        return change_set
+
+    def test_uses_severity_enhancer_when_injected(self) -> None:
+        """测试注入增强器时使用多维度评分结果."""
+        # Arrange
+        change_set = self._create_service_change_set()
+        analyzer = MockCallChainAnalyzer()
+        enhancer = Mock()
+        enhancer.determine_severity.return_value = ImpactSeverity.LOW
+
+        service = ImpactAnalysisService(analyzer, severity_enhancer=enhancer)
+
+        # Act
+        impact_graph = service.analyze(change_set, max_depth=3)
+
+        # Assert
+        assert enhancer.determine_severity.called
+        # 增强器返回 LOW，应覆盖默认的关键词判定（OrderService 含 service 关键词）
+        direct_nodes = [
+            node for node in impact_graph.nodes.values() if node.impact_type == ImpactType.DIRECT
+        ]
+        assert direct_nodes
+        assert all(node.severity == ImpactSeverity.LOW for node in direct_nodes)
+
+    def test_backward_compatible_without_enhancer(self) -> None:
+        """测试未注入增强器时沿用关键词启发式判定."""
+        # Arrange
+        change_set = self._create_service_change_set(class_name="com.example.OrderService")
+        analyzer = MockCallChainAnalyzer()
+
+        service = ImpactAnalysisService(analyzer)
+
+        # Act
+        impact_graph = service.analyze(change_set, max_depth=3)
+
+        # Assert - "service" 关键词应判定为 HIGH
+        direct_nodes = [
+            node for node in impact_graph.nodes.values() if node.impact_type == ImpactType.DIRECT
+        ]
+        assert direct_nodes
+        assert all(node.severity == ImpactSeverity.HIGH for node in direct_nodes)

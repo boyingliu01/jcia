@@ -18,7 +18,7 @@ from jcia.core.interfaces.call_chain_analyzer import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_project_dir(tmp_path: Path) -> Path:
     """Create temporary project directory structure."""
     # Create source directory structure
@@ -27,7 +27,8 @@ def temp_project_dir(tmp_path: Path) -> Path:
 
     # Create a simple Java file
     java_file = src_dir / "Service.java"
-    java_file.write_text("""
+    java_file.write_text(
+        """
 package com.example;
 
 public class Service {
@@ -39,7 +40,8 @@ public class Service {
         helper.anotherMethod();
     }
 }
-""")
+"""
+    )
 
     return tmp_path
 
@@ -49,9 +51,7 @@ class TestJavaAllCallGraphAdapter:
 
     @patch("jcia.adapters.tools.java_all_call_graph_adapter.subprocess.run")
     @patch("jcia.adapters.tools.java_all_call_graph_adapter.Path.exists")
-    def test_init_downloads_jacg_if_not_exists(
-        self, mock_exists, mock_run, tmp_path: Path
-    ) -> None:
+    def test_init_downloads_jacg_if_not_exists(self, mock_exists, mock_run, tmp_path: Path) -> None:
         """测试初始化时下载 JACG 如果不存在."""
         cache_dir = tmp_path / "cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
@@ -270,9 +270,7 @@ public class Service {
         )
 
         # RestTemplate is checked with exact match
-        result = adapter._identify_rest_call(
-            [], "com.example.Client", "RestTemplateExchange"
-        )
+        result = adapter._identify_rest_call([], "com.example.Client", "RestTemplateExchange")
 
         assert result is not None
         assert result.call_type == "rest"
@@ -285,9 +283,7 @@ public class Service {
         )
 
         # WebClient is also checked
-        result = adapter._identify_rest_call(
-            [], "com.example.Client", "WebClientCall"
-        )
+        result = adapter._identify_rest_call([], "com.example.Client", "WebClientCall")
 
         assert result is not None
         assert result.call_type == "rest"
@@ -300,9 +296,7 @@ public class Service {
         )
 
         # .exchange( is checked as part of method name
-        result = adapter._identify_rest_call(
-            [], "com.example.Client", ".exchange(some, args)"
-        )
+        result = adapter._identify_rest_call([], "com.example.Client", ".exchange(some, args)")
 
         assert result is not None
         assert result.call_type == "rest"
@@ -447,9 +441,7 @@ public class Service {
 
     @patch("jcia.adapters.tools.java_all_call_graph_adapter.subprocess.run")
     @patch("jcia.adapters.tools.java_all_call_graph_adapter.Path.exists")
-    def test_analyze_upstream_cached(
-        self, mock_exists, mock_run, tmp_path: Path
-    ) -> None:
+    def test_analyze_upstream_cached(self, mock_exists, mock_run, tmp_path: Path) -> None:
         """测试分析上游（使用缓存）。"""
         adapter = JavaAllCallGraphAdapter(
             repo_path=str(tmp_path),
@@ -477,9 +469,7 @@ public class Service {
 
     @patch("jcia.adapters.tools.java_all_call_graph_adapter.subprocess.run")
     @patch("jcia.adapters.tools.java_all_call_graph_adapter.Path.exists")
-    def test_analyze_downstream(
-        self, mock_exists, mock_run, tmp_path: Path
-    ) -> None:
+    def test_analyze_downstream(self, mock_exists, mock_run, tmp_path: Path) -> None:
         """测试分析下游."""
         # Mock subprocess
         mock_result = MagicMock()

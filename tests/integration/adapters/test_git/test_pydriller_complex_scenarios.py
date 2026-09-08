@@ -1,5 +1,6 @@
 """PyDrillerAdapter 复杂场景测试 - 多提交、多文件."""
 
+import os
 import shutil
 import subprocess
 import tempfile
@@ -11,7 +12,7 @@ from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
 from jcia.core.entities.change_set import ChangeSet
 
 
-@pytest.fixture
+@pytest.fixture()
 def jenkins_repo_path() -> Path:
     """获取 Jenkins 仓库路径."""
     repo_path = Path(__file__).parent.parent.parent.parent / "jenkins"
@@ -20,95 +21,59 @@ def jenkins_repo_path() -> Path:
     return repo_path
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_repo_with_commits():
     """创建临时 Git 仓库并提交多个文件。"""
     temp_dir = Path(tempfile.mkdtemp(prefix="jcia_complex_test_"))
 
-    try:
-        # 初始化 Git 仓库
+    # 隔离全局/系统 Git 配置：宿主机可能配置了全局 core.hooksPath / init.templateDir，
+    # 其 pre-commit 钩子会拦截临时仓库的提交（因缺少测试而 BLOCKED），导致 CalledProcessError。
+    # 将全局与系统配置指向空设备，保证本用例在任何机器上都可重复运行。
+    isolated_env = {
+        **os.environ,
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_CONFIG_SYSTEM": os.devnull,
+        "GIT_CONFIG_NOSYSTEM": "1",
+    }
+
+    def run_git(*args: str) -> None:
         subprocess.run(
-            ["git", "init"],
+            ["git", *args],
             cwd=temp_dir,
             capture_output=True,
             check=True,
+            env=isolated_env,
         )
 
+    try:
+        # 初始化 Git 仓库
+        run_git("init")
+
         # 配置用户
-        subprocess.run(
-            ["git", "config", "user.email", "test@example.com"],
-            cwd=temp_dir,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "config", "user.name", "Test User"],
-            cwd=temp_dir,
-            capture_output=True,
-            check=True,
-        )
+        run_git("config", "user.email", "test@example.com")
+        run_git("config", "user.name", "Test User")
 
         # 提交 1: 添加 ServiceA.java
         (temp_dir / "ServiceA.java").write_text("public class ServiceA { void doWork() {} }")
-        subprocess.run(
-            ["git", "add", "ServiceA.java"],
-            cwd=temp_dir,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "commit", "-m", "feat: add ServiceA"],
-            cwd=temp_dir,
-            capture_output=True,
-            check=True,
-        )
+        run_git("add", "ServiceA.java")
+        run_git("commit", "-m", "feat: add ServiceA")
 
         # 提交 2: 添加 ServiceB.java
         (temp_dir / "ServiceB.java").write_text("public class ServiceB { void process() {} }")
-        subprocess.run(
-            ["git", "add", "ServiceB.java"],
-            cwd=temp_dir,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "commit", "-m", "feat: add ServiceB"],
-            cwd=temp_dir,
-            capture_output=True,
-            check=True,
-        )
+        run_git("add", "ServiceB.java")
+        run_git("commit", "-m", "feat: add ServiceB")
 
         # 提交 3: 修改 ServiceA.java
         (temp_dir / "ServiceA.java").write_text(
             'public class ServiceA { void doWork() { System.out.println("test"); } }'
         )
-        subprocess.run(
-            ["git", "add", "ServiceA.java"],
-            cwd=temp_dir,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "commit", "-m", "refactor: improve ServiceA"],
-            cwd=temp_dir,
-            capture_output=True,
-            check=True,
-        )
+        run_git("add", "ServiceA.java")
+        run_git("commit", "-m", "refactor: improve ServiceA")
 
         # 提交 4: 添加 ServiceC.java
         (temp_dir / "ServiceC.java").write_text("public class ServiceC { void execute() {} }")
-        subprocess.run(
-            ["git", "add", "ServiceC.java"],
-            cwd=temp_dir,
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "commit", "-m", "feat: add ServiceC"],
-            cwd=temp_dir,
-            capture_output=True,
-            check=True,
-        )
+        run_git("add", "ServiceC.java")
+        run_git("commit", "-m", "feat: add ServiceC")
 
         yield temp_dir
 

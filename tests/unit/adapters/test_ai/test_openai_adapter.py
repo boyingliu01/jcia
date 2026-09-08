@@ -239,9 +239,10 @@ class TestOpenAIAdapterResponseParsing:
     def test_parse_test_generation_response(self):
         """Test parsing test generation response."""
         response = {
-            "choices": [{
-                "message": {
-                    "content": """
+            "choices": [
+                {
+                    "message": {
+                        "content": """
 ```java
 public class ServiceTest {
     @Test
@@ -249,14 +250,13 @@ public class ServiceTest {
 }
 ```
 """
+                    }
                 }
-            }],
+            ],
             "usage": {"total_tokens": 500},
         }
 
-        test_cases = self.adapter._parse_test_generation_response(
-            response, ["com.example.Service"]
-        )
+        test_cases = self.adapter._parse_test_generation_response(response, ["com.example.Service"])
 
         assert len(test_cases) == 1
         assert test_cases[0].class_name == "com.example.ServiceTest"
@@ -267,16 +267,18 @@ public class ServiceTest {
     def test_extract_java_code_from_response(self):
         """Test extracting Java code from response."""
         response = {
-            "choices": [{
-                "message": {
-                    "content": """
+            "choices": [
+                {
+                    "message": {
+                        "content": """
 Here is the code:
 ```java
 public class Test {}
 ```
 """
+                    }
                 }
-            }]
+            ]
         }
 
         code = self.adapter._extract_java_code_from_response(response)
@@ -290,18 +292,20 @@ class TestOpenAIAdapterCodeAnalysis:
         """Set up test fixtures."""
         self.adapter = OpenAIAdapter(api_key="test-key")
 
-    @patch.object(OpenAIAdapter, '_call_openai_api')
+    @patch.object(OpenAIAdapter, "_call_openai_api")
     def test_analyze_code_success(self, mock_call_api):
         """Test successful code analysis."""
         mock_call_api.return_value = {
-            "choices": [{
-                "message": {
-                    "content": """
+            "choices": [
+                {
+                    "message": {
+                        "content": """
 潜在问题: Null pointer dereference
 风险级别: HIGH
 """
+                    }
                 }
-            }],
+            ],
             "usage": {"total_tokens": 800},
         }
 
@@ -316,7 +320,7 @@ class TestOpenAIAdapterCodeAnalysis:
         assert len(response.findings) > 0
         assert response.risk_level == "HIGH"
 
-    @patch.object(OpenAIAdapter, '_call_openai_api')
+    @patch.object(OpenAIAdapter, "_call_openai_api")
     def test_analyze_code_failure(self, mock_call_api):
         """Test code analysis failure handling."""
         mock_call_api.side_effect = Exception("API Error")
@@ -341,15 +345,13 @@ class TestOpenAIAdapterImpactExplanation:
         """Set up test fixtures."""
         self.adapter = OpenAIAdapter(api_key="test-key")
 
-    @patch.object(OpenAIAdapter, '_call_openai_api')
+    @patch.object(OpenAIAdapter, "_call_openai_api")
     def test_explain_change_impact_success(self, mock_call_api):
         """Test successful impact explanation."""
         mock_call_api.return_value = {
-            "choices": [{
-                "message": {
-                    "content": "This change affects the user authentication module."
-                }
-            }],
+            "choices": [
+                {"message": {"content": "This change affects the user authentication module."}}
+            ],
         }
 
         result = self.adapter.explain_change_impact(
@@ -359,7 +361,7 @@ class TestOpenAIAdapterImpactExplanation:
 
         assert "authentication" in result
 
-    @patch.object(OpenAIAdapter, '_call_openai_api')
+    @patch.object(OpenAIAdapter, "_call_openai_api")
     def test_explain_change_impact_failure(self, mock_call_api):
         """Test impact explanation failure handling."""
         mock_call_api.side_effect = Exception("API Error")
@@ -374,13 +376,14 @@ class TestOpenAIAdapterImpactExplanation:
 class TestOpenAIAdapterMockMode:
     """Tests for mock mode when openai is not installed."""
 
-    @patch.object(OpenAIAdapter, '_call_openai_api')
+    @patch.object(OpenAIAdapter, "_call_openai_api")
     def test_generate_tests_with_mock(self, mock_call_api):
         """Test test generation with mocked API."""
         mock_call_api.return_value = {
-            "choices": [{
-                "message": {
-                    "content": """
+            "choices": [
+                {
+                    "message": {
+                        "content": """
 ```java
 public class ServiceTest {
     @Test
@@ -388,8 +391,9 @@ public class ServiceTest {
 }
 ```
 """
+                    }
                 }
-            }],
+            ],
             "usage": {"total_tokens": 500},
         }
 

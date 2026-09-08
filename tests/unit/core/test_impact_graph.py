@@ -74,7 +74,7 @@ class TestImpactNode:
 class TestImpactGraph:
     """ImpactGraph测试类."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def sample_graph(self) -> ImpactGraph:
         """创建示例影响图."""
         graph = ImpactGraph(change_set_id="test-123")

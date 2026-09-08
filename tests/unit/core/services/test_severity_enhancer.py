@@ -35,7 +35,7 @@ class TestSeverityEnhancerInitialization:
 class TestSeverityEnhancerDetermineSeverity:
     """严重程度判定测试."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def enhancer(self) -> SeverityEnhancer:
         """创建增强器实例."""
         return SeverityEnhancer()
@@ -67,7 +67,9 @@ class TestSeverityEnhancerDetermineSeverity:
         # 低复杂度、高覆盖率、低变更频率，应该是低风险
         assert severity in [ImpactSeverity.LOW, ImpactSeverity.MEDIUM]
 
-    def test_determine_severity_disabled_multi_dimensional(self, enhancer: SeverityEnhancer) -> None:
+    def test_determine_severity_disabled_multi_dimensional(
+        self, enhancer: SeverityEnhancer
+    ) -> None:
         """测试禁用多维度评分时的回退."""
         enhancer.set_multi_dimensional_enabled(False)
 
@@ -90,7 +92,7 @@ class TestSeverityEnhancerDetermineSeverity:
 class TestSeverityEnhancerDetailedCalculation:
     """详细计算测试."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def enhancer(self) -> SeverityEnhancer:
         """创建增强器实例."""
         return SeverityEnhancer()
@@ -126,7 +128,7 @@ class TestSeverityEnhancerDetailedCalculation:
 class TestSeverityEnhancerWeightManagement:
     """权重管理测试."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def enhancer(self) -> SeverityEnhancer:
         """创建增强器实例."""
         return SeverityEnhancer()

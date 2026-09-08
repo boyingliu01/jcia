@@ -18,14 +18,14 @@ from jcia.core.interfaces.test_runner import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_maven_adapter() -> MavenAdapter:
     """Mock Maven adapter."""
     adapter = MagicMock(spec=MavenAdapter)
     return adapter
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_project_dir(tmp_path: Path) -> Path:
     """Create temporary project directory structure."""
     # Create target directory structure
@@ -393,9 +393,7 @@ class TestMavenSurefireTestExecutor:
         assert "expected true but was false" in result.stack_trace
 
     @pytest.mark.skip("The implementation behavior doesn't match this test case")
-    def test_is_test_affected_matching_class(
-        self, mock_maven_adapter: MagicMock
-    ) -> None:
+    def test_is_test_affected_matching_class(self, mock_maven_adapter: MagicMock) -> None:
         """测试判断测试受影响（类名匹配）。"""
         test = TestExecutionResult(
             test_class="com.example.UserServiceTest",
@@ -415,9 +413,7 @@ class TestMavenSurefireTestExecutor:
 
         assert executor._is_test_affected(test, changed_methods) is True
 
-    def test_is_test_affected_matching_method(
-        self, mock_maven_adapter: MagicMock
-    ) -> None:
+    def test_is_test_affected_matching_method(self, mock_maven_adapter: MagicMock) -> None:
         """测试判断测试受影响（方法名匹配）。"""
         test = TestExecutionResult(
             test_class="com.example.ServiceTest",
@@ -514,9 +510,7 @@ class TestMavenSurefireTestExecutor:
 
         assert baseline == {"test_results": []}
 
-    def test_parse_jacoco_coverage_no_file(
-        self, mock_maven_adapter: MagicMock
-    ) -> None:
+    def test_parse_jacoco_coverage_no_file(self, mock_maven_adapter: MagicMock) -> None:
         """测试解析不存在的 JaCoCo 覆盖率文件。"""
         executor = MavenSurefireTestExecutor(
             project_path=Path("/test/project"),

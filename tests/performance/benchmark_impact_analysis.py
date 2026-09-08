@@ -29,7 +29,7 @@ from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
 from jcia.adapters.tools.source_code_call_graph_adapter import SourceCodeCallGraphAnalyzer
 from jcia.core.use_cases.analyze_impact import AnalyzeImpactRequest, AnalyzeImpactUseCase
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -165,6 +165,7 @@ class ImpactAnalysisBenchmark:
 
             # 分析最近的提交
             import subprocess
+
             try:
                 # 获取最近的提交
                 result_git = subprocess.run(
@@ -174,7 +175,9 @@ class ImpactAnalysisBenchmark:
                     text=True,
                     check=True,
                 )
-                commits = [line.split()[0] for line in result_git.stdout.strip().split("\n") if line]
+                commits = [
+                    line.split()[0] for line in result_git.stdout.strip().split("\n") if line
+                ]
 
                 if len(commits) >= 2:
                     # 分析提交范围
@@ -267,6 +270,7 @@ class ImpactAnalysisBenchmark:
 
             # 4. 模拟分析请求
             import subprocess
+
             try:
                 result_git = subprocess.run(
                     ["git", "log", "--oneline", "-2"],
@@ -275,7 +279,9 @@ class ImpactAnalysisBenchmark:
                     text=True,
                     check=True,
                 )
-                commits = [line.split()[0] for line in result_git.stdout.strip().split("\n") if line]
+                commits = [
+                    line.split()[0] for line in result_git.stdout.strip().split("\n") if line
+                ]
 
                 if len(commits) >= 2:
                     request = AnalyzeImpactRequest(
@@ -333,7 +339,8 @@ class ImpactAnalysisBenchmark:
                 "total_duration_ms": sum(r.duration_ms for r in successful_results),
                 "avg_duration_ms": (
                     sum(r.duration_ms for r in successful_results) / len(successful_results)
-                    if successful_results else 0
+                    if successful_results
+                    else 0
                 ),
             },
             "results": [r.to_dict() for r in self.results],
@@ -384,16 +391,20 @@ class ImpactAnalysisBenchmark:
                 severity = "LOW"
 
             if severity in ["CRITICAL", "HIGH"]:
-                bottlenecks.append({
-                    "operation": op_name,
-                    "severity": severity,
-                    "avg_duration_ms": avg_duration,
-                    "max_duration_ms": max_duration,
-                    "sample_count": len(op_results),
-                })
+                bottlenecks.append(
+                    {
+                        "operation": op_name,
+                        "severity": severity,
+                        "avg_duration_ms": avg_duration,
+                        "max_duration_ms": max_duration,
+                        "sample_count": len(op_results),
+                    }
+                )
 
         # 按严重程度和持续时间排序
-        bottlenecks.sort(key=lambda x: (x["severity"] != "CRITICAL", x["avg_duration_ms"]), reverse=True)
+        bottlenecks.sort(
+            key=lambda x: (x["severity"] != "CRITICAL", x["avg_duration_ms"]), reverse=True
+        )
 
         return bottlenecks[:10]  # 只返回前10个
 

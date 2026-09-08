@@ -14,7 +14,11 @@ import pytest
 
 from jcia.adapters.ai.volcengine_adapter import VolcengineAdapter
 from jcia.core.entities.test_case import TestCase, TestPriority, TestType
-from jcia.core.interfaces.ai_service import CodeAnalysisRequest, TestGenerationRequest
+from jcia.core.interfaces.ai_service import (
+    AIProvider,
+    CodeAnalysisRequest,
+    TestGenerationRequest,
+)
 
 
 def get_api_credentials() -> tuple[str, str, str] | None:
@@ -35,7 +39,7 @@ def get_api_credentials() -> tuple[str, str, str] | None:
 class TestVolcengineAdapterIntegration:
     """VolcengineAdapter 集成测试类 - 使用真实 API。"""
 
-    @pytest.fixture
+    @pytest.fixture()
     def credentials(self) -> tuple[str, str, str]:
         """获取 API 凭证，如果未配置则跳过测试."""
         creds = get_api_credentials()
@@ -46,9 +50,7 @@ class TestVolcengineAdapterIntegration:
             )
         return creds
 
-    def test_adapter_initialization(
-        self, credentials: tuple[str, str, str]
-    ) -> None:
+    def test_adapter_initialization(self, credentials: tuple[str, str, str]) -> None:
         """测试适配器初始化。"""
         access_key, secret_key, app_id = credentials
 
@@ -73,11 +75,9 @@ class TestVolcengineAdapterIntegration:
         )
 
         # Assert
-        assert adapter.provider == "volcengine"
+        assert adapter.provider == AIProvider.VOLCENGINE
 
-    def test_generate_tests_creates_test_cases(
-        self, credentials: tuple[str, str, str]
-    ) -> None:
+    def test_generate_tests_creates_test_cases(self, credentials: tuple[str, str, str]) -> None:
         """测试生成测试用例。"""
         access_key, secret_key, app_id = credentials
 
@@ -101,9 +101,7 @@ class TestVolcengineAdapterIntegration:
         assert result.test_cases is not None
         assert len(result.test_cases) >= 1
 
-    def test_generate_tests_includes_token_usage(
-        self, credentials: tuple[str, str, str]
-    ) -> None:
+    def test_generate_tests_includes_token_usage(self, credentials: tuple[str, str, str]) -> None:
         """测试生成测试用例，包含 token 使用量统计。"""
         access_key, secret_key, app_id = credentials
 
@@ -153,9 +151,7 @@ class TestVolcengineAdapterIntegration:
         # Assert - 验证基本功能
         assert result.test_cases is not None
 
-    def test_refine_test_updates_test_code(
-        self, credentials: tuple[str, str, str]
-    ) -> None:
+    def test_refine_test_updates_test_code(self, credentials: tuple[str, str, str]) -> None:
         """测试优化测试用例。"""
         access_key, secret_key, app_id = credentials
 
@@ -184,9 +180,7 @@ class TestVolcengineAdapterIntegration:
 
         # Assert - 验证基本功能（不抛出异常即可）
 
-    def test_extract_risk_level_precision(
-        self, credentials: tuple[str, str, str]
-    ) -> None:
+    def test_extract_risk_level_precision(self, credentials: tuple[str, str, str]) -> None:
         """测试风险级别精准提取（避免子串误判）。"""
         access_key, secret_key, app_id = credentials
 
@@ -234,9 +228,7 @@ class TestVolcengineAdapterIntegration:
         assert explanation is not None
         assert len(explanation) > 0
 
-    def test_generate_tests_with_multiple_classes(
-        self, credentials: tuple[str, str, str]
-    ) -> None:
+    def test_generate_tests_with_multiple_classes(self, credentials: tuple[str, str, str]) -> None:
         """测试多类测试用例。"""
         access_key, secret_key, app_id = credentials
 
@@ -260,9 +252,7 @@ class TestVolcengineAdapterIntegration:
         assert result.test_cases is not None
         assert len(result.test_cases) >= 1  # API 可能返回不同数量
 
-    def test_generate_tests_with_requirements(
-        self, credentials: tuple[str, str, str]
-    ) -> None:
+    def test_generate_tests_with_requirements(self, credentials: tuple[str, str, str]) -> None:
         """测试带要求的测试生成。"""
         access_key, secret_key, app_id = credentials
 
@@ -286,9 +276,7 @@ class TestVolcengineAdapterIntegration:
         # Assert - 验证基本功能
         assert result.test_cases is not None
 
-    def test_call_api_builds_auth_headers(
-        self, credentials: tuple[str, str, str]
-    ) -> None:
+    def test_call_api_builds_auth_headers(self, credentials: tuple[str, str, str]) -> None:
         """测试构建认证头。"""
         access_key, secret_key, app_id = credentials
 
@@ -307,9 +295,7 @@ class TestVolcengineAdapterIntegration:
         assert access_key in headers["Authorization"]
         assert "X-VOLC-App-Id" in headers
 
-    def test_call_api_handles_request_errors(
-        self, credentials: tuple[str, str, str]
-    ) -> None:
+    def test_call_api_handles_request_errors(self, credentials: tuple[str, str, str]) -> None:
         """测试 API 请求错误处理。"""
         access_key, secret_key, app_id = credentials
 
@@ -336,9 +322,7 @@ class TestVolcengineAdapterIntegration:
         # Assert - 应该返回空结果而不是抛出异常
         assert result.test_cases is not None or len(result.test_cases) == 0
 
-    def test_temperature_parameter(
-        self, credentials: tuple[str, str, str]
-    ) -> None:
+    def test_temperature_parameter(self, credentials: tuple[str, str, str]) -> None:
         """测试温度参数配置。"""
         access_key, secret_key, app_id = credentials
 
@@ -353,9 +337,7 @@ class TestVolcengineAdapterIntegration:
         # Act
         assert adapter._temperature == 0.8
 
-    def test_region_parameter(
-        self, credentials: tuple[str, str, str]
-    ) -> None:
+    def test_region_parameter(self, credentials: tuple[str, str, str]) -> None:
         """测试区域参数配置。"""
         access_key, secret_key, app_id = credentials
 
@@ -370,9 +352,7 @@ class TestVolcengineAdapterIntegration:
         # Act
         assert adapter._region == "cn-beijing"
 
-    def test_endpoint_configuration(
-        self, credentials: tuple[str, str, str]
-    ) -> None:
+    def test_endpoint_configuration(self, credentials: tuple[str, str, str]) -> None:
         """测试端点配置。"""
         access_key, secret_key, app_id = credentials
 

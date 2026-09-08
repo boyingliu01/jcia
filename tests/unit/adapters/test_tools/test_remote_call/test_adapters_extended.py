@@ -4,9 +4,9 @@ This module provides comprehensive tests for Dubbo, Feign, HTTP, MQ, and Composi
 to increase test coverage from ~60% to 90%+.
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, mock_open
+
+import pytest
 
 from jcia.adapters.tools.remote_call import (
     CompositeRemoteCallAdapter,
@@ -16,7 +16,6 @@ from jcia.adapters.tools.remote_call import (
     MessageQueueRemoteCallAdapter,
 )
 from jcia.core.entities.remote_call import RemoteCallType
-
 
 
 class TestDubboRemoteCallAdapterExtended:
@@ -40,10 +39,12 @@ class TestDubboRemoteCallAdapterExtended:
 
         # Create a Java file with Dubbo annotation
         java_file = tmp_path / "TestService.java"
-        java_file.write_text("""
+        java_file.write_text(
+            """
         @DubboReference
         private UserService userService;
-        """)
+        """
+        )
 
         result = adapter.detect_from_directory(tmp_path)
         assert len(result) == 1
@@ -58,10 +59,12 @@ class TestDubboRemoteCallAdapterExtended:
         nested_dir.mkdir(parents=True)
 
         java_file = nested_dir / "Service.java"
-        java_file.write_text("""
+        java_file.write_text(
+            """
         @DubboReference
         private OrderService orderService;
-        """)
+        """
+        )
 
         result = adapter.detect_from_directory(tmp_path)
         assert len(result) == 1
@@ -81,10 +84,12 @@ class TestFeignRemoteCallAdapterExtended:
         adapter = FeignRemoteCallAdapter()
 
         java_file = tmp_path / "UserClient.java"
-        java_file.write_text("""
+        java_file.write_text(
+            """
         @FeignClient(name = "user-service")
         public interface UserClient {}
-        """)
+        """
+        )
 
         result = adapter.detect_from_directory(tmp_path)
         assert len(result) == 1
@@ -106,9 +111,11 @@ class TestHttpRemoteCallAdapterExtended:
         adapter = HttpRemoteCallAdapter()
 
         java_file = tmp_path / "ApiService.java"
-        java_file.write_text("""
+        java_file.write_text(
+            """
         restTemplate.getForObject("http://api/users", String.class);
-        """)
+        """
+        )
 
         result = adapter.detect_from_directory(tmp_path)
         assert len(result) >= 1
@@ -129,10 +136,12 @@ class TestMessageQueueRemoteCallAdapterExtended:
         adapter = MessageQueueRemoteCallAdapter()
 
         java_file = tmp_path / "OrderConsumer.java"
-        java_file.write_text("""
+        java_file.write_text(
+            """
         @RabbitListener(queues = "order.queue")
         public void processOrder(Order order) {}
-        """)
+        """
+        )
 
         result = adapter.detect_from_directory(tmp_path)
         assert len(result) == 1
@@ -144,10 +153,12 @@ class TestMessageQueueRemoteCallAdapterExtended:
         adapter = MessageQueueRemoteCallAdapter()
 
         java_file = tmp_path / "UserConsumer.java"
-        java_file.write_text("""
+        java_file.write_text(
+            """
         @KafkaListener(topics = "user-events")
         public void handleUserEvent(UserEvent event) {}
-        """)
+        """
+        )
 
         result = adapter.detect_from_directory(tmp_path)
         assert len(result) == 1
@@ -160,17 +171,21 @@ class TestMessageQueueRemoteCallAdapterExtended:
 
         # Create RabbitMQ consumer
         rabbit_file = tmp_path / "RabbitConsumer.java"
-        rabbit_file.write_text("""
+        rabbit_file.write_text(
+            """
         @RabbitListener(queues = "queue1")
         public void handle1() {}
-        """)
+        """
+        )
 
         # Create Kafka consumer
         kafka_file = tmp_path / "KafkaConsumer.java"
-        kafka_file.write_text("""
+        kafka_file.write_text(
+            """
         @KafkaListener(topics = "topic1")
         public void handle2() {}
-        """)
+        """
+        )
 
         result = adapter.detect_from_directory(tmp_path)
         assert len(result) == 2
@@ -204,19 +219,19 @@ class TestCompositeRemoteCallAdapterExtended:
                 call_type=RemoteCallType.DUBBO,
                 endpoint=RemoteEndpoint(service_name="svc1"),
                 caller_class="A",
-                confidence=0.95
+                confidence=0.95,
             ),
             RemoteCallInfo(
                 call_type=RemoteCallType.FEIGN,
                 endpoint=RemoteEndpoint(service_name="svc2"),
                 caller_class="B",
-                confidence=0.80
+                confidence=0.80,
             ),
             RemoteCallInfo(
                 call_type=RemoteCallType.MQ_KAFKA,
                 endpoint=RemoteEndpoint(url="topic1"),
                 caller_class="C",
-                confidence=0.90
+                confidence=0.90,
             ),
         ]
 
@@ -227,7 +242,6 @@ class TestCompositeRemoteCallAdapterExtended:
         assert stats["feign"] == 1
         assert stats["kafka"] == 1
         assert stats["high_confidence"] == 2  # 0.95 and 0.90 >= 0.9
-
 
 
 if __name__ == "__main__":

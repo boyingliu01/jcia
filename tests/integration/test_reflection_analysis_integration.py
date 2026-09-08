@@ -4,6 +4,7 @@ Tests the integration of reflection pattern matching with call chain analysis.
 """
 
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -23,8 +24,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.adapters]
 class TestReflectionAnalysisIntegration:
     """Integration tests for reflection analysis."""
 
-    @pytest.fixture
-    def temp_project(self) -> Path:
+    @pytest.fixture()
+    def temp_project(self) -> Iterator[Path]:
         """Create a temporary Java project for testing."""
         with tempfile.TemporaryDirectory() as tmpdir:
             project_path = Path(tmpdir)
@@ -33,7 +34,8 @@ class TestReflectionAnalysisIntegration:
 
             # Create a service class
             service_file = src_dir / "Service.java"
-            service_file.write_text("""
+            service_file.write_text(
+                """
 package com.example;
 
 public class Service {
@@ -45,11 +47,13 @@ public class Service {
         return "data";
     }
 }
-""")
+"""
+            )
 
             # Create a class with reflection calls
             reflector_file = src_dir / "Reflector.java"
-            reflector_file.write_text("""
+            reflector_file.write_text(
+                """
 package com.example;
 
 import java.lang.reflect.Method;
@@ -87,11 +91,13 @@ public class Reflector {
         );
     }
 }
-""")
+"""
+            )
 
             # Create another class that uses Service directly
             direct_file = src_dir / "DirectCaller.java"
-            direct_file.write_text("""
+            direct_file.write_text(
+                """
 package com.example;
 
 public class DirectCaller {
@@ -101,7 +107,8 @@ public class DirectCaller {
         service.process("direct call");
     }
 }
-""")
+"""
+            )
 
             yield project_path
 
@@ -109,7 +116,9 @@ public class DirectCaller {
         """Test that reflection patterns are extracted from Java files."""
         matcher = ReflectionPatternMatcher()
 
-        reflector_file = temp_project / "src" / "main" / "java" / "com" / "example" / "Reflector.java"
+        reflector_file = (
+            temp_project / "src" / "main" / "java" / "com" / "example" / "Reflector.java"
+        )
         content = reflector_file.read_text()
 
         matches = matcher.find_patterns(content, str(reflector_file))
@@ -140,15 +149,11 @@ public class DirectCaller {
         assert len(reflection_calls) > 0
 
         # Check that Class.forName was detected with correct target
-        for_name_calls = [
-            c for c in reflection_calls if c.call_type == ReflectionType.FOR_NAME
-        ]
+        for_name_calls = [c for c in reflection_calls if c.call_type == ReflectionType.FOR_NAME]
         assert len(for_name_calls) >= 1
 
         # At least one should have "com.example.Service" as target
-        service_targets = [
-            c for c in for_name_calls if c.target_class == "com.example.Service"
-        ]
+        service_targets = [c for c in for_name_calls if c.target_class == "com.example.Service"]
         assert len(service_targets) >= 1
 
     def test_reflection_impact_analysis(self, temp_project: Path) -> None:
@@ -186,14 +191,12 @@ public class DirectCaller {
 
         # Find literal-based calls
         literal_calls = [
-            c for c in reflection_calls
-            if c.inference_source == InferenceSource.LITERAL
+            c for c in reflection_calls if c.inference_source == InferenceSource.LITERAL
         ]
 
         # Find variable-based calls
         variable_calls = [
-            c for c in reflection_calls
-            if c.inference_source == InferenceSource.VARIABLE
+            c for c in reflection_calls if c.inference_source == InferenceSource.VARIABLE
         ]
 
         # Literal calls should have higher confidence
@@ -206,9 +209,7 @@ public class DirectCaller {
 
         reflection_calls = analyzer.get_reflection_calls("com.example.Reflector")
 
-        proxy_calls = [
-            c for c in reflection_calls if c.call_type == ReflectionType.PROXY
-        ]
+        proxy_calls = [c for c in reflection_calls if c.call_type == ReflectionType.PROXY]
 
         assert len(proxy_calls) >= 1
 
@@ -226,7 +227,9 @@ public class DirectCaller {
         """Test inference of reflection targets from chained calls."""
         matcher = ReflectionPatternMatcher()
 
-        reflector_file = temp_project / "src" / "main" / "java" / "com" / "example" / "Reflector.java"
+        reflector_file = (
+            temp_project / "src" / "main" / "java" / "com" / "example" / "Reflector.java"
+        )
         content = reflector_file.read_text()
 
         # Find chained calls
@@ -237,7 +240,8 @@ public class DirectCaller {
 
         # Check that target class and method are extracted
         service_get_data = [
-            c for c in chained_calls
+            c
+            for c in chained_calls
             if c.target_class == "com.example.Service" and c.target_method == "getData"
         ]
         assert len(service_get_data) >= 1
@@ -255,7 +259,7 @@ public class DirectCaller {
             for child in node.children:
                 collect_methods(child, methods)
 
-        all_methods = []
+        all_methods: list[str] = []
         collect_methods(graph.root, all_methods)
 
         # Should include reflection targets
@@ -270,12 +274,12 @@ class TestReflectionWithRealWorldPatterns:
         """Test Spring-style reflection patterns."""
         matcher = ReflectionPatternMatcher()
 
-        content = '''
+        content = """
         // Spring-style reflection
         Class<?> controllerClass = Class.forName("com.example.controller.UserController");
         Method handleMethod = controllerClass.getMethod("handleRequest", HttpServletRequest.class);
         Object result = handleMethod.invoke(controller, request);
-        '''
+        """
 
         matches = matcher.find_patterns(content, "SpringTest.java")
 
@@ -288,11 +292,11 @@ class TestReflectionWithRealWorldPatterns:
         """Test MyBatis-style mapper reflection."""
         matcher = ReflectionPatternMatcher()
 
-        content = '''
+        content = """
         // MyBatis mapper proxy
         SqlSession session = sqlSessionFactory.openSession();
         UserMapper mapper = session.getMapper(UserMapper.class);
-        '''
+        """
 
         # This doesn't directly use reflection in the typical sense,
         # but we should not produce false positives
@@ -307,11 +311,11 @@ class TestReflectionWithRealWorldPatterns:
         """Test Dubbo SPI-style reflection."""
         matcher = ReflectionPatternMatcher()
 
-        content = '''
+        content = """
         // Dubbo ExtensionLoader uses reflection internally
         ExtensionLoader<Protocol> loader = ExtensionLoader.getExtensionLoader(Protocol.class);
         Protocol protocol = loader.getExtension("dubbo");
-        '''
+        """
 
         # Should not produce false positives
         matches = matcher.find_patterns(content, "DubboTest.java")
@@ -322,7 +326,7 @@ class TestReflectionWithRealWorldPatterns:
         """Test complex reflection scenario with multiple patterns."""
         matcher = ReflectionPatternMatcher()
 
-        content = '''
+        content = """
         public class DynamicInvoker {
             public Object invoke(String className, String methodName, Object... args) throws Exception {
                 Class<?> clazz = Class.forName(className);
@@ -339,7 +343,7 @@ class TestReflectionWithRealWorldPatterns:
                 return types;
             }
         }
-        '''
+        """
 
         matches = matcher.find_patterns(content, "DynamicInvoker.java")
 

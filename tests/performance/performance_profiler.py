@@ -117,7 +117,7 @@ class PerformanceProfiler:
             end_cpu = time.process_time()
 
             # 收集内存统计
-            current, peak = tracemalloc.get_traced_memory()
+            _, peak = tracemalloc.get_traced_memory()
             tracemalloc.stop()
 
             # 收集性能统计
@@ -133,8 +133,8 @@ class PerformanceProfiler:
             # 提取函数级性能数据
             metrics.function_timings = self._extract_function_timings(stats)
             metrics.profile_stats = {
-                "total_calls": stats.total_calls,
-                "primitive_calls": stats.primitive_calls,
+                "total_calls": getattr(stats, "total_calls", 0),
+                "primitive_calls": getattr(stats, "primitive_calls", 0),
             }
 
         except Exception as e:
@@ -158,16 +158,18 @@ class PerformanceProfiler:
         """
         timings = []
         # 限制只获取前20个最耗时的函数
-        for func, (cc, _nc, tt, ct, _callers) in list(stats.stats.items())[:20]:
+        for func, (cc, _nc, tt, ct, _callers) in list(getattr(stats, "stats", {}).items())[:20]:
             filename, line_no, func_name = func
-            timings.append({
-                "function": func_name,
-                "file": filename,
-                "line": line_no,
-                "call_count": cc,
-                "total_time_ms": ct * 1000,
-                "own_time_ms": tt * 1000,
-            })
+            timings.append(
+                {
+                    "function": func_name,
+                    "file": filename,
+                    "line": line_no,
+                    "call_count": cc,
+                    "total_time_ms": ct * 1000,
+                    "own_time_ms": tt * 1000,
+                }
+            )
         # 按总耗时排序
         timings.sort(key=lambda x: x["total_time_ms"], reverse=True)
         return timings
@@ -231,12 +233,15 @@ def profile_decorator(profiler: PerformanceProfiler | None = None):
     Returns:
         装饰器函数
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., tuple[T, PerformanceMetrics]]:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> tuple[T, PerformanceMetrics]:
             prof = profiler or PerformanceProfiler()
             return prof.profile_function(func, *args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -266,7 +271,7 @@ class ProfileBlock:
         """退出上下文."""
         if self.metrics:
             end_cpu = time.process_time()
-            current, peak = tracemalloc.get_traced_memory()
+            _, peak = tracemalloc.get_traced_memory()
             tracemalloc.stop()
 
             self.metrics.cpu_time_ms = (end_cpu - self._start_cpu) * 1000

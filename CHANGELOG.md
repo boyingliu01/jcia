@@ -37,12 +37,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 补齐 jcia/infrastructure/database/__init__.py 包标记
 
 ### Testing
-- 所有单元测试通过（332 个测试）
-- 测试覆盖率 89%（目标 ≥ 80%）
-- 适配器层测试覆盖率 > 90%
-- 基础设施层测试覆盖率 > 80%
-- 服务层测试覆盖率 > 80%
-- 用例层测试覆盖率 > 85%
+- 测试套件：857 passed / 31 skipped（原记录 332 已过时）
+- 实测总覆盖率 81.40%（目标 ≥ 80%）
+- 重构 pydriller 集成测试改用可靠的 GitPython commit range，消除 3 个 flaky 用例
+- 测试 fixture 做 hermetic 隔离，移除对真实外部环境的隐式依赖
+- 修正 volcengine 集成测试对 provider 的错误断言（普通 Enum 成员不等于字符串）
+- 新增 tests.* 的 mypy override，对齐 pyright 对测试代码的既定放宽
 
 ### Development
 - Pre-commit hooks 配置

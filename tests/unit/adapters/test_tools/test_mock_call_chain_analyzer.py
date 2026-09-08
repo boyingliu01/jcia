@@ -11,7 +11,7 @@ from jcia.core.interfaces.call_chain_analyzer import (
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_analyzer(tmp_path: Path) -> MockCallChainAnalyzer:
     """创建 Mock 分析器实例."""
     return MockCallChainAnalyzer(repo_path=str(tmp_path))
@@ -46,9 +46,7 @@ class TestMockCallChainAnalyzer:
         assert graph.root.method_name == "method1"
         assert graph.root.class_name == "com.example.Service"
 
-    def test_analyze_downstream_returns_graph(
-        self, mock_analyzer: MockCallChainAnalyzer
-    ) -> None:
+    def test_analyze_downstream_returns_graph(self, mock_analyzer: MockCallChainAnalyzer) -> None:
         """测试下游分析返回图."""
         graph = mock_analyzer.analyze_downstream("Service.method", max_depth=10)
 

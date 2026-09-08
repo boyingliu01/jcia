@@ -3,9 +3,9 @@
 This module tests the SkyWalking call chain adapter.
 """
 
-import pytest
 from unittest.mock import MagicMock, Mock, patch
-from datetime import datetime
+
+import pytest
 
 from jcia.adapters.tools.skywalking_call_chain_adapter import (
     DubboCall,
@@ -14,9 +14,6 @@ from jcia.adapters.tools.skywalking_call_chain_adapter import (
 )
 from jcia.core.interfaces.call_chain_analyzer import (
     AnalyzerType,
-    CallChainDirection,
-    CallChainGraph,
-    CallChainNode,
 )
 
 
@@ -126,9 +123,7 @@ class TestSkyWalkingCallChainAdapter:
     def test_parse_method_to_endpoint_http(self) -> None:
         """Test parsing HTTP method to endpoint."""
         adapter = SkyWalkingCallChainAdapter()
-        service, endpoint = adapter._parse_method_to_endpoint(
-            "GET:/api/users/{id}"
-        )
+        service, endpoint = adapter._parse_method_to_endpoint("GET:/api/users/{id}")
         # For strings without dots (no "."), implementation returns (method, method)
         assert service == "GET:/api/users/{id}"
         assert endpoint == "GET:/api/users/{id}"
@@ -136,9 +131,7 @@ class TestSkyWalkingCallChainAdapter:
     def test_parse_method_to_endpoint_dubbo(self) -> None:
         """Test parsing Dubbo method to endpoint."""
         adapter = SkyWalkingCallChainAdapter()
-        service, endpoint = adapter._parse_method_to_endpoint(
-            "com.example.UserService.getUser"
-        )
+        service, endpoint = adapter._parse_method_to_endpoint("com.example.UserService.getUser")
         # Implementation splits by dots and returns last segment as service
         assert service == "UserService"
         assert endpoint == "getUser"
@@ -179,6 +172,7 @@ class TestSkyWalkingErrorHandling:
         mock_response.text = "Internal Server Error"
         # raise_for_status will raise an HTTPError
         import requests
+
         mock_response.raise_for_status.side_effect = requests.HTTPError("500 Server Error")
         mock_post.return_value = mock_response
 
@@ -198,4 +192,3 @@ class TestSkyWalkingErrorHandling:
         # Implementation raises RuntimeError on exceptions
         with pytest.raises(RuntimeError):
             adapter._execute_graphql("query { testQuery }", {})
-

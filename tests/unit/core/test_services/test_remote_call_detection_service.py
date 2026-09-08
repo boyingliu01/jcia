@@ -3,19 +3,18 @@
 This module tests the remote call detection service.
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
-from jcia.core.services.remote_call_detection_service import (
-    RemoteCallDetectionService,
-    RemoteCallDetectionResult,
-)
+import pytest
+
 from jcia.core.entities.remote_call import (
     RemoteCallInfo,
     RemoteCallType,
     RemoteEndpoint,
-    RemoteCallChain,
+)
+from jcia.core.services.remote_call_detection_service import (
+    RemoteCallDetectionResult,
+    RemoteCallDetectionService,
 )
 
 
@@ -81,10 +80,12 @@ class TestRemoteCallDetectionService:
     def test_detect_from_file(self, tmp_path: Path) -> None:
         """Verify detection from single file."""
         test_file = tmp_path / "Service.java"
-        test_file.write_text("""
+        test_file.write_text(
+            """
         @DubboReference
         private UserService userService;
-        """)
+        """
+        )
 
         service = RemoteCallDetectionService()
         result = service.detect_from_file(str(test_file))
@@ -94,14 +95,18 @@ class TestRemoteCallDetectionService:
 
     def test_detect_from_directory(self, tmp_path: Path) -> None:
         """Verify detection from directory."""
-        (tmp_path / "Service1.java").write_text("""
+        (tmp_path / "Service1.java").write_text(
+            """
         @DubboReference
         private UserService userService;
-        """)
-        (tmp_path / "Service2.java").write_text("""
+        """
+        )
+        (tmp_path / "Service2.java").write_text(
+            """
         @FeignClient(name = "order-service")
         interface OrderClient {}
-        """)
+        """
+        )
 
         service = RemoteCallDetectionService()
         results = service.detect_from_directory(tmp_path)
@@ -212,20 +217,24 @@ class TestRemoteCallDetectionService:
 
     def test_get_detection_summary(self, tmp_path: Path) -> None:
         """Verify detection summary."""
-        (tmp_path / "Service.java").write_text("""
+        (tmp_path / "Service.java").write_text(
+            """
         @DubboReference
         private UserService userService;
 
         @FeignClient(name = "order-service")
         interface OrderClient {}
-        """)
+        """
+        )
 
         service = RemoteCallDetectionService()
         result = service.detect_from_file(str(tmp_path / "Service.java"))
         summary = service.get_detection_summary(result)
 
         assert "total_calls" in summary
-        assert summary["total_calls"] >= 1
+        total_calls = summary["total_calls"]
+        assert isinstance(total_calls, int)
+        assert total_calls >= 1
 
     def test_detect_from_file_not_exist(self) -> None:
         """Test detection from non-existent file."""
@@ -274,14 +283,18 @@ class TestRemoteCallDetectionService:
         """Test aggregating multiple detection results."""
         service = RemoteCallDetectionService()
 
-        (tmp_path / "Service1.java").write_text("""
+        (tmp_path / "Service1.java").write_text(
+            """
         @DubboReference
         private UserService userService;
-        """)
-        (tmp_path / "Service2.java").write_text("""
+        """
+        )
+        (tmp_path / "Service2.java").write_text(
+            """
         @FeignClient(name = "order-service")
         interface OrderClient {}
-        """)
+        """
+        )
 
         # Create multiple results
         result1 = service.detect_from_file(str(tmp_path / "Service1.java"))

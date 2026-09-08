@@ -20,6 +20,14 @@ from jcia.core.entities.impact_graph import (
     ImpactSeverity,
     ImpactType,
 )
+from jcia.core.entities.remote_call import (
+    RemoteCallInfo,
+    RemoteCallType,
+    RemoteEndpoint,
+)
+from jcia.core.services.remote_call_detection_service import (
+    RemoteCallDetectionResult,
+)
 from jcia.core.use_cases.analyze_impact import (
     AnalyzeImpactRequest,
     AnalyzeImpactResponse,
@@ -87,19 +95,19 @@ class TestAnalyzeImpactResponse:
 class TestAnalyzeImpactUseCase:
     """测试AnalyzeImpactUseCase."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_analyzer(self) -> Mock:
         """创建模拟分析器."""
         analyzer = Mock()
         analyzer.analyzer_name = "mock"
         return analyzer
 
-    @pytest.fixture
+    @pytest.fixture()
     def use_case(self, mock_analyzer: Mock) -> AnalyzeImpactUseCase:
         """创建用例实例."""
         return AnalyzeImpactUseCase(change_analyzer=mock_analyzer)
 
-    @pytest.fixture
+    @pytest.fixture()
     def valid_repo_path(self, tmp_path: Path) -> Path:
         """创建有效的仓库路径."""
         return tmp_path
@@ -355,3 +363,214 @@ class TestAnalyzeImpactUseCase:
         )
         impact_graph.add_node(node)
         return impact_graph
+
+
+class TestAnalyzeImpactRemoteCallIntegration:
+    """测试远程调用检测与融合集成（Phase 4）.
+
+    验证 AnalyzeImpactUseCase 能够可选地接入 RemoteCallDetectionService
+    与 AnalysisFusionService，将跨服务调用融合进影响图，并保持向后兼容。
+    """
+
+    @pytest.fixture()
+    def mock_analyzer(self) -> Mock:
+        """创建模拟变更分析器."""
+        analyzer = Mock()
+        analyzer.analyzer_name = "mock"
+        return analyzer
+
+    @pytest.fixture()
+    def valid_repo_path(self, tmp_path: Path) -> Path:
+        """创建有效的仓库路径."""
+        return tmp_path
+
+    def _create_java_change_set(self) -> ChangeSet:
+        """创建包含 Java 文件变更的变更集."""
+        file_change = FileChange(
+            file_path="com/example/OrderClient.java",
+            change_type=ChangeType.MODIFY,
+        )
+        file_change.method_changes.append(
+            MethodChange(
+                class_name="com.example.OrderClient",
+                method_name="placeOrder",
+                signature="()",
+            )
+        )
+        return ChangeSet(
+            from_commit="abc123",
+            to_commit="def456",
+            commits=[
+                CommitInfo(
+                    hash="abc123",
+                    author="Test Author",
+                    email="test@example.com",
+                    message="Test commit",
+                    timestamp=datetime.now(),
+                )
+            ],
+            file_changes=[file_change],
+        )
+
+    def _create_remote_call(self) -> RemoteCallInfo:
+        """创建模拟远程调用."""
+        return RemoteCallInfo(
+            call_type=RemoteCallType.DUBBO,
+            endpoint=RemoteEndpoint(
+                service_name="inventory-service",
+                interface="InventoryService",
+                method="deduct",
+            ),
+            caller_class="com.example.OrderClient",
+            caller_method="placeOrder",
+            confidence=0.95,
+        )
+
+    def test_request_detect_remote_calls_defaults_false(self) -> None:
+        """测试请求默认不启用远程调用检测（向后兼容）."""
+        request = AnalyzeImpactRequest(repo_path=Path("/test/repo"))
+        assert request.detect_remote_calls is False
+
+    def test_use_case_accepts_optional_remote_call_services(self, mock_analyzer: Mock) -> None:
+        """测试用例可注入远程调用检测器与融合服务."""
+        detector = Mock()
+        fusion = Mock()
+        use_case = AnalyzeImpactUseCase(
+            change_analyzer=mock_analyzer,
+            remote_call_detector=detector,
+            fusion_service=fusion,
+        )
+        assert use_case._remote_call_detector is detector
+        assert use_case._fusion_service is fusion
+
+    def test_use_case_backward_compatible_without_new_services(self, mock_analyzer: Mock) -> None:
+        """测试未注入新服务时旧构造方式仍可用."""
+        use_case = AnalyzeImpactUseCase(change_analyzer=mock_analyzer)
+        assert use_case._remote_call_detector is None
+        assert use_case._fusion_service is None
+
+    def test_execute_fuses_remote_calls_when_enabled(
+        self, mock_analyzer: Mock, valid_repo_path: Path
+    ) -> None:
+        """测试启用开关时执行远程调用检测与融合."""
+        # Arrange
+        request = AnalyzeImpactRequest(
+            repo_path=valid_repo_path,
+            commit_range="abc123..def456",
+            detect_remote_calls=True,
+        )
+        mock_analyzer.analyze_commit_range.return_value = self._create_java_change_set()
+
+        detector = Mock()
+        detector.detect_from_file.return_value = RemoteCallDetectionResult(
+            file_path="com/example/OrderClient.java",
+            calls=[self._create_remote_call()],
+        )
+        detector.aggregate_results.return_value = {
+            "total_calls": 1,
+            "rpc_calls": 1,
+            "mq_calls": 0,
+            "high_confidence": 1,
+            "unique_services": 1,
+        }
+
+        fusion = Mock()
+        fused_graph = ImpactGraph(change_set_id="abc123")
+        fused_graph.add_node(
+            ImpactNode(
+                method_name="remote:inventory-service",
+                class_name="inventory-service",
+                impact_type=ImpactType.INDIRECT,
+                severity=ImpactSeverity.HIGH,
+                depth=-1,
+            )
+        )
+        fusion.fuse_with_remote_calls.return_value = fused_graph
+
+        use_case = AnalyzeImpactUseCase(
+            change_analyzer=mock_analyzer,
+            call_chain_analyzer=MagicMock(),
+            remote_call_detector=detector,
+            fusion_service=fusion,
+        )
+
+        with patch(
+            "jcia.core.services.impact_analysis_service.ImpactAnalysisService"
+        ) as mock_service:
+            mock_service.return_value.analyze.return_value = ImpactGraph(change_set_id="abc123")
+
+            # Act
+            response = use_case.execute(request)
+
+        # Assert
+        assert detector.detect_from_file.called
+        fusion.fuse_with_remote_calls.assert_called_once()
+        assert "remote_calls" in response.summary
+        assert response.summary["remote_calls"]["total_calls"] == 1
+        assert response.impact_graph is fused_graph
+
+    def test_execute_skips_remote_calls_when_disabled(
+        self, mock_analyzer: Mock, valid_repo_path: Path
+    ) -> None:
+        """测试未启用开关时不触发远程调用检测."""
+        # Arrange
+        request = AnalyzeImpactRequest(
+            repo_path=valid_repo_path,
+            commit_range="abc123..def456",
+        )
+        mock_analyzer.analyze_commit_range.return_value = self._create_java_change_set()
+
+        detector = Mock()
+        fusion = Mock()
+        use_case = AnalyzeImpactUseCase(
+            change_analyzer=mock_analyzer,
+            call_chain_analyzer=MagicMock(),
+            remote_call_detector=detector,
+            fusion_service=fusion,
+        )
+
+        with patch(
+            "jcia.core.services.impact_analysis_service.ImpactAnalysisService"
+        ) as mock_service:
+            base_graph = ImpactGraph(change_set_id="abc123")
+            mock_service.return_value.analyze.return_value = base_graph
+
+            # Act
+            response = use_case.execute(request)
+
+        # Assert
+        detector.detect_from_file.assert_not_called()
+        fusion.fuse_with_remote_calls.assert_not_called()
+        assert "remote_calls" not in response.summary
+        assert response.impact_graph is base_graph
+
+    def test_execute_remote_calls_graceful_when_detector_missing(
+        self, mock_analyzer: Mock, valid_repo_path: Path
+    ) -> None:
+        """测试启用开关但未注入检测器时优雅降级（不崩溃）."""
+        # Arrange
+        request = AnalyzeImpactRequest(
+            repo_path=valid_repo_path,
+            commit_range="abc123..def456",
+            detect_remote_calls=True,
+        )
+        mock_analyzer.analyze_commit_range.return_value = self._create_java_change_set()
+
+        use_case = AnalyzeImpactUseCase(
+            change_analyzer=mock_analyzer,
+            call_chain_analyzer=MagicMock(),
+        )
+
+        with patch(
+            "jcia.core.services.impact_analysis_service.ImpactAnalysisService"
+        ) as mock_service:
+            base_graph = ImpactGraph(change_set_id="abc123")
+            mock_service.return_value.analyze.return_value = base_graph
+
+            # Act
+            response = use_case.execute(request)
+
+        # Assert
+        assert isinstance(response, AnalyzeImpactResponse)
+        assert response.impact_graph is base_graph
+        assert "remote_calls" not in response.summary

@@ -199,7 +199,9 @@ class TestCodeQLAdapterCreateDatabase:
 
     @patch("jcia.adapters.tools.codeql_adapter.subprocess.run")
     @patch("jcia.adapters.tools.codeql_adapter.shutil.rmtree")
-    def test_create_database_overwrite(self, mock_rmtree: Mock, mock_run: Mock, tmp_path: Path) -> None:
+    def test_create_database_overwrite(
+        self, mock_rmtree: Mock, mock_run: Mock, tmp_path: Path
+    ) -> None:
         """Test database creation with overwrite flag."""
         repo_path = tmp_path / "repo"
         repo_path.mkdir()
@@ -325,15 +327,30 @@ class TestCodeQLAdapterExtractCallGraph:
         # Mock query results for methods (as dict with tuples)
         method_results = {
             "tuples": [
-                {"name": "process", "signature": "(String): void", "class_name": "com.example.Service", "file": "Service.java", "line": "10"},
-                {"name": "helper", "signature": "(): String", "class_name": "com.example.Util", "file": "Util.java", "line": "5"},
+                {
+                    "name": "process",
+                    "signature": "(String): void",
+                    "class_name": "com.example.Service",
+                    "file": "Service.java",
+                    "line": "10",
+                },
+                {
+                    "name": "helper",
+                    "signature": "(): String",
+                    "class_name": "com.example.Util",
+                    "file": "Util.java",
+                    "line": "5",
+                },
             ]
         }
 
         # Mock query results for calls (as dict with tuples containing lists)
         call_results = {
             "tuples": [
-                [{"name": "process", "class_name": "com.example.Service"}, {"name": "helper", "class_name": "com.example.Util"}],
+                [
+                    {"name": "process", "class_name": "com.example.Service"},
+                    {"name": "helper", "class_name": "com.example.Util"},
+                ],
             ]
         }
 
@@ -356,7 +373,13 @@ class TestCodeQLAdapterExtractCallGraph:
 
         method_results = {
             "tuples": [
-                {"name": "handleRequest", "signature": "(Request): Response", "class_name": "com.example.Controller", "file": "Controller.java", "line": "20"},
+                {
+                    "name": "handleRequest",
+                    "signature": "(Request): Response",
+                    "class_name": "com.example.Controller",
+                    "file": "Controller.java",
+                    "line": "20",
+                },
             ]
         }
 
@@ -586,7 +609,7 @@ class TestCodeQLAdapterSecurityQueries:
                                 }
                             ],
                         }
-                    ]
+                    ],
                 }
             ]
         }
@@ -631,9 +654,7 @@ class TestCodeQLAdapterSecurityQueries:
             ],
         }
 
-        run = {
-            "tool": {"driver": {"rules": [{"name": "Command Injection"}]}}
-        }
+        run = {"tool": {"driver": {"rules": [{"name": "Command Injection"}]}}}
 
         finding = adapter._parse_sarif_result(result, run)
 

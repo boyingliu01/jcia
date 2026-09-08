@@ -23,7 +23,7 @@ TEST_APP_ID = "test-app"
 StubFn = Callable[[VolcengineAdapter, str | None, int | None], None]
 
 
-@pytest.fixture
+@pytest.fixture()
 def adapter() -> VolcengineAdapter:
     return VolcengineAdapter(
         access_key=TEST_ACCESS_KEY,
@@ -32,7 +32,7 @@ def adapter() -> VolcengineAdapter:
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def stub_call_api() -> Any:
     def _stub(
         adapter_instance: VolcengineAdapter,

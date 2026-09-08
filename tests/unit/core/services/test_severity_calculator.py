@@ -53,7 +53,7 @@ class TestDimensionScore:
 class TestMultiDimensionalSeverityCalculator:
     """多维度严重程度计算器测试."""
 
-    @pytest.fixture
+    @pytest.fixture()
     def calculator(self) -> MultiDimensionalSeverityCalculator:
         """创建计算器实例."""
         return MultiDimensionalSeverityCalculator()
@@ -92,7 +92,9 @@ class TestMultiDimensionalSeverityCalculator:
         for weight in weights.values():
             assert abs(weight - 1.0 / 6.0) < 0.001
 
-    def test_class_keyword_score_calculation(self, calculator: MultiDimensionalSeverityCalculator) -> None:
+    def test_class_keyword_score_calculation(
+        self, calculator: MultiDimensionalSeverityCalculator
+    ) -> None:
         """测试类名关键词评分."""
         # 测试核心类（高分数）
         assert calculator._calculate_class_keyword_score("OrderCoreService") == 100.0
@@ -111,7 +113,9 @@ class TestMultiDimensionalSeverityCalculator:
         default_score = calculator._calculate_class_keyword_score("SomeRandomClass")
         assert default_score == 50.0
 
-    def test_complexity_score_calculation(self, calculator: MultiDimensionalSeverityCalculator) -> None:
+    def test_complexity_score_calculation(
+        self, calculator: MultiDimensionalSeverityCalculator
+    ) -> None:
         """测试复杂度评分."""
         # 高复杂度
         high_complexity = {"cyclomatic_complexity": 25, "lines_of_code": 150}
@@ -153,7 +157,9 @@ class TestMultiDimensionalSeverityCalculator:
         zero_score = calculator._calculate_depth_score(0)
         assert 0.0 <= zero_score <= 40.0
 
-    def test_coverage_score_calculation(self, calculator: MultiDimensionalSeverityCalculator) -> None:
+    def test_coverage_score_calculation(
+        self, calculator: MultiDimensionalSeverityCalculator
+    ) -> None:
         """测试测试覆盖率评分（覆盖率越低，分数越高）."""
         # 未覆盖（最高风险）
         assert calculator._calculate_coverage_score(0.0) == 100.0
@@ -174,7 +180,9 @@ class TestMultiDimensionalSeverityCalculator:
         full_coverage = calculator._calculate_coverage_score(1.0)
         assert 0.0 <= full_coverage <= 20.0
 
-    def test_frequency_score_calculation(self, calculator: MultiDimensionalSeverityCalculator) -> None:
+    def test_frequency_score_calculation(
+        self, calculator: MultiDimensionalSeverityCalculator
+    ) -> None:
         """测试变更频率评分（变更越频繁，分数越高）."""
         # 频繁变更
         assert calculator._calculate_frequency_score(10) == 100.0
@@ -196,29 +204,23 @@ class TestMultiDimensionalSeverityCalculator:
         zero = calculator._calculate_frequency_score(0)
         assert zero == 0.0
 
-    def test_business_criticality_score(self, calculator: MultiDimensionalSeverityCalculator) -> None:
+    def test_business_criticality_score(
+        self, calculator: MultiDimensionalSeverityCalculator
+    ) -> None:
         """测试业务关键性评分."""
         # 高业务关键性（支付、交易、用户相关）
-        assert calculator._calculate_business_criticality(
-            "PaymentService", "processPayment"
-        ) == 100.0
-        assert calculator._calculate_business_criticality(
-            "OrderManager", "createOrder"
-        ) == 100.0
-        assert calculator._calculate_business_criticality(
-            "UserAuth", "login"
-        ) == 100.0
+        assert (
+            calculator._calculate_business_criticality("PaymentService", "processPayment") == 100.0
+        )
+        assert calculator._calculate_business_criticality("OrderManager", "createOrder") == 100.0
+        assert calculator._calculate_business_criticality("UserAuth", "login") == 100.0
 
         # 中等业务关键性（查询类）
-        medium = calculator._calculate_business_criticality(
-            "ProductQuery", "findProducts"
-        )
+        medium = calculator._calculate_business_criticality("ProductQuery", "findProducts")
         assert 40.0 <= medium <= 70.0
 
         # 低业务关键性（工具类）
-        low = calculator._calculate_business_criticality(
-            "StringUtil", "trim"
-        )
+        low = calculator._calculate_business_criticality("StringUtil", "trim")
         assert low <= 50.0
 
     def test_calculate_integration(self, calculator: MultiDimensionalSeverityCalculator) -> None:
@@ -247,7 +249,9 @@ class TestMultiDimensionalSeverityCalculator:
         assert SeverityDimension.BUSINESS_CRITICALITY in dimensions
         assert SeverityDimension.CROSS_SERVICE in dimensions
 
-    def test_score_to_severity_conversion(self, calculator: MultiDimensionalSeverityCalculator) -> None:
+    def test_score_to_severity_conversion(
+        self, calculator: MultiDimensionalSeverityCalculator
+    ) -> None:
         """测试分数到严重程度的转换."""
         # 高风险分数
         assert calculator._score_to_severity(90.0) == ImpactSeverity.HIGH
@@ -280,7 +284,7 @@ class TestMultiDimensionalSeverityCalculator:
         )
 
         # 验证权重已应用
-        assert result is not None  # noqa: F841
+        assert result is not None
         weights = calculator.get_weights()
         assert weights[SeverityDimension.CLASS_KEYWORDS] == 0.5
         assert weights[SeverityDimension.METHOD_COMPLEXITY] == 0.3

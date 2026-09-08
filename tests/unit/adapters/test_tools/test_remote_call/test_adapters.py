@@ -3,9 +3,7 @@
 This module tests all remote call adapters including Dubbo, Feign, HTTP, and MQ.
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 from jcia.adapters.tools.remote_call import (
     CompositeRemoteCallAdapter,
@@ -52,10 +50,12 @@ class TestDubboRemoteCallAdapter:
         """Verify detection of Dubbo calls."""
         adapter = DubboRemoteCallAdapter()
         test_file = tmp_path / "Service.java"
-        test_file.write_text("""
+        test_file.write_text(
+            """
         @DubboReference
         private UserService userService;
-        """)
+        """
+        )
 
         calls = adapter.detect_remote_calls(str(test_file))
         assert len(calls) == 1
@@ -82,10 +82,12 @@ class TestFeignRemoteCallAdapter:
         """Verify detection of Feign calls."""
         adapter = FeignRemoteCallAdapter()
         test_file = tmp_path / "Client.java"
-        test_file.write_text("""
+        test_file.write_text(
+            """
         @FeignClient(name = "user-service", url = "http://user-service")
         public interface UserClient {}
-        """)
+        """
+        )
 
         calls = adapter.detect_remote_calls(str(test_file))
         assert len(calls) == 1
@@ -112,9 +114,11 @@ class TestHttpRemoteCallAdapter:
         """Verify detection of HTTP calls."""
         adapter = HttpRemoteCallAdapter()
         test_file = tmp_path / "ApiService.java"
-        test_file.write_text("""
+        test_file.write_text(
+            """
         restTemplate.getForObject("http://api/users", String.class);
-        """)
+        """
+        )
 
         calls = adapter.detect_remote_calls(str(test_file))
         assert len(calls) >= 1
@@ -145,13 +149,15 @@ class TestMessageQueueRemoteCallAdapter:
         """Verify detection of MQ calls."""
         adapter = MessageQueueRemoteCallAdapter()
         test_file = tmp_path / "Consumer.java"
-        test_file.write_text("""
+        test_file.write_text(
+            """
         @RabbitListener(queues = "order.queue")
         public void processOrder(Order order) {}
 
         @KafkaListener(topics = "user-events")
         public void handleUser(UserEvent event) {}
-        """)
+        """
+        )
 
         calls = adapter.detect_remote_calls(str(test_file))
         assert len(calls) == 2
@@ -212,7 +218,8 @@ class TestCompositeRemoteCallAdapter:
         """Verify detection of all remote call types."""
         adapter = CompositeRemoteCallAdapter()
         test_file = tmp_path / "MixedService.java"
-        test_file.write_text("""
+        test_file.write_text(
+            """
         @DubboReference
         private UserService userService;
 
@@ -223,7 +230,8 @@ class TestCompositeRemoteCallAdapter:
 
         @RabbitListener(queues = "events")
         void handleEvent(Event e) {}
-        """)
+        """
+        )
 
         calls = adapter.detect_remote_calls(str(test_file))
         assert len(calls) >= 3
@@ -297,14 +305,18 @@ class TestCompositeRemoteCallAdapter:
         adapter = CompositeRemoteCallAdapter()
 
         # Create multiple Java files
-        (tmp_path / "Service1.java").write_text("""
+        (tmp_path / "Service1.java").write_text(
+            """
         @DubboReference
         private UserService userService;
-        """)
-        (tmp_path / "Service2.java").write_text("""
+        """
+        )
+        (tmp_path / "Service2.java").write_text(
+            """
         @FeignClient(name = "order-service")
         interface OrderClient {}
-        """)
+        """
+        )
 
         calls = adapter.detect_from_directory(tmp_path)
         assert len(calls) >= 2
