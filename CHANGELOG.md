@@ -38,8 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修复 PyDrillerAdapter 变更文件路径缺陷：原用 `ModifiedFile.filename`（仅 basename，如 `CspFilter.java`）作为 `file_path`，导致下游 `repo_path / file_path` 无法定位磁盘文件，远程调用检测恒报 "File not found" 并返回 0 结果；改用 `new_path`（相对仓库根的完整路径）并统一分隔符为正斜杠，缺失时回退 `filename`。该缺陷此前因单测 mock 把 `filename` 设为完整路径而被掩盖
 
 ### Testing
-- 测试套件：861 passed / 31 skipped（新增 4 个 PyDriller 路径回归测试）
-- 实测总覆盖率 81.40%（目标 ≥ 80%）
+- 测试套件：895 passed / 31 skipped
+- 实测总覆盖率 84%（目标 ≥ 80%）；Adapters 层覆盖率 72.4% → 78.04%（目标 ≥ 75%）
+- 新增 SkyWalkingAdapter 单元测试（34 例）：mock `_execute_graphql`/`requests.post` 隔离网络边界，覆盖率 13% → 100%
+- 新增 4 个 PyDriller 路径回归测试（new_path 全路径 / 反斜杠归一化 / filename 回退 / test 文件识别）
 - 重构 pydriller 集成测试改用可靠的 GitPython commit range，消除 3 个 flaky 用例
 - 测试 fixture 做 hermetic 隔离，移除对真实外部环境的隐式依赖
 - 修正 volcengine 集成测试对 provider 的错误断言（普通 Enum 成员不等于字符串）
