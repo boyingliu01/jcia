@@ -10,6 +10,7 @@
 
 - 🔍 **变更代码影响分析** - 自动分析 Git 提交，识别变更的文件和方法
 - 📊 **影响图构建** - 构建调用链图，计算受影响的类和方法
+- 🌐 **跨服务远程调用检测** - 识别 Dubbo/Feign/HTTP/MQ 远程调用并融合进影响图，评估跨服务变更风险（`--detect-remote-calls`）
 - 🎯 **智能测试选择** - 基于 STARTS 算法和影响范围选择测试用例
 - 🤖 **AI 测试生成** - 集成 LLM 服务，自动生成测试用例建议
 - 📈 **多格式报告** - 支持 HTML、JSON、Markdown 格式报告
@@ -58,6 +59,9 @@ ai:
 ```bash
 # 分析变更影响
 jcia analyze --repo-path /path/to/repo --from-commit abc123 --to-commit def456
+
+# 分析变更影响并检测跨服务远程调用（Dubbo/Feign/HTTP/MQ）
+jcia analyze --repo-path /path/to/repo --commit-range abc123..def456 --detect-remote-calls
 
 # 生成测试用例
 jcia test --repo-path /path/to/project --target-class com.example.Service

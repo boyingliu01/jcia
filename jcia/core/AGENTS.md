@@ -21,6 +21,7 @@ core/
 | CALL CHAIN BFS/DFS | `services/call_chain_builder.py` - max_depth limit |
 | AI test generation | `services/test_generator_service.py` - factory pattern |
 | CLI→UseCase mapping | `use_cases/{analy*impac*,generate_test*,generate_report*,run_regression*}` |
+| Remote call orchestration | `services/remote_call_detection_service.py` + `services/analysis_fusion_service.py` |
 
 ## CONVENTIONS (core-specific)
 - **Entities**: `@dataclass`, no external imports, `__test__ = False` on Test*-prefixed classes
@@ -40,3 +41,4 @@ core/
 1. Impact: UseCase → ChangeSet (entity) → CallChainBuilder → ImpactGraph
 2. Test: UseCase → TestCase (entity) → TestSelectionService → selected tests
 3. Regression: UseCase → TestRun (entity) → ChangeComparisonService → TestDiff
+4. Remote call (opt-in `--detect-remote-calls`): AnalyzeImpactUseCase → RemoteCallDetectionService → AnalysisFusionService fuses `remote:{service}` nodes into ImpactGraph → SeverityEnhancer re-scores CROSS_SERVICE impact

@@ -12,7 +12,7 @@ adapters/
 ├── maven/              # Maven build system integration
 ├── test_runners/       # Maven Surefire + JaCoCo execution
 └── tools/              # STARTS, call graphs, CodeQL, reflection, remote call
-    └── remote_call/    # IN PROGRESS: Dubbo, Feign, HttpClient, MQ
+    └── remote_call/    # Dubbo/Feign/HTTP/MQ detectors + composite (Phase 4, integrated)
 ```
 
 ## WHERE TO LOOK
@@ -28,12 +28,13 @@ adapters/
 | Reflection detection | `tools/reflection_patterns.py` |
 | SkyWalking traces | `ai/skywalking_adapter.py` |
 | Maven Surefire exec | `test_runners/maven_surefire_test_executor.py` |
+| Remote call detection | `tools/remote_call/composite_adapter.py` (Dubbo/Feign/HTTP/MQ) |
 
 ## CONVENTIONS (adapter-specific)
 - Implement interfaces from `jcia/core/interfaces/`
 - Transform external data → domain entities
 - All adapters must implement the corresponding ABC
-- Remote call adapters (`remote_call/`) are IN PROGRESS
+- Remote call adapters (`remote_call/`) implement `RemoteCallAnalyzer`; `composite_adapter.py` aggregates the Dubbo/Feign/HTTP/MQ detectors behind one interface
 
 ## ANTI-PATTERNS (adapter-specific)
 - **KNOWN** `database/sqlite_adapter.py` is confusing — it wraps `jcia/infrastructure/database/sqlite_adapter.py`. Same name, different layer.

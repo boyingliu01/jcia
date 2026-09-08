@@ -35,8 +35,11 @@ JCIA (Java Code Impact Analyzer) is a development tool that helps teams quickly 
 - **Jenkins** (`jenkins/`) - Open-source continuous integration server used for validation and testing of JCIA functionality. This is a real Java project with ~1000+ test cases (~2956 Java/XML files) that serves as the primary testbed for impact analysis and test selection features. Has its own `AGENTS.md` at `jenkins/AGENTS.md`.
 
 **Known Issues**:
-- **CLI entry point**: `pyproject.toml` defines `jcia = "jcia.cli:main"` but no `jcia/cli/__init__.py` exists and no `main()` function is defined. The `cli()` function lives in `jcia/cli/main.py`. Fix: either create `jcia/cli/__init__.py` or update entry point to `jcia.cli.main:cli`.
-- **Duplicate sqlite_adapter.py**: Present in both `jcia/adapters/database/` and `jcia/infrastructure/database/`. The adapter imports from infrastructure, creating naming confusion.
+- **Same-named `sqlite_adapter.py` across two layers**: `jcia/adapters/database/sqlite_adapter.py` defines `SQLiteDatabaseAdapter` (an Adapters-layer convenience wrapper exposing repository instances), while `jcia/infrastructure/database/sqlite_adapter.py` defines `SQLiteAdapter` (the actual DB adapter). The former imports the latter. The identical filename across layers can confuse navigation, but it is not a functional bug.
+
+**Recently Resolved**:
+- **CLI entry point** (was broken): `jcia/cli/__init__.py` now exists and re-exports `cli`; `pyproject.toml` uses `jcia = "jcia.cli.main:cli"`. Verified working via `jcia --version` → `0.1.0`.
+- **Remote call detection** (was IN PROGRESS): Phase 4 integrated — `analyze --detect-remote-calls` fuses Dubbo/Feign/HTTP/MQ detection into the impact graph. See `jcia/adapters/tools/remote_call/`.
 
 ---
 
@@ -146,11 +149,12 @@ jcia/
 │       ├── skywalking_call_chain_adapter.py
 │       ├── codeql_adapter.py, codeql_models.py
 │       ├── reflection_patterns.py, reflection_models.py
-│       └── remote_call/          # Remote call detection adapters (IN PROGRESS)
-│           ├── dubbo_analyzer.py
-│           ├── feign_analyzer.py
-│           ├── httpclient_analyzer.py
-│           └── mq_listener_analyzer.py
+│       ├── remote_call/          # Remote call detection adapters (Phase 4, integrated)
+│       │   ├── composite_adapter.py
+│       │   ├── dubbo_adapter.py
+│       │   ├── feign_adapter.py
+│       │   ├── http_adapter.py
+│       │   └── mq_adapter.py
 │       └── remote_call_patterns.py
 ├── cli/                  # Command-line interface
 │   └── main.py
