@@ -35,9 +35,10 @@ JCIA (Java Code Impact Analyzer) is a development tool that helps teams quickly 
 - **Jenkins** (`jenkins/`) - Open-source continuous integration server used for validation and testing of JCIA functionality. This is a real Java project with ~1000+ test cases (~2956 Java/XML files) that serves as the primary testbed for impact analysis and test selection features. Has its own `AGENTS.md` at `jenkins/AGENTS.md`.
 
 **Known Issues**:
-- **Same-named `sqlite_adapter.py` across two layers**: `jcia/adapters/database/sqlite_adapter.py` defines `SQLiteDatabaseAdapter` (an Adapters-layer convenience wrapper exposing repository instances), while `jcia/infrastructure/database/sqlite_adapter.py` defines `SQLiteAdapter` (the actual DB adapter). The former imports the latter. The identical filename across layers can confuse navigation, but it is not a functional bug.
+- None currently blocking. (The same-named `sqlite_adapter.py` collision across two layers was resolved — see below.)
 
 **Recently Resolved**:
+- **Same-named `sqlite_adapter.py` across two layers** (was a navigation hazard): the Adapters-layer facade is now `jcia/adapters/database/sqlite_database_adapter.py` (`SQLiteDatabaseAdapter` — assembles the connection + three repositories + entity factories), distinct from the infrastructure-layer `jcia/infrastructure/database/sqlite_adapter.py` (`SQLiteAdapter` — low-level SQL execution). Each filename now matches its class name, consistent with the project convention.
 - **CLI entry point** (was broken): `jcia/cli/__init__.py` now exists and re-exports `cli`; `pyproject.toml` uses `jcia = "jcia.cli.main:cli"`. Verified working via `jcia --version` → `0.1.0`.
 - **Remote call detection** (was IN PROGRESS): Phase 4 integrated — `analyze --detect-remote-calls` fuses Dubbo/Feign/HTTP/MQ detection into the impact graph. See `jcia/adapters/tools/remote_call/`.
 
@@ -134,7 +135,7 @@ jcia/
 │   │   ├── openai_adapter.py
 │   │   └── skywalking_adapter.py
 │   ├── database/         # Database adapters
-│   │   └── sqlite_adapter.py
+│   │   └── sqlite_database_adapter.py
 │   ├── git/              # Git repository adapters
 │   │   └── pydriller_adapter.py
 │   ├── maven/            # Maven build system adapters

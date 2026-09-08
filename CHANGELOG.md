@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 完整的集成测试
 - Phase 4 跨服务远程调用集成：`analyze` 命令新增 `--detect-remote-calls` 开关，将远程调用检测（Dubbo/Feign/HTTP/MQ）融合进影响图并启用多维度严重度评分；采用向后兼容的可选依赖注入（默认关闭），涉及 analyze_impact 用例、ImpactAnalysisService 与 CLI
 
+### Changed
+- 重命名 Adapters 层数据库门面 `jcia/adapters/database/sqlite_adapter.py` → `sqlite_database_adapter.py`（类 `SQLiteDatabaseAdapter`），消除与基础设施层 `jcia/infrastructure/database/sqlite_adapter.py`（类 `SQLiteAdapter`）的**同名文件歧义**；两层文件名各自与类名对齐（符合 `pydriller_adapter.py` → `PyDrillerAdapter` 约定）。同步更新唯一导入点、单测与 AGENTS/CLAUDE/PROJECT_STATUS 文档；数据库相关 35 个单测全绿
+
 ### Fixed
 - 修复 TestSuiteResult 类的 pytest 收集警告
 - 修复 AnalyzeImpactUseCase 的 is_empty() 方法调用

@@ -1,4 +1,10 @@
-"""SQLite 数据库适配器（Adapters 层封装）。"""
+"""SQLite 数据库适配器（Adapters 层封装）。
+
+对 ``infrastructure`` 层 :class:`~jcia.infrastructure.database.sqlite_adapter.SQLiteAdapter`
+的高层门面：一次性装配数据库连接与三个仓储实例，并提供实体构造便捷方法。
+文件名与类名 ``SQLiteDatabaseAdapter`` 对齐，以区别于基础设施层负责底层
+SQL 执行的 ``sqlite_adapter.py``（``SQLiteAdapter``）。
+"""
 
 from typing import TYPE_CHECKING
 

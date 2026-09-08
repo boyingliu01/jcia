@@ -7,7 +7,7 @@
 ```
 adapters/
 ├── ai/                 # Volcengine, OpenAI, SkyWalking APM, LLM factory
-├── database/           # SQLite adapter (WRAPS infrastructure layer)
+├── database/           # sqlite_database_adapter.py — facade WRAPPING infrastructure layer
 ├── git/                # PyDriller repository analysis
 ├── maven/              # Maven build system integration
 ├── test_runners/       # Maven Surefire + JaCoCo execution
@@ -37,7 +37,7 @@ adapters/
 - Remote call adapters (`remote_call/`) implement `RemoteCallAnalyzer`; `composite_adapter.py` aggregates the Dubbo/Feign/HTTP/MQ detectors behind one interface
 
 ## ANTI-PATTERNS (adapter-specific)
-- **KNOWN** `database/sqlite_adapter.py` is confusing — it wraps `jcia/infrastructure/database/sqlite_adapter.py`. Same name, different layer.
+- **NOTE (resolved)** `database/sqlite_database_adapter.py` (`SQLiteDatabaseAdapter`) is the Adapters-layer facade that wraps `jcia/infrastructure/database/sqlite_adapter.py` (`SQLiteAdapter`, low-level SQL). The two files were once both named `sqlite_adapter.py`; the facade was renamed to match its class, so the same-name collision is gone.
 - NEVER expose external library types directly — wrap in domain entities
 - NEVER catch bare exceptions — specific exception handling only
 - NEVER skip interface implementation — pre-commit hooks check this

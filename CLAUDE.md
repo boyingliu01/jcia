@@ -101,7 +101,7 @@ jcia config --show
   - `git/pydriller_adapter.py`: Git repository analysis via PyDriller
   - `ai/volcengine_adapter.py`, `ai/openai_adapter.py`, `ai/llm_adapter.py`: AI-powered test generation
   - `ai/skywalking_adapter.py`: SkyWalking trace analysis
-  - `database/sqlite_adapter.py`: SQLite persistence
+  - `database/sqlite_database_adapter.py`: `SQLiteDatabaseAdapter` facade — SQLite persistence (wraps the infrastructure-layer `SQLiteAdapter`)
   - `maven/maven_adapter.py`: Maven integration
   - `test_runners/maven_surefire_test_executor.py`: JUnit test execution via Maven Surefire
   - `tools/`:
@@ -243,7 +243,8 @@ When implementing new features:
 #### Remaining Work (Enhancements, non-blocking)
 1. **Recall benchmark** — Jenkins (a monolith) validates *precision*: 0 false positives, confirmed by ripgrep finding 0 RPC/MQ patterns in the entire tree. A microservice sample repo is still needed to benchmark detection *recall* against the ≥ 90% accuracy goal.
 2. **Cross-service chain stitching** — `RemoteCallDetectionService.build_call_chains` currently groups calls by caller class; full chain reconstruction requires service-registry integration.
-3. **Naming clarity** — same-named `sqlite_adapter.py` exists in both `adapters/database/` and `infrastructure/database/` (different classes; not a functional bug).
+
+> Resolved since Phase 4: the same-named `sqlite_adapter.py` collision — the Adapters-layer facade is now `sqlite_database_adapter.py` (`SQLiteDatabaseAdapter`), distinct from the infrastructure-layer `sqlite_adapter.py` (`SQLiteAdapter`).
 
 ### Quality Metrics Summary
 

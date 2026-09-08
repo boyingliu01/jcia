@@ -142,9 +142,8 @@ jcia analyze --repo-path jenkins --commit-range 6227cd1091..68f58856e2 --detect-
 | # | 问题 | 影响 | 状态 / 说明 |
 |---|------|------|-------------|
 | 1 | 部分外部工具适配器覆盖率偏低 | 低 | `skywalking_call_chain_adapter`(33%)、`java_all_call_graph_adapter`(61%)、`maven_surefire_test_executor`(61%)、`openai_adapter`(63%) 依赖外部 shell/HTTP，单测需大量打桩；Adapters 层整体已达标 **78.0%** |
-| 2 | `sqlite_adapter.py` 在两层同名 | 低 | `adapters/database/`（`SQLiteDatabaseAdapter` 封装）与 `infrastructure/database/`（`SQLiteAdapter` 实现）同名不同类，非功能 bug；去重合并仍待办 |
-| 3 | 跨服务调用链拼接为简化实现 | 中 | `RemoteCallDetectionService.build_call_chains` 目前按调用方类分组，完整链路重建需接入服务注册中心 |
-| 4 | 远程调用召回率未在真实微服务基准上量化 | 中 | Jenkins 单体无正例，仅验证精度；≥90% 召回目标待引入微服务样本仓库评估 |
+| 2 | 跨服务调用链拼接为简化实现 | 中 | `RemoteCallDetectionService.build_call_chains` 目前按调用方类分组，完整链路重建需接入服务注册中心 |
+| 3 | 远程调用召回率未在真实微服务基准上量化 | 中 | Jenkins 单体无正例，仅验证精度；≥90% 召回目标待引入微服务样本仓库评估 |
 
 ---
 
@@ -156,6 +155,7 @@ jcia analyze --repo-path jenkins --commit-range 6227cd1091..68f58856e2 --detect-
 - **CLI 入口点**：`pyproject.toml` 的 `[project.scripts]` 已正确指向 `jcia.cli.main:cli`（AGENTS.md 中记录的 `jcia.cli:main` 缺失问题已不存在）；并补齐 `jcia/cli/__init__.py` 包标记。
 - **pydriller 集成测试 flaky**：重构 `PyDrillerAdapter` 的提交范围解析，改用可靠的 GitPython `iter_commits(range)`，消除 pydriller 在 Windows 临时仓库上间歇性返回空结果导致的 3 个偶发失败；同步更新 6 个单测 mock（`Repository` → `Git` 模式）。实测 `test_pydriller_complex_scenarios.py` 8 passed / 1 skipped（`test_large_commit_range_analysis` 按设计跳过）、0 失败。
 - **`SLF001` 私有成员访问**：`sqlite_repository.py` 两处直接访问 `_adapter._connection` 已重构为调用新增的公开 `SQLiteAdapter.execute_many()`。
+- **`sqlite_adapter.py` 两层同名（去重）**：将 Adapters 层门面 `adapters/database/sqlite_adapter.py` 重命名为 `sqlite_database_adapter.py`（类名 `SQLiteDatabaseAdapter`），与基础设施层 `infrastructure/database/sqlite_adapter.py`（`SQLiteAdapter`，负责底层 SQL 执行）明确区分；两层文件名各自与类名对齐，符合项目约定（如 `pydriller_adapter.py` → `PyDrillerAdapter`）。同步更新唯一导入点、单测与 AGENTS/CLAUDE 等全部文档，数据库相关 35 个单测全绿。
 - **一批真实类型问题**（33 条）：异构 dict 字面量补 `dict[str, Any]` 注解、删除死代码（`test_runner` 恒假的 `__post_init__`、`java_all_call_graph_adapter` 两处未使用的 `_parse_method` 解包）、`call_chain_builder` 遍历参数改为 `CallChainNode | None`、多处未使用变量改 `_` 占位、测试中 pstats 动态属性改用 `getattr`。
 
 ---
@@ -180,7 +180,7 @@ jcia analyze --repo-path jenkins --commit-range 6227cd1091..68f58856e2 --detect-
 4. ~~**同步 AGENTS.md / README / CLAUDE.md（TASK-020）**~~ ✅ **已完成**：修正过时命名与已知问题，补充远程调用能力说明（本次 docs 提交）。
 5. **建立微服务样本仓库以量化召回率**：Jenkins 单体只能验证精度；需引入含真实 Dubbo/Feign/HTTP/MQ 调用的微服务项目，评估 ≥ 90% 检测准确率/召回目标。
 6. **跨服务调用链拼接**：将 `build_call_chains` 从"按调用方类分组"升级为接入服务注册中心的完整链路重建。
-7. **sqlite_adapter 去重**：合并 `adapters/database/` 与 `infrastructure/database/` 的同名实现。
+7. ~~**sqlite_adapter 去重**~~ ✅ **已完成**：将 Adapters 层门面重命名为 `sqlite_database_adapter.py`（`SQLiteDatabaseAdapter`），与基础设施层 `sqlite_adapter.py`（`SQLiteAdapter`）区分，两层文件名各自与类名对齐，消除同名歧义。
 
 ---
 
