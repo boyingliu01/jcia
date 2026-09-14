@@ -12,6 +12,7 @@ result = subprocess.run(
     ],
     capture_output=True,
     text=True,
+    check=False,  # 故意不抛异常：下方按 returncode 输出并透传退出码
 )
 
 print(result.stdout)

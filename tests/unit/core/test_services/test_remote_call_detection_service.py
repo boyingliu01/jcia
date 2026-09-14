@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from jcia.adapters.tools.remote_call.composite_adapter import CompositeRemoteCallAdapter
 from jcia.core.entities.remote_call import (
     RemoteCallInfo,
     RemoteCallType,
@@ -16,6 +17,9 @@ from jcia.core.services.remote_call_detection_service import (
     RemoteCallDetectionResult,
     RemoteCallDetectionService,
 )
+
+# Composite 及各子分析器均为无状态正则/AST 检测，测试内共享实例
+_composite = CompositeRemoteCallAdapter()
 
 
 class TestRemoteCallDetectionResult:
@@ -72,9 +76,30 @@ class TestRemoteCallDetectionResult:
 class TestRemoteCallDetectionService:
     """Tests for RemoteCallDetectionService."""
 
+    def test_service_uses_injected_analyzer(self, tmp_path: Path) -> None:
+        """服务必须使用注入的 analyzer（DIP：core 不得自行构造 adapters 实现）."""
+        from unittest.mock import MagicMock
+
+        analyzer = MagicMock()
+        analyzer.detect_remote_calls.return_value = [
+            RemoteCallInfo(
+                call_type=RemoteCallType.DUBBO,
+                endpoint=RemoteEndpoint(service_name="user-service"),
+                caller_class="OrderService",
+            ),
+        ]
+        test_file = tmp_path / "OrderService.java"
+        test_file.write_text("class OrderService {}")
+
+        service = RemoteCallDetectionService(analyzer=analyzer)
+        result = service.detect_from_file(str(test_file))
+
+        analyzer.detect_remote_calls.assert_called_once_with(str(test_file))
+        assert len(result.calls) == 1
+
     def test_service_initialization(self) -> None:
         """Verify service initializes correctly."""
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
         assert service._adapter is not None
 
     def test_detect_from_file(self, tmp_path: Path) -> None:
@@ -87,7 +112,7 @@ class TestRemoteCallDetectionService:
         """
         )
 
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
         result = service.detect_from_file(str(test_file))
 
         assert result.file_path == str(test_file)
@@ -108,7 +133,7 @@ class TestRemoteCallDetectionService:
         """
         )
 
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
         results = service.detect_from_directory(tmp_path)
 
         assert len(results) >= 1
@@ -117,14 +142,14 @@ class TestRemoteCallDetectionService:
 
     def test_detect_returns_empty_for_nonexistent_file(self) -> None:
         """Verify behavior for nonexistent file."""
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
         result = service.detect_from_file("/nonexistent/path/File.java")
 
         assert result.calls == []
 
     def test_filter_by_call_type(self) -> None:
         """Verify filtering by call type."""
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
         calls = [
             RemoteCallInfo(
                 call_type=RemoteCallType.DUBBO,
@@ -149,7 +174,7 @@ class TestRemoteCallDetectionService:
 
     def test_filter_high_confidence(self) -> None:
         """Verify filtering high confidence calls."""
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
         calls = [
             RemoteCallInfo(
                 call_type=RemoteCallType.DUBBO,
@@ -171,7 +196,7 @@ class TestRemoteCallDetectionService:
 
     def test_get_unique_services(self) -> None:
         """Verify unique service extraction."""
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
         calls = [
             RemoteCallInfo(
                 call_type=RemoteCallType.DUBBO,
@@ -195,7 +220,7 @@ class TestRemoteCallDetectionService:
 
     def test_build_call_chains(self) -> None:
         """Verify call chain building."""
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
         calls = [
             RemoteCallInfo(
                 call_type=RemoteCallType.DUBBO,
@@ -227,7 +252,7 @@ class TestRemoteCallDetectionService:
         """
         )
 
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
         result = service.detect_from_file(str(tmp_path / "Service.java"))
         summary = service.get_detection_summary(result)
 
@@ -238,7 +263,7 @@ class TestRemoteCallDetectionService:
 
     def test_detect_from_file_not_exist(self) -> None:
         """Test detection from non-existent file."""
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
         result = service.detect_from_file("/nonexistent/file.java")
 
         assert result.calls == []
@@ -246,14 +271,14 @@ class TestRemoteCallDetectionService:
 
     def test_detect_from_directory_not_exist(self) -> None:
         """Test detection from non-existent directory."""
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
         results = service.detect_from_directory(Path("/nonexistent/directory"))
 
         assert results == []
 
     def test_filter_by_confidence(self) -> None:
         """Test filtering by confidence threshold."""
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
         calls = [
             RemoteCallInfo(
                 call_type=RemoteCallType.DUBBO,
@@ -281,7 +306,7 @@ class TestRemoteCallDetectionService:
 
     def test_aggregate_results(self, tmp_path: Path) -> None:
         """Test aggregating multiple detection results."""
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(_composite)
 
         (tmp_path / "Service1.java").write_text(
             """

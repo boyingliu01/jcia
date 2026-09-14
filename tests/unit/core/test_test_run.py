@@ -63,7 +63,7 @@ class TestTestResult:
 class TestTestRun:
     """TestRun测试类."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def sample_run(self) -> TestRun:
         """创建示例测试运行."""
         run = TestRun(
@@ -218,7 +218,7 @@ class TestTestDiff:
 class TestTestComparison:
     """TestComparison测试类."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def sample_comparison(self) -> TestComparison:
         """创建示例对比."""
         baseline = TestRun(id=1, run_type=RunType.BASELINE)

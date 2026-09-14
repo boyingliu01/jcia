@@ -13,14 +13,14 @@ from jcia.core.entities.test_case import TestPriority
 from jcia.core.interfaces.test_runner import TestSelectionStrategy
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_maven_adapter() -> MavenAdapter:
     """Mock Maven adapter."""
     adapter = MagicMock(spec=MavenAdapter)
     return adapter
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_project_dir(tmp_path: Path) -> Path:
     """Create temporary project directory structure."""
     # Create source directory structure

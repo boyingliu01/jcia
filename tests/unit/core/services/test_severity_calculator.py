@@ -53,7 +53,7 @@ class TestDimensionScore:
 class TestMultiDimensionalSeverityCalculator:
     """多维度严重程度计算器测试."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def calculator(self) -> MultiDimensionalSeverityCalculator:
         """创建计算器实例."""
         return MultiDimensionalSeverityCalculator()

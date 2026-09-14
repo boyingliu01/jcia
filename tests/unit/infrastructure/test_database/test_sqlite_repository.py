@@ -22,7 +22,7 @@ from jcia.infrastructure.database.sqlite_repository import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def adapter() -> Iterator[SQLiteAdapter]:
     """创建并连接内存数据库."""
     sqlite_adapter = SQLiteAdapter(":memory:")
@@ -31,19 +31,19 @@ def adapter() -> Iterator[SQLiteAdapter]:
     sqlite_adapter.disconnect()
 
 
-@pytest.fixture()
+@pytest.fixture
 def run_repo(adapter: SQLiteAdapter) -> SQLiteTestRunRepository:
     """创建 TestRun 仓储."""
     return SQLiteTestRunRepository(adapter)
 
 
-@pytest.fixture()
+@pytest.fixture
 def result_repo(adapter: SQLiteAdapter) -> SQLiteTestResultRepository:
     """创建 TestResult 仓储."""
     return SQLiteTestResultRepository(adapter)
 
 
-@pytest.fixture()
+@pytest.fixture
 def diff_repo(adapter: SQLiteAdapter) -> SQLiteTestDiffRepository:
     """创建 TestDiff 仓储."""
     return SQLiteTestDiffRepository(adapter)

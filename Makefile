@@ -53,7 +53,11 @@ lint-strict:
 format:
 	python -m ruff format jcia tests
 
-check: lint security typecheck
+arch-check:
+	@echo "Checking architecture contracts (import-linter)..."
+	lint-imports
+
+check: lint arch-check security typecheck
 
 check-strict: lint-strict security typecheck-strict
 	@echo "All strict checks passed!"

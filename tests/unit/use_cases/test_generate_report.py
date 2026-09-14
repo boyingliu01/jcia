@@ -25,7 +25,7 @@ from jcia.core.use_cases.generate_report import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_output_dir(tmp_path: Path) -> Path:
     """创建临时输出目录.
 
@@ -40,7 +40,7 @@ def temp_output_dir(tmp_path: Path) -> Path:
     return output_dir
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_test_run() -> TestRun:
     """创建示例测试运行对象.
 
@@ -76,7 +76,7 @@ def sample_test_run() -> TestRun:
     return test_run
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_impact_graph() -> ImpactGraph:
     """创建示例影响图.
 
@@ -96,7 +96,7 @@ def sample_impact_graph() -> ImpactGraph:
     return graph
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_change_set() -> ChangeSet:
     """创建示例变更集合.
 

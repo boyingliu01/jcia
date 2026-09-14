@@ -41,7 +41,8 @@ dev = [
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.12.0",
     "pytest-asyncio>=0.21.0",
-    "ruff>=0.1.0",
+    "ruff==0.15.5",  # 与 xp-gate pre-commit hook 同版本，升级需两边同步
+    "import-linter>=2.0",  # 架构分层约束机器强制（见 [tool.importlinter]）
     "pyright>=1.1.340",
     "bandit[toml]>=1.7.6",
     "pre-commit>=3.6.0",
@@ -172,6 +173,10 @@ ignore = [
     "PIE810", # 建议 endswith 一次传入元组
     "PYI036", # __exit__ 参数注解（stub 专用规则，对 .py 过严）
     "ARG005", # 未使用的 lambda 参数（ARG001/ARG002 已忽略，回调常见）
+    # ruff 0.15.x 对齐 hook 版本后新增规则：函数级 import 在本项目为既有的
+    # 惰性加载/避免循环依赖/测试隔离设计（CLI 命令组装、remote_call 适配器
+    # 注册、pytest 局部 mock），全量重构风险大于收益，显式整体豁免
+    "PLC0415",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -188,9 +193,68 @@ ignore = [
     "PT018", # 断言应拆分（测试中 assert a and b 常见，不影响正确性）
     "PGH003",# type:ignore 需指定规则码（测试从简）
 ]
+# 仓库根一次性分析/验证脚本：print 即其输出界面，HTML 渲染函数天然长行高复杂度，
+# 直接探针私有适配器接口/字符串拼接日志属脚本角色，不纳入包本体质量门禁
+"/*.py" = ["T201", "E501", "C901", "PLR1722", "G003", "SLF001"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+# ---- import-linter：architecture.yaml 分层约束的机器强制（xp-gate Gate 6 检测执行）----
+[tool.importlinter]
+root_packages = ["jcia"]
+
+[[tool.importlinter.contracts]]
+name = "Clean Architecture 主分层栈（禁止逆向依赖）"
+type = "layers"
+layers = [
+    "jcia.cli",
+    "jcia.adapters",
+    "jcia.core.use_cases",
+    "jcia.core.services",
+    "jcia.core.interfaces",
+    "jcia.core.entities",
+]
+
+[[tool.importlinter.contracts]]
+name = "core 层不得依赖外层实现（依赖倒置）"
+type = "forbidden"
+source_modules = [
+    "jcia.core.entities",
+    "jcia.core.interfaces",
+    "jcia.core.services",
+    "jcia.core.use_cases",
+]
+forbidden_modules = [
+    "jcia.adapters",
+    "jcia.infrastructure",
+    "jcia.reports",
+    "jcia.cli",
+]
+
+[[tool.importlinter.contracts]]
+name = "infrastructure 只依赖 entities/interfaces（不碰业务与外层）"
+type = "forbidden"
+source_modules = ["jcia.infrastructure"]
+forbidden_modules = [
+    "jcia.adapters",
+    "jcia.cli",
+    "jcia.reports",
+    "jcia.core.services",
+    "jcia.core.use_cases",
+]
+
+[[tool.importlinter.contracts]]
+name = "reports 只依赖 entities/interfaces（不碰业务与外层）"
+type = "forbidden"
+source_modules = ["jcia.reports"]
+forbidden_modules = [
+    "jcia.adapters",
+    "jcia.cli",
+    "jcia.infrastructure",
+    "jcia.core.services",
+    "jcia.core.use_cases",
+]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -307,3 +371,23 @@ disallow_untyped_defs = false      # ≈ pyright reportMissingParameterType=none
 disallow_incomplete_defs = false   # 允许部分注解的测试 helper
 disallow_untyped_calls = false     # 调用未注解的测试 helper 不拦截
 disable_error_code = ["method-assign"]  # Mock 替换实例方法（monkeypatch 惯用法），非缺陷
+
+# —— 仓库根一次性分析/演示脚本专项放宽 ——
+# 这些 run_*.py / test_*_entities.py 是仓库根的一次性脚本，非 jcia 包生产代码，
+# 与 [tool.ruff.lint.per-file-ignores] 中 "/*.py" 的豁免属同一角色定位；主检查器
+# pyright 的作用域为 `pyright jcia tests`，本就不覆盖这些脚本。mypy 作为辅助检查器
+# 对齐 pyright 的作用域，避免对无人维护的临时脚本产生比主检查器更严的拦截。
+[[tool.mypy.overrides]]
+module = [
+    "run_ai_tests",
+    "run_jenkins_analysis",
+    "run_jenkins_analysis_detailed",
+    "run_jenkins_analysis_full",
+    "run_jenkins_validation",
+    "test_remote_call_entities",
+]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+check_untyped_defs = false
+

@@ -49,7 +49,7 @@ from jcia.core.interfaces.tool_wrapper import (
     ToolWrapper,
 )
 
-__all__ = [
+__all__ = [  # noqa: RUF022  # 按领域分组排布为有意布局，非字母序
     # 分析器接口
     "ChangeAnalyzer",
     "ImpactAnalyzer",

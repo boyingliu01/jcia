@@ -65,13 +65,13 @@ class TestRunRegressionResponse:
 class TestRunRegressionUseCase:
     """测试RunRegressionUseCase."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_test_executor(self) -> Mock:
         """创建模拟测试执行器."""
         executor = Mock()
         return executor
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_repositories(self) -> tuple[Mock, Mock, Mock]:
         """创建模拟仓储."""
         test_run_repo = Mock()
@@ -79,7 +79,7 @@ class TestRunRegressionUseCase:
         test_diff_repo = Mock()
         return test_run_repo, test_result_repo, test_diff_repo
 
-    @pytest.fixture()
+    @pytest.fixture
     def use_case(
         self, mock_test_executor: Mock, mock_repositories: tuple[Mock, Mock, Mock]
     ) -> RunRegressionUseCase:
@@ -92,7 +92,7 @@ class TestRunRegressionUseCase:
             test_diff_repo=test_diff_repo,
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def valid_project_path(self, tmp_path: Path) -> Path:
         """创建有效的项目路径."""
         return tmp_path

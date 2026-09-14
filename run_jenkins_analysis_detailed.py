@@ -1,4 +1,5 @@
 """生成详细的 Jenkins 影响分析报告（包含代码对比和调用链）."""
+
 from pathlib import Path
 
 from pydriller import Repository
@@ -25,7 +26,16 @@ class EnhancedHTMLReporter:
         output_path = self.output_dir / filename
         output_path.write_text(html, encoding="utf-8")
 
-        return type('ReportResult', (), {'success': True, 'output_path': output_path, 'content': html, 'size_bytes': len(html.encode("utf-8"))})
+        return type(
+            "ReportResult",
+            (),
+            {
+                "success": True,
+                "output_path": output_path,
+                "content": html,
+                "size_bytes": len(html.encode("utf-8")),
+            },
+        )
 
     def _ensure_output_dir(self):
         """确保输出目录存在."""
@@ -34,6 +44,7 @@ class EnhancedHTMLReporter:
     def _get_output_filename(self, format: str):
         """获取输出文件名."""
         from datetime import datetime
+
         return f"detailed_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{format}"
 
     def _render_html(self, data: ReportData) -> str:
@@ -52,7 +63,9 @@ class EnhancedHTMLReporter:
         html += self._render_change_overview(change_set)
 
         # 代码变更详情及影响分析
-        html += self._render_code_changes(change_set, metadata.get("diff_results", []), impact_graph)
+        html += self._render_code_changes(
+            change_set, metadata.get("diff_results", []), impact_graph
+        )
 
         # 影响分析详情
         html += self._render_impact_analysis(impact_graph, change_set)
@@ -223,20 +236,22 @@ class EnhancedHTMLReporter:
         html = '<div class="card"><h2>📝 提交信息</h2>'
 
         if not commit_details:
-            html += '<p>未获取到提交详情</p>'
+            html += "<p>未获取到提交详情</p>"
         else:
             for commit in commit_details:
                 html += '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #667eea;">'
                 html += f'<h3 style="margin-top: 0;"><span class="badge" style="background: #667eea; color: white;">{commit["short_hash"]}</span> {commit["msg"]}</h3>'
-                html += f'<p style="margin: 5px 0;"><strong>👤 作者:</strong> {commit["author"]}</p>'
+                html += (
+                    f'<p style="margin: 5px 0;"><strong>👤 作者:</strong> {commit["author"]}</p>'
+                )
                 html += f'<p style="margin: 5px 0;"><strong>📅 时间:</strong> {commit["date"]}</p>'
                 html += f'<p style="margin: 5px 0;"><strong>📄 变更文件 ({len(commit["files"])}):</strong></p>'
                 html += '<div style="margin-left: 20px;">'
                 for file in commit["files"]:
                     html += f'<code style="display: block; margin: 2px 0; padding: 4px; background: white; border-radius: 4px;">📁 {file}</code>'
-                html += '</div></div>'
+                html += "</div></div>"
 
-        html += '</div>'
+        html += "</div>"
         return html
 
     def _render_change_overview(self, change_set):
@@ -246,27 +261,27 @@ class EnhancedHTMLReporter:
             <h2>📊 变更概览</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                 <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #1976d2;">{change_set.get('commit_count', 0)}</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #1976d2;">{change_set.get("commit_count", 0)}</div>
                     <div>变更提交数</div>
                 </div>
                 <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #388e3c;">{len(change_set.get('file_changes', []))}</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #388e3c;">{len(change_set.get("file_changes", []))}</div>
                     <div>变更文件数</div>
                 </div>
                 <div style="background: #fff3e0; padding: 15px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #f57c00;">{len(change_set.get('changed_java_files', []))}</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #f57c00;">{len(change_set.get("changed_java_files", []))}</div>
                     <div>Java文件数</div>
                 </div>
                 <div style="background: #f3e5f5; padding: 15px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #7b1fa2;">{len(change_set.get('changed_methods', []))}</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #7b1fa2;">{len(change_set.get("changed_methods", []))}</div>
                     <div>变更方法数</div>
                 </div>
                 <div style="background: #fce4ec; padding: 15px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #c2185b;">{change_set.get('total_insertions', 0)}</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #c2185b;">{change_set.get("total_insertions", 0)}</div>
                     <div>新增行数</div>
                 </div>
                 <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #388e3c;">{change_set.get('total_deletions', 0)}</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #388e3c;">{change_set.get("total_deletions", 0)}</div>
                     <div>删除行数</div>
                 </div>
             </div>
@@ -306,8 +321,8 @@ class EnhancedHTMLReporter:
                 html += f'<h3 style="margin: 0;">📄 {file_name}</h3>'
                 html += '<p style="margin: 5px 0 0 0;">'
                 html += f'<span class="badge" style="background: white; color: #667eea;">{file_change["change_type"]}</span>'
-                html += f' +{file_change.get("insertions", 0)} / -{file_change.get("deletions", 0)}'
-                html += '</p></div>'
+                html += f" +{file_change.get('insertions', 0)} / -{file_change.get('deletions', 0)}"
+                html += "</p></div>"
 
                 # 查找对应的差异
                 diff_text = None
@@ -319,7 +334,7 @@ class EnhancedHTMLReporter:
                 if diff_text:
                     html += '<div style="padding: 15px;">'
                     html += self._render_diff_view(diff_text)
-                    html += '</div>'
+                    html += "</div>"
 
                 # 显示方法变更及影响
                 method_changes = file_change.get("method_changes", [])
@@ -340,21 +355,21 @@ class EnhancedHTMLReporter:
                         html += '<div style="margin: 15px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">'
                         html += f'<h5 style="margin-top: 0; color: #667eea;">{method_name}</h5>'
                         html += f'<p><span class="badge direct">{method.get("change_type", "modify")}</span>'
-                        html += f' 行 {method.get("line_start", 0)}-{method.get("line_end", 0)}</p>'
+                        html += f" 行 {method.get('line_start', 0)}-{method.get('line_end', 0)}</p>"
 
                         # 显示影响
                         if impact:
                             html += '<div style="margin-top: 10px;">'
                             html += f'<p><span class="badge {impact["severity"]}">{impact["severity"]}</span>'
-                            html += f' 影响类型: {impact["impact_type"]}</p>'
+                            html += f" 影响类型: {impact['impact_type']}</p>"
 
                             # 上游影响（被调用）
                             if impact["upstream"]:
-                                html += '<p><strong>📤 被以下函数调用（需要回归测试）:</strong></p>'
+                                html += "<p><strong>📤 被以下函数调用（需要回归测试）:</strong></p>"
                                 html += '<div style="margin-left: 15px; background: #fff3e0; padding: 10px; border-radius: 5px;">'
                                 for caller in impact["upstream"]:
                                     html += f'<code style="display: block; margin: 3px 0;">→ {caller}</code>'
-                                html += '</div>'
+                                html += "</div>"
 
                             # 下游影响（调用）
                             if impact["downstream"]:
@@ -362,50 +377,54 @@ class EnhancedHTMLReporter:
                                 html += '<div style="margin-left: 15px; background: #e3f2fd; padding: 10px; border-radius: 5px;">'
                                 for callee in impact["downstream"]:
                                     html += f'<code style="display: block; margin: 3px 0;">← {callee}</code>'
-                                html += '</div>'
+                                html += "</div>"
 
-                            html += '</div>'
+                            html += "</div>"
                         else:
-                            html += '<p style="color: #666; font-style: italic;">未检测到影响传播</p>'
+                            html += (
+                                '<p style="color: #666; font-style: italic;">未检测到影响传播</p>'
+                            )
 
-                        html += '</div>'
+                        html += "</div>"
 
-                    html += '</div>'
+                    html += "</div>"
 
-                html += '</div>'
+                html += "</div>"
 
-        html += '</div>'
+        html += "</div>"
         return html
 
     def _render_diff_view(self, diff_text):
         """渲染差异视图."""
-        lines = diff_text.split('\n')
+        lines = diff_text.split("\n")
         left_lines = []
         right_lines = []
         current_left = 1
         current_right = 1
 
         for line in lines:
-            if line.startswith('@@'):
+            if line.startswith("@@"):
                 # 差异头部
                 html = f'<div class="diff-header">{line}</div>'
                 html += '<div class="diff-view">'
                 if left_lines:
-                    html += '<div class="diff-left">' + '\n'.join(left_lines) + '</div>'
+                    html += '<div class="diff-left">' + "\n".join(left_lines) + "</div>"
                 if right_lines:
-                    html += '<div class="diff-right">' + '\n'.join(right_lines) + '</div>'
-                html += '</div>'
+                    html += '<div class="diff-right">' + "\n".join(right_lines) + "</div>"
+                html += "</div>"
                 left_lines = []
                 right_lines = []
-            elif line.startswith('---'):
+            elif line.startswith("---") or line.startswith("+++"):
                 continue
-            elif line.startswith('+++'):
-                continue
-            elif line.startswith('-'):
-                right_lines.append(f'<span class="diff-line-number">{current_right}</span> <span class="diff-remove">{line[1:]}</span>')
+            elif line.startswith("-"):
+                right_lines.append(
+                    f'<span class="diff-line-number">{current_right}</span> <span class="diff-remove">{line[1:]}</span>'
+                )
                 current_right += 1
-            elif line.startswith('+'):
-                left_lines.append(f'<span class="diff-line-number">{current_left}</span> <span class="diff-add">{line[1:]}</span>')
+            elif line.startswith("+"):
+                left_lines.append(
+                    f'<span class="diff-line-number">{current_left}</span> <span class="diff-add">{line[1:]}</span>'
+                )
                 current_left += 1
             else:
                 left_lines.append(f'<span class="diff-line-number">{current_left}</span> {line}')
@@ -417,10 +436,10 @@ class EnhancedHTMLReporter:
         if left_lines or right_lines:
             html += '<div class="diff-view">'
             if left_lines:
-                html += '<div class="diff-left">' + '\n'.join(left_lines) + '</div>'
+                html += '<div class="diff-left">' + "\n".join(left_lines) + "</div>"
             if right_lines:
-                html += '<div class="diff-right">' + '\n'.join(right_lines) + '</div>'
-            html += '</div>'
+                html += '<div class="diff-right">' + "\n".join(right_lines) + "</div>"
+            html += "</div>"
 
         return html
 
@@ -431,13 +450,10 @@ class EnhancedHTMLReporter:
         nodes = impact_graph.get("nodes", [])
         edges = impact_graph.get("edges", [])
 
-        # 将节点列表转换为字典方便查找
-        nodes_dict = {node["method_name"]: node for node in nodes}
-
         if not nodes:
-            html += '<p>未检测到影响传播</p>'
+            html += "<p>未检测到影响传播</p>"
         else:
-            html += f'<p>共分析 {len(nodes)} 个受影响的方法，{len(edges)} 个调用关系</p>'
+            html += f"<p>共分析 {len(nodes)} 个受影响的方法，{len(edges)} 个调用关系</p>"
 
             # 按严重程度分组
             high_severity = []
@@ -454,48 +470,48 @@ class EnhancedHTMLReporter:
 
             # 显示高风险影响
             if high_severity:
-                html += '<h3>🔴 高风险影响 (需要优先回归测试)</h3>'
+                html += "<h3>🔴 高风险影响 (需要优先回归测试)</h3>"
                 for method_name, node in high_severity:
                     html += self._render_impact_node(method_name, node, edges)
 
             # 显示中等风险影响
             if medium_severity:
-                html += '<h3>🟡 中等风险影响</h3>'
+                html += "<h3>🟡 中等风险影响</h3>"
                 for method_name, node in medium_severity:
                     html += self._render_impact_node(method_name, node, edges)
 
             # 显示低风险影响
             if low_severity:
-                html += '<h3>🟢 低风险影响</h3>'
+                html += "<h3>🟢 低风险影响</h3>"
                 for method_name, node in low_severity:
                     html += self._render_impact_node(method_name, node, edges)
 
-        html += '</div>'
+        html += "</div>"
         return html
 
     def _render_impact_node(self, method_name, node, edges):
         """渲染影响节点详情."""
         html = f'<div class="impact-node {node.get("severity", "medium")}">'
-        html += f'<h4>{method_name}</h4>'
+        html += f"<h4>{method_name}</h4>"
         html += f'<p><span class="badge direct">{node.get("impact_type", "direct")}</span>'
         html += f'<span class="badge {node.get("severity", "medium")}">{node.get("severity", "medium")}</span>'
-        html += f'深度: {node.get("depth", 0)}</p>'
+        html += f"深度: {node.get('depth', 0)}</p>"
 
         # 查找上游和下游
         upstream = node.get("upstream", [])
         downstream = node.get("downstream", [])
 
         if upstream:
-            html += '<p><strong>📤 被以下函数调用（上游）:</strong></p>'
+            html += "<p><strong>📤 被以下函数调用（上游）:</strong></p>"
             for caller in upstream:
-                html += f'<code>{caller}</code> → '
+                html += f"<code>{caller}</code> → "
 
         if downstream:
-            html += '<p><strong>📥 调用了以下函数（下游）:</strong></p>'
+            html += "<p><strong>📥 调用了以下函数（下游）:</strong></p>"
             for callee in downstream:
-                html += f'→ <code>{callee}</code><br>'
+                html += f"→ <code>{callee}</code><br>"
 
-        html += '</div>'
+        html += "</div>"
         return html
 
     def _render_call_chain(self, impact_graph):
@@ -509,17 +525,17 @@ class EnhancedHTMLReporter:
         nodes_dict = {node["method_name"]: node for node in nodes}
 
         if not root_methods:
-            html += '<p>未检测到调用链</p>'
+            html += "<p>未检测到调用链</p>"
         else:
-            html += '<p>以下是从变更方法开始的完整调用链：</p>'
+            html += "<p>以下是从变更方法开始的完整调用链：</p>"
 
             for root_method in root_methods:
                 html += '<div class="call-chain">'
-                html += f'<h3>📍 从 <code>{root_method}</code> 开始的调用链</h3>'
+                html += f"<h3>📍 从 <code>{root_method}</code> 开始的调用链</h3>"
                 html += self._render_call_chain_recursive(root_method, nodes_dict, 1)
-                html += '</div>'
+                html += "</div>"
 
-        html += '</div>'
+        html += "</div>"
         return html
 
     def _render_call_chain_recursive(self, method_name, nodes, depth, visited=None):
@@ -528,17 +544,17 @@ class EnhancedHTMLReporter:
             visited = set()
 
         if method_name in visited or depth > 5:
-            return ''
+            return ""
 
         visited.add(method_name)
 
         node = nodes.get(method_name)
         if not node:
-            return ''
+            return ""
 
         html = f'<div class="call-chain-item depth-{depth}">'
-        html += f'<strong>Depth {depth}:</strong> <code>{method_name}</code><br>'
-        html += f'类型: {node.get("impact_type", "direct")} | 严重程度: {node.get("severity", "medium")}'
+        html += f"<strong>Depth {depth}:</strong> <code>{method_name}</code><br>"
+        html += f"类型: {node.get('impact_type', 'direct')} | 严重程度: {node.get('severity', 'medium')}"
 
         # 递归显示下游
         downstream = node.get("downstream", [])
@@ -546,7 +562,7 @@ class EnhancedHTMLReporter:
             for callee in downstream:
                 html += self._render_call_chain_recursive(callee, nodes, depth + 1, visited)
 
-        html += '</div>'
+        html += "</div>"
         return html
 
 
@@ -554,7 +570,7 @@ class EnhancedHTMLReporter:
 # 配置
 repo_path = str(Path(r"E:\Study\LLM\Java代码变更影响分析\jenkins-full"))
 from_commit = "68f5885"  # Fix "Zeno's paradox"
-to_commit = "52fa585"    # Replace dependency on jenkins.io
+to_commit = "52fa585"  # Replace dependency on jenkins.io
 
 print("=" * 60)
 print("生成详细的 Jenkins 代码变更影响分析报告")
@@ -586,25 +602,29 @@ print("✓ 分析完成")
 print("\n获取提交详情...")
 commit_details = []
 for commit in Repository(repo_path, single=from_commit).traverse_commits():
-    commit_details.append({
-        "hash": commit.hash,
-        "short_hash": commit.hash[:7],
-        "msg": commit.msg,
-        "author": commit.author.name,
-        "date": commit.author_date.strftime("%Y-%m-%d %H:%M:%S"),
-        "files": [f.filename for f in commit.modified_files],
-    })
+    commit_details.append(
+        {
+            "hash": commit.hash,
+            "short_hash": commit.hash[:7],
+            "msg": commit.msg,
+            "author": commit.author.name,
+            "date": commit.author_date.strftime("%Y-%m-%d %H:%M:%S"),
+            "files": [f.filename for f in commit.modified_files],
+        }
+    )
     break  # 只获取起始提交
 
 for commit in Repository(repo_path, single=to_commit).traverse_commits():
-    commit_details.append({
-        "hash": commit.hash,
-        "short_hash": commit.hash[:7],
-        "msg": commit.msg,
-        "author": commit.author.name,
-        "date": commit.author_date.strftime("%Y-%m-%d %H:%M:%S"),
-        "files": [f.filename for f in commit.modified_files],
-    })
+    commit_details.append(
+        {
+            "hash": commit.hash,
+            "short_hash": commit.hash[:7],
+            "msg": commit.msg,
+            "author": commit.author.name,
+            "date": commit.author_date.strftime("%Y-%m-%d %H:%M:%S"),
+            "files": [f.filename for f in commit.modified_files],
+        }
+    )
     break  # 只获取结束提交
 
 print(f"✓ 收集到 {len(commit_details)} 个提交详情")
@@ -616,6 +636,7 @@ for file_change in response.change_set.file_changes:
     if file_change.is_java_file:
         # 使用 git diff 获取详细差异
         import subprocess
+
         result = subprocess.run(
             ["git", "diff", f"{from_commit}..{to_commit}", "--", file_change.file_path],
             cwd=repo_path,
@@ -624,11 +645,13 @@ for file_change in response.change_set.file_changes:
             check=False,
         )
         if result.stdout:
-            diff_results.append({
-                "file": file_change.file_path,
-                "diff": result.stdout,
-                "change_type": file_change.change_type.value,
-            })
+            diff_results.append(
+                {
+                    "file": file_change.file_path,
+                    "diff": result.stdout,
+                    "change_type": file_change.change_type.value,
+                }
+            )
 
 # 生成详细报告
 print("\n生成详细报告...")

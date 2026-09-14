@@ -55,7 +55,7 @@ class TestGenerateTestsResponse:
 class TestGenerateTestsUseCase:
     """测试GenerateTestsUseCase."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_ai_generator(self) -> Mock:
         """创建模拟AI生成器."""
         generator = Mock()
@@ -63,12 +63,12 @@ class TestGenerateTestsUseCase:
         generator.model = "gpt-4"
         return generator
 
-    @pytest.fixture()
+    @pytest.fixture
     def use_case(self, mock_ai_generator: Mock) -> GenerateTestsUseCase:
         """创建用例实例."""
         return GenerateTestsUseCase(ai_generator=mock_ai_generator)
 
-    @pytest.fixture()
+    @pytest.fixture
     def valid_project_path(self, tmp_path: Path) -> Path:
         """创建有效的项目路径."""
         return tmp_path

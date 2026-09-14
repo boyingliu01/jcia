@@ -196,7 +196,7 @@ class TestSkyWalkingErrorHandling:
             adapter._execute_graphql("query { testQuery }", {})
 
 
-@pytest.fixture()
+@pytest.fixture
 def adapter() -> SkyWalkingCallChainAdapter:
     """Provide a default-configured adapter instance."""
     return SkyWalkingCallChainAdapter()

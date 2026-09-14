@@ -39,7 +39,7 @@ def get_api_credentials() -> tuple[str, str, str] | None:
 class TestVolcengineAdapterIntegration:
     """VolcengineAdapter 集成测试类 - 使用真实 API。"""
 
-    @pytest.fixture()
+    @pytest.fixture
     def credentials(self) -> tuple[str, str, str]:
         """获取 API 凭证，如果未配置则跳过测试."""
         creds = get_api_credentials()

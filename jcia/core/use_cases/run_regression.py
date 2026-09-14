@@ -233,7 +233,7 @@ class RunRegressionUseCase:
             TestRun,
             TestStatus,
         )
-        from jcia.core.interfaces.test_runner import (  # noqa: TCH001
+        from jcia.core.interfaces.test_runner import (  # noqa: TC001
             TestSuiteResult,
         )
 

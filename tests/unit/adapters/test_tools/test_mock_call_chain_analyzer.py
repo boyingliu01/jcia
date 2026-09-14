@@ -11,7 +11,7 @@ from jcia.core.interfaces.call_chain_analyzer import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_analyzer(tmp_path: Path) -> MockCallChainAnalyzer:
     """创建 Mock 分析器实例."""
     return MockCallChainAnalyzer(repo_path=str(tmp_path))

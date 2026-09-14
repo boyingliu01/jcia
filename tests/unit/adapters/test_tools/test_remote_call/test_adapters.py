@@ -209,6 +209,7 @@ class TestCompositeRemoteCallAdapter:
 
         assert RemoteCallType.DUBBO in types
         assert RemoteCallType.FEIGN in types
+        assert RemoteCallType.GRPC in types
         assert RemoteCallType.REST in types
         assert RemoteCallType.MQ_RABBITMQ in types
         assert RemoteCallType.MQ_KAFKA in types
@@ -226,6 +227,8 @@ class TestCompositeRemoteCallAdapter:
         @FeignClient(name = "order-service")
         interface OrderClient {}
 
+        GreeterGrpc.newBlockingStub(channel);
+
         restTemplate.getForObject("http://api/test", String.class);
 
         @RabbitListener(queues = "events")
@@ -239,6 +242,7 @@ class TestCompositeRemoteCallAdapter:
         call_types = {c.call_type for c in calls}
         assert RemoteCallType.DUBBO in call_types
         assert RemoteCallType.FEIGN in call_types
+        assert RemoteCallType.GRPC in call_types
         assert RemoteCallType.MQ_RABBITMQ in call_types
 
     def test_get_calls_by_type(self) -> None:

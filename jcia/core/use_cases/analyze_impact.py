@@ -207,7 +207,7 @@ class AnalyzeImpactUseCase:
             Exception: 分析过程中发生错误
         """
         # 导入ImpactAnalysisService避免和循环依赖
-        from jcia.core.interfaces.call_chain_analyzer import (  # noqa: TCH001
+        from jcia.core.interfaces.call_chain_analyzer import (  # noqa: TC001
             CallChainAnalyzer,
         )
         from jcia.core.services.impact_analysis_service import ImpactAnalysisService

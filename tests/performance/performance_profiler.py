@@ -260,7 +260,7 @@ class ProfileBlock:
         self.profiler = profiler or PerformanceProfiler()
         self.metrics: PerformanceMetrics | None = None
 
-    def __enter__(self) -> "ProfileBlock":
+    def __enter__(self) -> "ProfileBlock":  # noqa: PYI034  # typing.Self 需 3.11+，项目 target 3.10
         """进入上下文."""
         self.metrics = PerformanceMetrics(operation_name=self.name)
         tracemalloc.start()

@@ -24,7 +24,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.adapters]
 class TestReflectionAnalysisIntegration:
     """Integration tests for reflection analysis."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def temp_project(self) -> Iterator[Path]:
         """Create a temporary Java project for testing."""
         with tempfile.TemporaryDirectory() as tmpdir:

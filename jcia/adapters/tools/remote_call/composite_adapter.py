@@ -22,6 +22,7 @@ class CompositeRemoteCallAdapter(RemoteCallAnalyzer):
     Provides unified detection for all remote call types:
     - Dubbo RPC
     - Feign Client
+    - gRPC
     - HTTP Clients
     - Message Queues
 
@@ -38,12 +39,14 @@ class CompositeRemoteCallAdapter(RemoteCallAnalyzer):
         """Initialize the composite adapter with all sub-adapters."""
         from jcia.adapters.tools.remote_call.dubbo_adapter import DubboRemoteCallAdapter
         from jcia.adapters.tools.remote_call.feign_adapter import FeignRemoteCallAdapter
+        from jcia.adapters.tools.remote_call.grpc_adapter import GrpcRemoteCallAdapter
         from jcia.adapters.tools.remote_call.http_adapter import HttpRemoteCallAdapter
         from jcia.adapters.tools.remote_call.mq_adapter import MessageQueueRemoteCallAdapter
 
         self._adapters: list[RemoteCallAnalyzer] = [
             DubboRemoteCallAdapter(),
             FeignRemoteCallAdapter(),
+            GrpcRemoteCallAdapter(),
             HttpRemoteCallAdapter(),
             MessageQueueRemoteCallAdapter(),
         ]

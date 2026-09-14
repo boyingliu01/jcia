@@ -10,6 +10,6 @@ from jcia.adapters.tools.starts_test_selector_adapter import (
 __all__ = [
     "JavaAllCallGraphAdapter",
     "MockCallChainAnalyzer",
-    "SkyWalkingCallChainAdapter",
     "STARTSTestSelectorAdapter",
+    "SkyWalkingCallChainAdapter",
 ]

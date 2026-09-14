@@ -35,7 +35,7 @@ class TestSeverityEnhancerInitialization:
 class TestSeverityEnhancerDetermineSeverity:
     """严重程度判定测试."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def enhancer(self) -> SeverityEnhancer:
         """创建增强器实例."""
         return SeverityEnhancer()
@@ -92,7 +92,7 @@ class TestSeverityEnhancerDetermineSeverity:
 class TestSeverityEnhancerDetailedCalculation:
     """详细计算测试."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def enhancer(self) -> SeverityEnhancer:
         """创建增强器实例."""
         return SeverityEnhancer()
@@ -128,7 +128,7 @@ class TestSeverityEnhancerDetailedCalculation:
 class TestSeverityEnhancerWeightManagement:
     """权重管理测试."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def enhancer(self) -> SeverityEnhancer:
         """创建增强器实例."""
         return SeverityEnhancer()

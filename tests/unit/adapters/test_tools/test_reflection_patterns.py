@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.adapters, pytest.mark.tools]
 class TestReflectionPatternMatcher:
     """Tests for ReflectionPatternMatcher."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def matcher(self) -> ReflectionPatternMatcher:
         """Create a pattern matcher instance."""
         return ReflectionPatternMatcher()

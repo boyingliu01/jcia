@@ -12,7 +12,7 @@ from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
 from jcia.core.entities.change_set import ChangeSet
 
 
-@pytest.fixture()
+@pytest.fixture
 def jenkins_repo_path() -> Path:
     """获取 Jenkins 仓库路径."""
     repo_path = Path(__file__).parent.parent.parent.parent / "jenkins"
@@ -21,7 +21,7 @@ def jenkins_repo_path() -> Path:
     return repo_path
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_repo_with_commits():
     """创建临时 Git 仓库并提交多个文件。"""
     temp_dir = Path(tempfile.mkdtemp(prefix="jcia_complex_test_"))

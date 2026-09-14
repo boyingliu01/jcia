@@ -890,7 +890,6 @@ class AnalysisFusionService:
                 fused.add_edge(edge)
 
         logger.info(
-            f"Fused impact graph with {len(remote_calls)} remote calls, "
-            f"added cross-service nodes"
+            f"Fused impact graph with {len(remote_calls)} remote calls, added cross-service nodes"
         )
         return fused

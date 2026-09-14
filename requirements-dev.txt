@@ -3,7 +3,11 @@ pytest>=7.4.0
 pytest-cov>=4.1.0
 pytest-mock>=3.12.0
 pytest-asyncio>=0.21.0
-ruff>=0.1.0
+# 与 xp-gate pre-commit hook 使用的全局 ruff 保持同版本（升级需两边同步，
+# 否则 hook 与本地 make check 规则集不一致会阻断提交）
+ruff==0.15.5
+# 架构分层约束机器强制（architecture.yaml → pyproject [tool.importlinter]）
+import-linter>=2.0
 pyright>=1.1.340
 bandit[toml]>=1.7.6
 pre-commit>=3.6.0

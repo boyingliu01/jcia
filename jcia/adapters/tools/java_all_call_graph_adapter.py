@@ -2,7 +2,7 @@
 
 基于字节码的 Java 静态调用链分析器，支持远程调用识别。
 """
-# ruff: noqa: S324,S310  # md5 for cache keys, file: URLs for local files
+# ruff: noqa: S310  # md5 for cache keys, file: URLs for local files
 
 import hashlib
 import json
@@ -601,7 +601,7 @@ class JavaAllCallGraphAdapter(CallChainAnalyzer):
         """
         # 简化处理：假设接口名与类名相似
         # 实际应该从配置文件或注解参数中解析
-        simple_name = class_name.split(".")[-1]
+        simple_name = class_name.rsplit(".", maxsplit=1)[-1]
         return f"I{simple_name}"  # 例如: UserService -> IUserService
 
     def _identify_grpc_call(self, class_name: str, method_name: str) -> str | None:

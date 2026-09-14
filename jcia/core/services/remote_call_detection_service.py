@@ -14,6 +14,7 @@ from jcia.core.entities.remote_call import (
     RemoteCallInfo,
     RemoteCallType,
 )
+from jcia.core.interfaces.remote_call_analyzer import RemoteCallAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -57,18 +58,22 @@ class RemoteCallDetectionService:
 
     Example:
         ```python
-        service = RemoteCallDetectionService()
+        service = RemoteCallDetectionService(analyzer=CompositeRemoteCallAdapter())
         result = service.detect_from_file("OrderService.java")
         for call in result.calls:
             print(f"{call.call_type}: {call.endpoint.service_name}")
         ```
     """
 
-    def __init__(self) -> None:
-        """Initialize the detection service."""
-        from jcia.adapters.tools.remote_call.composite_adapter import CompositeRemoteCallAdapter
+    def __init__(self, analyzer: RemoteCallAnalyzer) -> None:
+        """Initialize the detection service.
 
-        self._adapter: CompositeRemoteCallAdapter = CompositeRemoteCallAdapter()
+        Args:
+            analyzer: 远端调用分析器实现。由组合根（CLI/use case）注入；
+                core 服务不得自行构造 adapters 层实现（Clean Architecture 分层约束，
+                由 import-linter Gate 6 机器强制）。
+        """
+        self._adapter: RemoteCallAnalyzer = analyzer
 
     def detect_from_file(self, file_path: str) -> RemoteCallDetectionResult:
         """Detect remote calls from a single file.

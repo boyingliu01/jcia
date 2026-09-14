@@ -5,11 +5,11 @@
 #     adapters → infrastructure → use_cases → services → entities
 #
 # 强制方式说明：
-#   - Python 侧的实际类型/分层校验由 pyright（strict，0 errors）+ 单元测试承担。
-#   - 若需机器强制“分层导入”约束，可另配 import-linter（.import-linter.yml）；
-#     Gate 6 的 python 分支在检测到该文件时会运行 `lint-imports` 强制校验。
-#   - 未配置 import-linter 时，Gate 6 对 python 优雅跳过（不做机器校验），
-#     本文件即作为架构约束的权威文档声明。
+#   - 分层导入约束已由 import-linter 机器强制：契约定义在 pyproject.toml
+#     的 [tool.importlinter]（与下方 layers 声明一一对应），本地验证：
+#     `make arch-check` 或直接 `lint-imports`。
+#   - xp-gate Gate 6（pre-commit hook）检测到配置后自动运行 lint-imports。
+#   - 类型/逻辑校验由 pyright（strict，0 errors）+ 单元测试承担。
 
 layers:
   # —— 最内层：领域实体，无外部依赖 ——

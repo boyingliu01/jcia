@@ -7,15 +7,17 @@
 如果所有测试都通过，将显示 "所有测试通过！"。
 """
 
+import pytest
+
 from jcia.core.entities.remote_call import (
+    RemoteCallChain,
+    RemoteCallInfo,
     RemoteCallType,
     RemoteEndpoint,
-    RemoteCallInfo,
-    RemoteCallChain,
 )
 
 
-def test_remote_call_type():
+def test_remote_call_type() -> None:
     """测试 RemoteCallType 枚举。"""
     print("测试 RemoteCallType...")
 
@@ -43,7 +45,7 @@ def test_remote_call_type():
     print("  ✓ RemoteCallType 测试通过")
 
 
-def test_remote_endpoint():
+def test_remote_endpoint() -> None:
     """测试 RemoteEndpoint 类。"""
     print("测试 RemoteEndpoint...")
 
@@ -73,9 +75,7 @@ def test_remote_endpoint():
     assert default.interface is None
 
     # 测试 full_identifier
-    ep1 = RemoteEndpoint(
-        service_name="svc", interface="Iface", method="method"
-    )
+    ep1 = RemoteEndpoint(service_name="svc", interface="Iface", method="method")
     assert ep1.full_identifier == "svc:Iface.method"
 
     ep2 = RemoteEndpoint(interface="Iface", method="method")
@@ -90,7 +90,7 @@ def test_remote_endpoint():
     print("  ✓ RemoteEndpoint 测试通过")
 
 
-def test_remote_call_info():
+def test_remote_call_info() -> None:
     """测试 RemoteCallInfo 类。"""
     print("测试 RemoteCallInfo...")
 
@@ -154,7 +154,7 @@ def test_remote_call_info():
     print("  ✓ RemoteCallInfo 测试通过")
 
 
-def test_remote_call_chain():
+def test_remote_call_chain() -> None:
     """测试 RemoteCallChain 类。"""
     print("测试 RemoteCallChain...")
 
@@ -193,12 +193,8 @@ def test_remote_call_chain():
 
     # 测试 get_unique_services
     endpoint3 = RemoteEndpoint(service_name="svc1")  # Duplicate
-    call3 = RemoteCallInfo(
-        call_type=RemoteCallType.REST, endpoint=endpoint3, caller_class="C"
-    )
-    chain2 = RemoteCallChain(
-        calls=[call1, call2, call3], source_method="start"
-    )
+    call3 = RemoteCallInfo(call_type=RemoteCallType.REST, endpoint=endpoint3, caller_class="C")
+    chain2 = RemoteCallChain(calls=[call1, call2, call3], source_method="start")
     unique = chain2.get_unique_services()
     assert unique == {"svc1", "svc2"}
 
@@ -232,7 +228,7 @@ def test_remote_call_chain():
     print("  ✓ RemoteCallChain 测试通过")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """运行所有测试。"""
     print("=" * 60)
     print("开始测试 Remote Call 实体类")
@@ -257,6 +253,7 @@ def run_all_tests():
     except Exception as e:
         print(f"\n💥 发生错误: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

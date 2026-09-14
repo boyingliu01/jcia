@@ -19,7 +19,7 @@ from jcia.adapters.ai.skywalking_adapter import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def adapter() -> SkyWalkingAdapter:
     """返回默认配置的适配器实例."""
     return SkyWalkingAdapter()
@@ -98,16 +98,18 @@ class TestExecuteGraphql:
         }
         mock_response.raise_for_status.return_value = None
 
-        with patch("requests.post", return_value=mock_response), pytest.raises(
-            RuntimeError, match="boom; bang"
+        with (
+            patch("requests.post", return_value=mock_response),
+            pytest.raises(RuntimeError, match="boom; bang"),
         ):
             adapter._execute_graphql("query {}", {})
 
     def test_request_exception_wrapped(self, adapter: SkyWalkingAdapter) -> None:
         """底层 RequestException 应被包装为 RuntimeError."""
-        with patch(
-            "requests.post", side_effect=requests.exceptions.ConnectionError("down")
-        ), pytest.raises(RuntimeError, match="Failed to execute GraphQL query"):
+        with (
+            patch("requests.post", side_effect=requests.exceptions.ConnectionError("down")),
+            pytest.raises(RuntimeError, match="Failed to execute GraphQL query"),
+        ):
             adapter._execute_graphql("query {}", {})
 
 
@@ -219,11 +221,14 @@ class TestAnalyzeEndpointStats:
 
     def test_returns_processed_stats(self, adapter: SkyWalkingAdapter) -> None:
         """正常路径应返回处理后的统计列表."""
-        with patch.object(
-            adapter, "_execute_graphql", return_value={"stats": [{"endpointId": "ep1"}]}
-        ), patch.object(
-            adapter, "_process_endpoint_stats", return_value=[{"endpoint": "ep1"}]
-        ) as mock_process:
+        with (
+            patch.object(
+                adapter, "_execute_graphql", return_value={"stats": [{"endpointId": "ep1"}]}
+            ),
+            patch.object(
+                adapter, "_process_endpoint_stats", return_value=[{"endpoint": "ep1"}]
+            ) as mock_process,
+        ):
             result = adapter._analyze_endpoint_stats(["ep1"], time_range=7)
 
         assert result == [{"endpoint": "ep1"}]
@@ -287,8 +292,9 @@ class TestRecommendTests:
                 "response_time_p99": 300,
             }
         ]
-        with patch.object(adapter, "_find_related_endpoints", return_value=["ep1"]), patch.object(
-            adapter, "_analyze_endpoint_stats", return_value=stats
+        with (
+            patch.object(adapter, "_find_related_endpoints", return_value=["ep1"]),
+            patch.object(adapter, "_analyze_endpoint_stats", return_value=stats),
         ):
             result = adapter.recommend_tests(["com.demo.OrderService.create"])
 
@@ -310,8 +316,9 @@ class TestRecommendTests:
                 "throughput": 10,
             }
         ]
-        with patch.object(adapter, "_find_related_endpoints", return_value=["ep1"]), patch.object(
-            adapter, "_analyze_endpoint_stats", return_value=stats
+        with (
+            patch.object(adapter, "_find_related_endpoints", return_value=["ep1"]),
+            patch.object(adapter, "_analyze_endpoint_stats", return_value=stats),
         ):
             result = adapter.recommend_tests(["com.demo.Service.run"])
 
@@ -328,8 +335,9 @@ class TestRecommendTests:
                 "throughput": 500,
             }
         ]
-        with patch.object(adapter, "_find_related_endpoints", return_value=["ep1"]), patch.object(
-            adapter, "_analyze_endpoint_stats", return_value=stats
+        with (
+            patch.object(adapter, "_find_related_endpoints", return_value=["ep1"]),
+            patch.object(adapter, "_analyze_endpoint_stats", return_value=stats),
         ):
             result = adapter.recommend_tests(["com.demo.Service.run"])
 

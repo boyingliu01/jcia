@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - plan.json - 项目开发计划（JSON 格式）
 - README.md - 完整的项目介绍和快速开始指南
 - CONTRIBUTING.md - 详细的贡献指南
+- gRPC 远程调用适配器 `jcia/adapters/tools/remote_call/grpc_adapter.py`（`GrpcRemoteCallAdapter`，识别 `XxxGrpc.new(Blocking)Stub`），已接入 `CompositeRemoteCallAdapter`（issue #16）
+- 服务发现抽象：`ServiceRegistry` ABC（`jcia/core/interfaces/service_registry.py`，含 `ServiceInfo`）+ `MockServiceRegistry`（`jcia/adapters/tools/service_registry/`）（issue #16）
+- 分层领域知识库 `AGENTS.md`：`jcia/adapters/tools/`、`jcia/adapters/tools/remote_call/`、`jcia/core/services/`（issue #17）
 
 ### Implemented
 - 完整的适配器层实现（Git, Maven, AI, Database）
@@ -25,9 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 完整的报告生成模块（HTML, JSON, Markdown）
 - 完整的集成测试
 - Phase 4 跨服务远程调用集成：`analyze` 命令新增 `--detect-remote-calls` 开关，将远程调用检测（Dubbo/Feign/HTTP/MQ）融合进影响图并启用多维度严重度评分；采用向后兼容的可选依赖注入（默认关闭），涉及 analyze_impact 用例、ImpactAnalysisService 与 CLI
+- 架构分层 CI 强制：`[tool.importlinter]` 定义 4 个 contract（主分层栈 + core 禁依赖外层 + infrastructure/reports 限制），`architecture.yaml` 声明同步；`Makefile` 新增 `arch-check` 目标，pre-commit Gate 6 修复（扩展检测 pyproject 配置 + 依据 `lint-imports` 退出码阻断）
 
 ### Changed
 - 重命名 Adapters 层数据库门面 `jcia/adapters/database/sqlite_adapter.py` → `sqlite_database_adapter.py`（类 `SQLiteDatabaseAdapter`），消除与基础设施层 `jcia/infrastructure/database/sqlite_adapter.py`（类 `SQLiteAdapter`）的**同名文件歧义**；两层文件名各自与类名对齐（符合 `pydriller_adapter.py` → `PyDrillerAdapter` 约定）。同步更新唯一导入点、单测与 AGENTS/CLAUDE/PROJECT_STATUS 文档；数据库相关 35 个单测全绿
+- 对齐 ruff 版本至 `0.15.5`（`requirements-dev.txt` + `pyproject.toml` 钉版），消除 venv(0.1.9) 与 pre-commit hook(0.15.5) 的规则集漂移；配置层豁免根脚本角色性规则（T201/E501/C901/PLR1722/G003/SLF001 via `/*.py` per-file-ignores）与既有惰性导入设计（全局豁免 PLC0415），并修复真实告警
+- `RemoteCallDetectionService.__init__` 改为**强制注入** `analyzer: RemoteCallAnalyzer`（DIP）， concrete 实现改由组合根 `jcia/cli/main.py` 提供；同步调整相关单测构造
 
 ### Fixed
 - 修复 TestSuiteResult 类的 pytest 收集警告

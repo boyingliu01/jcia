@@ -10,6 +10,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 # 添加项目根目录到 Python 路径
 sys.path.insert(0, str(Path(__file__).parent))
@@ -40,11 +41,11 @@ class AdapterTestResult:
     def __init__(self, adapter_name: str):
         self.adapter_name = adapter_name
         self.success = False
-        self.test_cases = []
-        self.errors = []
-        self.warnings = []
+        self.test_cases: list[dict[str, Any]] = []
+        self.errors: list[str] = []
+        self.warnings: list[str] = []
         self.duration = 0.0
-        self.start_time = None
+        self.start_time: float = 0.0
 
     def add_test_case(self, name: str, passed: bool, duration: float) -> None:
         """添加测试用例结果."""
@@ -153,16 +154,14 @@ class JenkinsValidator:
         try:
             # 初始化适配器
             logger.info("初始化 JavaAllCallGraphAdapter...")
-            adapter = JavaAllCallGraphAdapter(
-                repo_path=str(self._jenkins_workspace), max_depth=5
-            )
+            adapter = JavaAllCallGraphAdapter(repo_path=str(self._jenkins_workspace), max_depth=5)
 
             test_start = time.time()
 
             # 测试1: 初始化
             try:
                 start = time.time()
-                assert adapter.analyzer_type == "static"
+                assert adapter.analyzer_type.value == "static"
                 duration = time.time() - start
                 result.add_test_case("初始化测试", True, duration)
             except Exception as e:
@@ -172,9 +171,7 @@ class JenkinsValidator:
             # 测试2: 分析上游调用
             try:
                 start = time.time()
-                upstream = adapter.analyze_upstream(
-                    "com.example.UserService.getUser", max_depth=3
-                )
+                upstream = adapter.analyze_upstream("com.example.UserService.getUser", max_depth=3)
                 assert upstream is not None
                 assert upstream.total_nodes >= 1
                 duration = time.time() - start
@@ -388,7 +385,7 @@ class JenkinsValidator:
             # 测试1: 初始化
             try:
                 start = time.time()
-                assert adapter.analyzer_type == "dynamic"
+                assert adapter.analyzer_type.value == "dynamic"
                 assert adapter.supports_cross_service
                 duration = time.time() - start
                 result.add_test_case("初始化测试", True, duration)
@@ -399,12 +396,14 @@ class JenkinsValidator:
             # 测试2: 获取服务拓扑（需要 OAP Server）
             try:
                 start = time.time()
-                topology = adapter.get_service_topology()
+                adapter.get_service_topology()
                 duration = time.time() - start
                 # 不要求成功，因为可能没有 OAP Server
                 result.add_test_case("获取服务拓扑", True, duration)
             except Exception as e:
-                result.add_test_case("获取服务拓扑", True, time.time() - test_start)  # 标记为通过，因为可能没有 OAP Server
+                result.add_test_case(
+                    "获取服务拓扑", True, time.time() - test_start
+                )  # 标记为通过，因为可能没有 OAP Server
                 result.add_warning(f"获取服务拓扑失败（可能无 OAP Server）: {e}")
 
             result.success = len(result.errors) == 0
@@ -431,6 +430,7 @@ class JenkinsValidator:
         try:
             # 检查是否有 API key
             import os
+
             api_key = os.environ.get("OPENAI_API_KEY")
             if not api_key:
                 result.add_warning("OPENAI_API_KEY 环境变量未设置，跳过测试")
@@ -451,7 +451,7 @@ class JenkinsValidator:
             # 测试1: 初始化
             try:
                 start = time.time()
-                assert adapter.provider == "openai"
+                assert adapter.provider.value == "openai"
                 assert adapter.model == "gpt-4-turbo-preview"
                 duration = time.time() - start
                 result.add_test_case("初始化测试", True, duration)
@@ -530,9 +530,7 @@ class JenkinsValidator:
         logger.info(f"测试用例: {len(result.test_cases)}")
         for tc in result.test_cases:
             status_icon = "✓" if tc["passed"] else "✗"
-            logger.info(
-                f"  {status_icon} {tc['name']} ({tc['duration']:.2f}s)"
-            )
+            logger.info(f"  {status_icon} {tc['name']} ({tc['duration']:.2f}s)")
 
     def _generate_report(self, total_duration: float) -> dict[str, Any]:
         """生成验证报告.
@@ -545,9 +543,7 @@ class JenkinsValidator:
         """
         # 统计结果
         total_tests = sum(len(r.test_cases) for r in self.results)
-        passed_tests = sum(
-            sum(1 for tc in r.test_cases if tc["passed"]) for r in self.results
-        )
+        passed_tests = sum(sum(1 for tc in r.test_cases if tc["passed"]) for r in self.results)
         failed_tests = total_tests - passed_tests
 
         total_errors = sum(len(r.errors) for r in self.results)
@@ -573,7 +569,9 @@ class JenkinsValidator:
                 "total_tests": total_tests,
                 "passed_tests": passed_tests,
                 "failed_tests": failed_tests,
-                "success_rate": f"{(passed_tests / total_tests * 100):.1f}%" if total_tests > 0 else "N/A",
+                "success_rate": f"{(passed_tests / total_tests * 100):.1f}%"
+                if total_tests > 0
+                else "N/A",
                 "total_errors": total_errors,
                 "total_warnings": total_warnings,
             },
@@ -609,8 +607,8 @@ class JenkinsValidator:
 
         md_content = f"""# JCIA 适配器验证报告
 
-**验证时间**: {summary['validation_time']}
-**总耗时**: {summary['total_duration']}
+**验证时间**: {summary["validation_time"]}
+**总耗时**: {summary["total_duration"]}
 
 ---
 
@@ -618,14 +616,14 @@ class JenkinsValidator:
 
 | 指标 | 数值 |
 |------|------|
-| 适配器总数 | {summary['total_adapters']} |
-| 成功数量 | {summary['successful_adapters']} |
-| 测试用例总数 | {summary['total_tests']} |
-| 通过测试 | {summary['passed_tests']} |
-| 失败测试 | {summary['failed_tests']} |
-| 成功率 | {summary['success_rate']} |
-| 错误总数 | {summary['total_errors']} |
-| 警告总数 | {summary['total_warnings']} |
+| 适配器总数 | {summary["total_adapters"]} |
+| 成功数量 | {summary["successful_adapters"]} |
+| 测试用例总数 | {summary["total_tests"]} |
+| 通过测试 | {summary["passed_tests"]} |
+| 失败测试 | {summary["failed_tests"]} |
+| 成功率 | {summary["success_rate"]} |
+| 错误总数 | {summary["total_errors"]} |
+| 警告总数 | {summary["total_warnings"]} |
 
 ---
 
@@ -637,7 +635,7 @@ class JenkinsValidator:
             status_icon = "✓" if result.success else "✗"
             md_content += f"""### {status_icon} {result.adapter_name}
 
-**状态**: {'通过' if result.success else '失败'}
+**状态**: {"通过" if result.success else "失败"}
 **持续时间**: {result.duration:.2f}秒
 **测试用例数**: {len(result.test_cases)}
 
@@ -741,8 +739,8 @@ class JenkinsValidator:
 </head>
 <body>
     <h1>JCIA 适配器验证报告</h1>
-    <p><strong>验证时间</strong>: {summary['validation_time']}</p>
-    <p><strong>总耗时</strong>: {summary['total_duration']}</p>
+    <p><strong>验证时间</strong>: {summary["validation_time"]}</p>
+    <p><strong>总耗时</strong>: {summary["total_duration"]}</p>
 
     <div class="summary">
         <h2>验证摘要</h2>
@@ -753,35 +751,35 @@ class JenkinsValidator:
             </tr>
             <tr>
                 <td>适配器总数</td>
-                <td>{summary['total_adapters']}</td>
+                <td>{summary["total_adapters"]}</td>
             </tr>
             <tr>
                 <td>成功数量</td>
-                <td class="success">{summary['successful_adapters']}</td>
+                <td class="success">{summary["successful_adapters"]}</td>
             </tr>
             <tr>
                 <td>测试用例总数</td>
-                <td>{summary['total_tests']}</td>
+                <td>{summary["total_tests"]}</td>
             </tr>
             <tr>
                 <td>通过测试</td>
-                <td class="success">{summary['passed_tests']}</td>
+                <td class="success">{summary["passed_tests"]}</td>
             </tr>
             <tr>
                 <td>失败测试</td>
-                <td class="failure">{summary['failed_tests']}</td>
+                <td class="failure">{summary["failed_tests"]}</td>
             </tr>
             <tr>
                 <td>成功率</td>
-                <td>{summary['success_rate']}</td>
+                <td>{summary["success_rate"]}</td>
             </tr>
             <tr>
                 <td>错误总数</td>
-                <td class="failure">{summary['total_errors']}</td>
+                <td class="failure">{summary["total_errors"]}</td>
             </tr>
             <tr>
                 <td>警告总数</td>
-                <td class="warning">{summary['total_warnings']}</td>
+                <td class="warning">{summary["total_warnings"]}</td>
             </tr>
         </table>
     </div>
@@ -793,8 +791,8 @@ class JenkinsValidator:
             status_class = "success" if result.success else "failure"
             html_content += f"""
     <div style="margin-bottom: 30px;">
-        <h3 class="{status_class}">{'✓' if result.success else '✗'} {result.adapter_name}</h3>
-        <p><strong>状态</strong>: <span class="{status_class}">{'通过' if result.success else '失败'}</span></p>
+        <h3 class="{status_class}">{"✓" if result.success else "✗"} {result.adapter_name}</h3>
+        <p><strong>状态</strong>: <span class="{status_class}">{"通过" if result.success else "失败"}</span></p>
         <p><strong>持续时间</strong>: {result.duration:.2f}秒</p>
         <p><strong>测试用例数</strong>: {len(result.test_cases)}</p>
 
@@ -806,7 +804,7 @@ class JenkinsValidator:
                 tc_class = "test-passed" if tc["passed"] else "test-failed"
                 html_content += f"""
             <li class="{tc_class}">
-                {tc['name']} ({tc['duration']:.2f}s)
+                {tc["name"]} ({tc["duration"]:.2f}s)
             </li>
 """
 
@@ -847,9 +845,7 @@ def main():
         default=".",
         help="Jenkins 工作空间路径（默认：当前目录）",
     )
-    parser.add_argument(
-        "--jenkins-url", type=str, default=None, help="Jenkins 服务器 URL"
-    )
+    parser.add_argument("--jenkins-url", type=str, default=None, help="Jenkins 服务器 URL")
     parser.add_argument(
         "--output-dir",
         type=str,
@@ -884,9 +880,7 @@ def main():
     logger.info("验证完成")
     logger.info("=" * 80)
     logger.info(f"总耗时: {summary['total_duration']}")
-    logger.info(
-        f"适配器通过率: {summary['successful_adapters']}/{summary['total_adapters']}"
-    )
+    logger.info(f"适配器通过率: {summary['successful_adapters']}/{summary['total_adapters']}")
     logger.info(f"测试成功率: {summary['success_rate']}")
     logger.info(f"报告目录: {args.output_dir}")
     logger.info("=" * 80)

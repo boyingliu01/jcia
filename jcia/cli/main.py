@@ -91,13 +91,18 @@ def analyze(
         fusion_service = None
         severity_enhancer = None
         if detect_remote_calls:
+            from jcia.adapters.tools.remote_call.composite_adapter import (
+                CompositeRemoteCallAdapter,
+            )
             from jcia.core.services import (
                 AnalysisFusionService,
                 RemoteCallDetectionService,
                 SeverityEnhancer,
             )
 
-            remote_call_detector = RemoteCallDetectionService()
+            remote_call_detector = RemoteCallDetectionService(
+                analyzer=CompositeRemoteCallAdapter(),
+            )
             fusion_service = AnalysisFusionService()
             severity_enhancer = SeverityEnhancer()
 
@@ -291,7 +296,7 @@ def report(output_dir: str, format: str, include_details: bool) -> None:
 @cli.command()
 @click.option("--show", is_flag=True, help="显示配置项")
 @click.option("--set", type=str, help="设置设置项（格式：key=value）")
-def config(show: bool, set: str | None) -> None:  # noqa: C901
+def config(show: bool, set: str | None) -> None:
     """配置管理.
 
     查看、设置或管理配置。

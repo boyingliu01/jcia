@@ -19,14 +19,14 @@ from jcia.core.interfaces.test_runner import (
 from jcia.core.interfaces.tool_wrapper import ToolResult
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_maven_adapter() -> MavenAdapter:
     """Mock Maven adapter."""
     adapter = MagicMock(spec=MavenAdapter)
     return adapter
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_project_dir(tmp_path: Path) -> Path:
     """Create temporary project directory structure."""
     # Create target directory structure
@@ -827,9 +827,10 @@ class TestConfigureJacocoPluginBuild:
         executor = self._executor_with_pom(mock_maven_adapter, temp_project_dir)
         mock_et = MagicMock()
         mock_et.parse.return_value.getroot.return_value.find.return_value = None
-        with patch("jcia.adapters.test_runners.maven_surefire_test_executor.ET", mock_et), patch(
-            "jcia.adapters.test_runners.maven_surefire_test_executor.logger"
-        ) as mock_logger:
+        with (
+            patch("jcia.adapters.test_runners.maven_surefire_test_executor.ET", mock_et),
+            patch("jcia.adapters.test_runners.maven_surefire_test_executor.logger") as mock_logger,
+        ):
             executor._configure_jacoco()
         mock_logger.info.assert_any_call("JaCoCo plugin not found, would add (implementation note)")
 
@@ -840,9 +841,10 @@ class TestConfigureJacocoPluginBuild:
         executor = self._executor_with_pom(mock_maven_adapter, temp_project_dir)
         mock_et = MagicMock()
         mock_et.parse.return_value.getroot.return_value.find.return_value = MagicMock()
-        with patch("jcia.adapters.test_runners.maven_surefire_test_executor.ET", mock_et), patch(
-            "jcia.adapters.test_runners.maven_surefire_test_executor.logger"
-        ) as mock_logger:
+        with (
+            patch("jcia.adapters.test_runners.maven_surefire_test_executor.ET", mock_et),
+            patch("jcia.adapters.test_runners.maven_surefire_test_executor.logger") as mock_logger,
+        ):
             executor._configure_jacoco()
         mock_logger.debug.assert_any_call("JaCoCo plugin already configured")
 

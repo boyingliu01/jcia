@@ -95,19 +95,19 @@ class TestAnalyzeImpactResponse:
 class TestAnalyzeImpactUseCase:
     """测试AnalyzeImpactUseCase."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_analyzer(self) -> Mock:
         """创建模拟分析器."""
         analyzer = Mock()
         analyzer.analyzer_name = "mock"
         return analyzer
 
-    @pytest.fixture()
+    @pytest.fixture
     def use_case(self, mock_analyzer: Mock) -> AnalyzeImpactUseCase:
         """创建用例实例."""
         return AnalyzeImpactUseCase(change_analyzer=mock_analyzer)
 
-    @pytest.fixture()
+    @pytest.fixture
     def valid_repo_path(self, tmp_path: Path) -> Path:
         """创建有效的仓库路径."""
         return tmp_path
@@ -372,14 +372,14 @@ class TestAnalyzeImpactRemoteCallIntegration:
     与 AnalysisFusionService，将跨服务调用融合进影响图，并保持向后兼容。
     """
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_analyzer(self) -> Mock:
         """创建模拟变更分析器."""
         analyzer = Mock()
         analyzer.analyzer_name = "mock"
         return analyzer
 
-    @pytest.fixture()
+    @pytest.fixture
     def valid_repo_path(self, tmp_path: Path) -> Path:
         """创建有效的仓库路径."""
         return tmp_path

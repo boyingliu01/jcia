@@ -20,7 +20,7 @@ from jcia.core.interfaces.call_chain_analyzer import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_project_dir(tmp_path: Path) -> Path:
     """Create temporary project directory structure."""
     # Create source directory structure
@@ -917,7 +917,7 @@ class TestBuildServiceTopology:
         """含 Dubbo provider 与 consumer 源文件时构建服务与依赖。"""
         provider = tmp_path / "UserServiceImpl.java"
         provider.write_text(
-            '@DubboService(version="1.0.0", group="teamA")\n' "public class UserServiceImpl {}\n"
+            '@DubboService(version="1.0.0", group="teamA")\npublic class UserServiceImpl {}\n'
         )
         consumer = tmp_path / "OrderManager.java"
         consumer.write_text(

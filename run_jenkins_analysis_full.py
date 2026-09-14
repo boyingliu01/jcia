@@ -1,4 +1,5 @@
 """运行 Jenkins 仓库影响分析（完整版，使用 PyDriller）."""
+
 from pathlib import Path
 
 from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
@@ -10,7 +11,7 @@ from jcia.reports.html_reporter import HTMLReporter
 # 配置
 repo_path = str(Path(r"E:\Study\LLM\Java代码变更影响分析\jenkins-full"))
 from_commit = "68f5885"  # Fix "Zeno's paradox"
-to_commit = "52fa585"    # Replace dependency on jenkins.io
+to_commit = "52fa585"  # Replace dependency on jenkins.io
 
 print("=" * 60)
 print("Jenkins 代码变更影响分析（完整版）")
@@ -72,7 +73,9 @@ try:
     for i, file_path in enumerate(response.change_set.changed_files[:20], 1):
         file_change = response.change_set.get_file_change(file_path)
         if file_change:
-            print(f"  {i}. {file_path} ({file_change.change_type.value}, +{file_change.insertions}/-{file_change.deletions})")
+            print(
+                f"  {i}. {file_path} ({file_change.change_type.value}, +{file_change.insertions}/-{file_change.deletions})"
+            )
         else:
             print(f"  {i}. {file_path}")
 
@@ -122,5 +125,6 @@ try:
 except Exception as e:
     print(f"  ✗ 分析失败: {e}")
     import traceback
+
     traceback.print_exc()
     exit(1)

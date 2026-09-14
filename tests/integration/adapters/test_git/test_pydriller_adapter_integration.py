@@ -8,7 +8,7 @@ from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
 from jcia.core.entities.change_set import ChangeSet, ChangeType
 
 
-@pytest.fixture()
+@pytest.fixture
 def jenkins_repo_path() -> Path:
     """获取 Jenkins 仓库路径."""
     # Jenkins 已克隆到项目根目录的 jenkins/ 文件夹

@@ -74,3 +74,8 @@ jenkins/
 # xp-gate 质量门禁 hook 的本地追踪产物（非项目源码，不应提交）
 .xp-gate/
 .quality-history.jsonl
+
+# IDE / agent 本地生成产物与走查临时状态（非项目源码，不应提交）
+.qoder/
+.sprint-state/
+.code-walkthrough-result.json

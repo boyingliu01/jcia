@@ -8,7 +8,7 @@ from jcia.adapters.maven.maven_adapter import MavenAdapter
 from jcia.core.interfaces.tool_wrapper import ToolStatus, ToolType
 
 
-@pytest.fixture()
+@pytest.fixture
 def jenkins_project_path() -> Path:
     """获取 Jenkins 项目路径."""
     # Jenkins 已克隆到当前目录的 jenkins/ 文件夹
@@ -18,7 +18,7 @@ def jenkins_project_path() -> Path:
     return project_path
 
 
-@pytest.fixture()
+@pytest.fixture
 def skip_if_no_maven() -> None:
     """如果 Maven 未安装则跳过测试."""
     import subprocess

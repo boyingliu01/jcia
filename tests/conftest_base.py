@@ -8,14 +8,14 @@ from unittest.mock import MagicMock
 import pytest
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_dir() -> Generator[Path, None, None]:
     """创建临时目录."""
     with tempfile.TemporaryDirectory() as tmp:
         yield Path(tmp)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_git_repo(temp_dir: Path) -> Path:
     """创建模拟的Git仓库."""
     git_dir = temp_dir / ".git"
@@ -28,7 +28,7 @@ def mock_git_repo(temp_dir: Path) -> Path:
     return temp_dir
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_java_project(temp_dir: Path) -> Path:
     """创建示例Java项目结构."""
     # 创建Maven项目结构
@@ -54,7 +54,7 @@ def sample_java_project(temp_dir: Path) -> Path:
     return temp_dir
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_config(temp_dir: Path) -> MagicMock:
     """创建模拟配置对象."""
     config = MagicMock()

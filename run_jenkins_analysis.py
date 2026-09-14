@@ -1,4 +1,5 @@
 """运行 Jenkins 仓库影响分析（使用 git show 命令）."""
+
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -19,7 +20,7 @@ from jcia.reports.html_reporter import HTMLReporter
 # 配置
 repo_path = str(Path(r"E:\Study\LLM\Java代码变更影响分析\jenkins-full"))
 from_commit = "68f5885"  # Fix "Zeno's paradox"
-to_commit = "52fa585"    # Replace dependency on jenkins.io
+to_commit = "52fa585"  # Replace dependency on jenkins.io
 
 print("=" * 60)
 print("Jenkins 代码变更影响分析")
@@ -42,7 +43,9 @@ try:
     )
 
     parts = result_from.stdout.strip().split("|")
-    from_full_hash, from_author_name, from_author_email, from_author_date, from_commit_message = parts
+    from_full_hash, from_author_name, from_author_email, from_author_date, from_commit_message = (
+        parts
+    )
 
     print("  ✓ 起始提交信息获取成功")
     print(f"    作者: {from_author_name}")
@@ -143,6 +146,7 @@ try:
 except Exception as e:
     print(f"  ✗ 构建变更集合失败: {e}")
     import traceback
+
     traceback.print_exc()
     exit(1)
 
@@ -162,6 +166,7 @@ try:
 except Exception as e:
     print(f"  ✗ 影响分析失败: {e}")
     import traceback
+
     traceback.print_exc()
     exit(1)
 
@@ -211,18 +216,19 @@ try:
         },
     )
 
-    result = reporter.generate(data)
+    report_result = reporter.generate(data)
 
-    if result.success:
+    if report_result.success:
         print("  ✓ HTML报告已生成")
-        print(f"    路径: {result.output_path}")
-        print(f"    大小: {result.size_bytes} 字节")
+        print(f"    路径: {report_result.output_path}")
+        print(f"    大小: {report_result.size_bytes} 字节")
     else:
-        print(f"  ✗ 报告生成失败: {result.error_message}")
+        print(f"  ✗ 报告生成失败: {report_result.error_message}")
 
 except Exception as e:
     print(f"  ✗ 生成报告失败: {e}")
     import traceback
+
     traceback.print_exc()
 
 print("\n" + "=" * 60)

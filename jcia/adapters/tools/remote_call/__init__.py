@@ -8,6 +8,7 @@ message queue (RabbitMQ, Kafka, RocketMQ) interactions.
 from jcia.adapters.tools.remote_call.composite_adapter import CompositeRemoteCallAdapter
 from jcia.adapters.tools.remote_call.dubbo_adapter import DubboRemoteCallAdapter
 from jcia.adapters.tools.remote_call.feign_adapter import FeignRemoteCallAdapter
+from jcia.adapters.tools.remote_call.grpc_adapter import GrpcRemoteCallAdapter
 from jcia.adapters.tools.remote_call.http_adapter import HttpRemoteCallAdapter
 from jcia.adapters.tools.remote_call.mq_adapter import MessageQueueRemoteCallAdapter
 
@@ -15,6 +16,7 @@ __all__ = [
     "CompositeRemoteCallAdapter",
     "DubboRemoteCallAdapter",
     "FeignRemoteCallAdapter",
+    "GrpcRemoteCallAdapter",
     "HttpRemoteCallAdapter",
     "MessageQueueRemoteCallAdapter",
 ]
