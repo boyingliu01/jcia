@@ -4,7 +4,7 @@ Guide for agentic coding agents working with JCIA (Java Code Impact Analyzer).
 
 **Project**: Python 3.10+ clean architecture tool for analyzing Java code change impact and intelligent test selection.
 
-**Version**: 0.1.0
+**Version**: 0.2.0
 **License**: MIT
 **Language**: Python (3.10, 3.11, 3.12)
 
@@ -39,7 +39,7 @@ JCIA (Java Code Impact Analyzer) is a development tool that helps teams quickly 
 
 **Recently Resolved**:
 - **Same-named `sqlite_adapter.py` across two layers** (was a navigation hazard): the Adapters-layer facade is now `jcia/adapters/database/sqlite_database_adapter.py` (`SQLiteDatabaseAdapter` — assembles the connection + three repositories + entity factories), distinct from the infrastructure-layer `jcia/infrastructure/database/sqlite_adapter.py` (`SQLiteAdapter` — low-level SQL execution). Each filename now matches its class name, consistent with the project convention.
-- **CLI entry point** (was broken): `jcia/cli/__init__.py` now exists and re-exports `cli`; `pyproject.toml` uses `jcia = "jcia.cli.main:cli"`. Verified working via `jcia --version` → `0.1.0`.
+- **CLI entry point** (was broken): `jcia/cli/__init__.py` now exists and re-exports `cli`; `pyproject.toml` uses `jcia = "jcia.cli.main:cli"`. Verified working via `jcia --version` → `0.2.0`.
 - **Remote call detection** (was IN PROGRESS): Phase 4 integrated — `analyze --detect-remote-calls` fuses Dubbo/Feign/gRPC/HTTP/MQ detection into the impact graph. `ServiceRegistry` ABC (`jcia/core/interfaces/service_registry.py`) + `MockServiceRegistry` (`jcia/adapters/tools/service_registry/`) provide the service-discovery seam; `RemoteCallDetectionService` now receives its analyzer via constructor injection (DIP), wired by the CLI composition root. See `jcia/adapters/tools/remote_call/`.
 - **Layering enforcement** (was manual): Clean Architecture import rules are now machine-enforced. `architecture.yaml` declares the contracts and `[tool.importlinter]` (4 contracts) blocks violations via `lint-imports` (pre-commit Gate 6 + `make arch-check`).
 

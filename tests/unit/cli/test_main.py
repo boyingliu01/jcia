@@ -391,15 +391,16 @@ class TestCLI:
 
 
 class TestConsoleEntryPoint:
-    """测试控制台入口点目标（setup.py / pyproject 的 console_scripts）."""
+    """测试控制台入口点目标（pyproject console_scripts 及历史 jcia.cli:main 形式）."""
 
     def test_cli_package_main_is_callable_cli_alias(self) -> None:
-        """setup.py 引用 jcia.cli:main，main 必须解析为 cli 函数而非子模块对象.
+        """jcia.cli 包必须暴露可调用的 main 别名（等价于 cli）.
 
-        setuptools 加载 console_scripts 时按 importlib.import_module('jcia.cli')
-        + getattr(mod, 'main') 解析；若无显式 main 别名，getattr 命中的是 import
-        系统自动绑定的 jcia.cli.main 子模块对象（不可调用），安装后的 jcia 命令
-        会在启动时抛 TypeError。
+        历史上 console_scripts 以 ``jcia.cli:main`` 解析；setuptools 通过
+        importlib.import_module('jcia.cli') + getattr(mod, 'main') 定位目标。
+        若无显式 main 别名，getattr 命中的是 import 系统自动绑定的
+        jcia.cli.main 子模块对象（不可调用），命令启动即抛 TypeError。当前
+        pyproject 入口为 ``jcia.cli.main:cli``，此别名作为向后兼容导出保留。
         """
         # Arrange & Act
         cli_package = importlib.import_module("jcia.cli")

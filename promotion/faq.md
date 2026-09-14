@@ -103,13 +103,10 @@ pip install jcia
 git clone https://github.com/boyingliu01/jcia.git
 cd jcia
 
-# 方法1：使用pip安装（推荐）
+# 方式1：常规安装
 pip install -e .
 
-# 方法2：使用setup.py
-python setup.py install
-
-# 方法3：开发模式（修改代码后立即生效）
+# 方式2：开发模式（修改代码后立即生效，含开发工具链）
 pip install -e ".[dev]"
 ```
 

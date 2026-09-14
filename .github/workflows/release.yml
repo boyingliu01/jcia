@@ -3,52 +3,121 @@ name: Release
 on:
   push:
     tags:
-      - "v*"
+      - "v[0-9]*"
 
+# Least privilege by default; each job elevates only what it needs.
 permissions:
   contents: read
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
-    name: Build sdist + wheel
+    name: Build & verify distribution
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Install build backend
+      - name: Guard tag matches project version
+        env:
+          REF: ${{ github.ref_name }}
         run: |
-          python -m pip install --upgrade pip
-          pip install "build>=1.0" "twine>=4.0"
-
-      - name: Build distribution
+          python - <<'PY'
+          import os, re, sys, tomllib
+          ref = os.environ["REF"]
+          tag = ref[1:] if ref.startswith("v") else ref
+          with open("pyproject.toml", "rb") as f:
+              ver = tomllib.load(f)["project"]["version"]
+          src = open("jcia/__init__.py", encoding="utf-8").read()
+          m = re.search(r"__version__\s*=\s*[\"']([^\"']+)[\"']", src)
+          init_ver = m.group(1) if m else None
+          errs = []
+          if tag != ver:
+              errs.append(f"tag {ref} != pyproject {ver}")
+          if init_ver != ver:
+              errs.append(f"jcia.__version__ {init_ver!r} != pyproject {ver}")
+          if errs:
+              sys.exit("release blocked: " + "; ".join(errs))
+          print(f"version guard OK: tag == pyproject == jcia.__version__ == {ver}")
+          PY
+      - name: Install build tooling
+        run: python -m pip install --upgrade pip build twine
+      - name: Build sdist and wheel
         run: python -m build
-
-      - name: Check distribution metadata
-        run: python -m twine check dist/*
-
-      - name: Upload artifacts
+      - name: Validate distributions
+        run: twine check dist/*
+      - name: Smoke test installed artifact
+        env:
+          REF: ${{ github.ref_name }}
+        run: |
+          python -m venv _smoke
+          ./_smoke/bin/python -m pip install --quiet dist/*.whl
+          out="$(./_smoke/bin/jcia --version)"
+          echo "$out"
+          ver="${REF#v}"
+          case "$out" in
+            *"$ver"*) echo "installed CLI reports ${ver}" ;;
+            *) echo "installed --version does not report ${ver}"; exit 1 ;;
+          esac
+      - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/*
+          path: dist/
 
-  publish:
+  # Irreversible step runs FIRST: a public GitHub Release is only cut once the
+  # package is actually installable from PyPI (avoids a release pointing at an
+  # unpublished version). Requires the trusted publisher registered on PyPI.org
+  # for this repo + environment "pypi".
+  publish-pypi:
     name: Publish to PyPI
     needs: build
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
-      id-token: write  # trusted publishing (OIDC)
+      id-token: write # OIDC token for trusted publishing
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
         with:
           name: dist
-          path: dist
-
-      - name: Publish to PyPI
+          path: dist/
+          run-id: ${{ github.run_id }}
+      - name: Publish to PyPI (trusted publishing / OIDC)
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: Create GitHub Release
+    needs: [build, publish-pypi]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create/update the release
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          run-id: ${{ github.run_id }}
+      - name: Create or update release with artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FLAGS=(--title "$GITHUB_REF_NAME" --generate-notes)
+          case "$GITHUB_REF_NAME" in
+            *-alpha*|*-beta*|*-rc*|*pre*|*dev*) FLAGS+=(--prerelease) ;;
+            *) FLAGS+=(--latest) ;;
+          esac
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "release exists; refreshing assets"
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* "${FLAGS[@]}"
+          fi

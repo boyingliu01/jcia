@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Release Readiness
 - 新增根目录 `LICENSE`（MIT），与 `pyproject.toml` / README 的许可证声明对齐
-- 新增 GitHub Actions：`ci.yml`（ruff / format / import-linter / pyright / mypy / bandit + Python 3.10–3.12 测试矩阵 + 覆盖率门槛 ≥ 80% + 集成测试非阻断）与 `release.yml`（`v*` tag 触发 `python -m build` + `twine check` + PyPI trusted publishing）
+- 新增 GitHub Actions：`ci.yml`（ruff / format / import-linter / pyright / mypy / bandit + Python 3.10–3.12 测试矩阵 + 覆盖率门槛 ≥ 80% + 集成测试非阻断）与 `release.yml`（`v[0-9]*` tag 触发：版本/标签一致性守卫 → `python -m build` + `twine check` + 安装烟测 → PyPI trusted publishing（OIDC）→ 成功后才创建附带产物的 GitHub Release；权限按 job 最小化，不可逆步骤先行以避免"有 Release 无包"的半成品发布）
+- 消除版本多源漂移：`setup.py` 退化为裸 `setup()` 骨架，`pyproject.toml` 成为 name/version/dependencies/entry-points/packages 的唯一权威源（原 `setup.py` 仍声明 `version=0.1.0` 与已废弃入口 `jcia.cli:cli`，虽被 `[project]` 覆盖但属潜在隐患）；`promotion/faq.md` 移除废弃的 `python setup.py install` 建议
 - 发布元数据校正：`[project.urls]` 及 README / `promotion/*` / `docs/*` / `scripts/*` 中的占位 `github.com/your-org/jcia` 全量替换为真实仓库 `github.com/boyingliu01/jcia`
 - 版本 `0.1.0 → 0.2.0`（`pyproject` / `jcia.__version__` / CLI `--version` 统一为单一来源，CLI 改读 `jcia.__version__`）；`Development Status` 由 `3 - Alpha` 升级为 `4 - Beta`
 - README 命令行与实况对齐：移除不存在的 `jcia regression` 命令与 `jcia report --output`（实际为必填 `--output-dir`），补齐 `report` / `config` 选项，覆盖率 badge `89% → 93%`
