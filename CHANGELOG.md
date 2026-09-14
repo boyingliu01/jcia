@@ -41,8 +41,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修复 PyDrillerAdapter 变更文件路径缺陷：原用 `ModifiedFile.filename`（仅 basename，如 `CspFilter.java`）作为 `file_path`，导致下游 `repo_path / file_path` 无法定位磁盘文件，远程调用检测恒报 "File not found" 并返回 0 结果；改用 `new_path`（相对仓库根的完整路径）并统一分隔符为正斜杠，缺失时回退 `filename`。该缺陷此前因单测 mock 把 `filename` 设为完整路径而被掩盖
 
 ### Testing
-- 测试套件：895 passed / 31 skipped
-- 实测总覆盖率 84%（目标 ≥ 80%）；Adapters 层覆盖率 72.4% → 78.04%（目标 ≥ 75%）
+- 测试套件：991 passed / 31 skipped
+- 实测总覆盖率 84% → 93%（目标 ≥ 80%）；Adapters 层覆盖率 78.04% → 93%（目标 ≥ 75%）
+- 新增 4 个工具适配器单元测试，将薄弱环节拉满：
+  - `skywalking_call_chain_adapter` 33% → 100%
+  - `java_all_call_graph_adapter` 61% → 100%（mock `subprocess.run`/`urllib.request.urlopen` 隔离 Java/下载边界，覆盖缓存/解析/注解/远程调用识别/服务拓扑各分支）
+  - `maven_surefire_test_executor` 61% → 100%（mock `subprocess.run` 隔离 Maven 边界，覆盖增量测试/覆盖率报告/JaCoCo 配置/结果解析）
+  - `openai_adapter` 63% → 99%（`sys.modules` 注入 fake `openai` 模块覆盖真实客户端路径与 ImportError 回退、重试退避；仅 1 行为不可达死代码）
 - 新增 SkyWalkingAdapter 单元测试（34 例）：mock `_execute_graphql`/`requests.post` 隔离网络边界，覆盖率 13% → 100%
 - 新增 4 个 PyDriller 路径回归测试（new_path 全路径 / 反斜杠归一化 / filename 回退 / test 文件识别）
 - 重构 pydriller 集成测试改用可靠的 GitPython commit range，消除 3 个 flaky 用例

@@ -1,5 +1,7 @@
 """Java All Call Graph 适配器单元测试."""
 
+import hashlib
+import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
@@ -587,3 +589,389 @@ class TestRemoteCallInfo:
         assert info.endpoint is None
         assert info.method is None
         assert info.url is None
+
+
+def _make_adapter(tmp_path: Path) -> JavaAllCallGraphAdapter:
+    """构造一个不触发 JAR 下载的适配器。"""
+    return JavaAllCallGraphAdapter(
+        repo_path=str(tmp_path),
+        jacg_jar=str(tmp_path / "test.jar"),
+    )
+
+
+class TestAnalyzeDirectionPaths:
+    """analyze_upstream 缓存未命中(130-135)与 analyze_downstream 缓存命中(152)。"""
+
+    def test_analyze_upstream_cache_miss(self, tmp_path: Path) -> None:
+        """缓存未命中时调用 _analyze_with_jacg 并写回缓存。"""
+        adapter = _make_adapter(tmp_path)
+        graph = CallChainGraph(
+            root=CallChainNode(class_name="A", method_name="m", signature=None),
+            direction=CallChainDirection.UPSTREAM,
+            max_depth=7,
+            total_nodes=2,
+        )
+        adapter._analyze_with_jacg = Mock(return_value=graph)  # type: ignore[method-assign]
+
+        result = adapter.analyze_upstream("A.m", 7)
+
+        assert result == graph
+        adapter._analyze_with_jacg.assert_called_once_with("A.m", "upstream", 7)
+        assert adapter._call_cache["upstream:A.m:7"] == graph
+
+    def test_analyze_downstream_cache_hit(self, tmp_path: Path) -> None:
+        """下游缓存命中直接返回，不调用 JACG。"""
+        adapter = _make_adapter(tmp_path)
+        cached = CallChainGraph(
+            root=CallChainNode(class_name="A", method_name="m", signature=None),
+            direction=CallChainDirection.DOWNSTREAM,
+            max_depth=3,
+            total_nodes=1,
+        )
+        adapter._call_cache["downstream:A.m:3"] = cached
+        adapter._analyze_with_jacg = Mock()  # type: ignore[method-assign]
+
+        result = adapter.analyze_downstream("A.m", 3)
+
+        assert result == cached
+        adapter._analyze_with_jacg.assert_not_called()
+
+
+class TestBuildFullGraphBranches:
+    """build_full_graph 剩余分支（212-220）。"""
+
+    @patch("jcia.adapters.tools.java_all_call_graph_adapter.subprocess.run")
+    def test_output_file_missing(self, mock_run: MagicMock, tmp_path: Path) -> None:
+        """returncode 0 但输出文件不存在 -> 空调用图。"""
+        mock_run.return_value = MagicMock(returncode=0, stderr="")
+        adapter = _make_adapter(tmp_path)
+
+        graph = adapter.build_full_graph()
+
+        assert graph.total_nodes == 1
+
+    @patch("jcia.adapters.tools.java_all_call_graph_adapter.subprocess.run")
+    def test_timeout(self, mock_run: MagicMock, tmp_path: Path) -> None:
+        """子进程超时 -> 空调用图。"""
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd="java", timeout=600)
+        adapter = _make_adapter(tmp_path)
+
+        graph = adapter.build_full_graph()
+
+        assert graph.total_nodes == 1
+
+    @patch("jcia.adapters.tools.java_all_call_graph_adapter.subprocess.run")
+    def test_generic_exception(self, mock_run: MagicMock, tmp_path: Path) -> None:
+        """通用异常 -> 空调用图。"""
+        mock_run.side_effect = OSError("java not found")
+        adapter = _make_adapter(tmp_path)
+
+        graph = adapter.build_full_graph()
+
+        assert graph.total_nodes == 1
+
+
+class TestAnalyzeWithJacg:
+    """_analyze_with_jacg 各分支（283-301）。"""
+
+    @patch("jcia.adapters.tools.java_all_call_graph_adapter.subprocess.run")
+    def test_returncode_nonzero(self, mock_run: MagicMock, tmp_path: Path) -> None:
+        """非零退出码 -> 空调用图。"""
+        mock_run.return_value = MagicMock(returncode=1, stderr="bad")
+        adapter = _make_adapter(tmp_path)
+
+        graph = adapter._analyze_with_jacg("com.example.Svc.m", "upstream", 5)
+
+        assert graph.total_nodes == 1
+
+    @patch("jcia.adapters.tools.java_all_call_graph_adapter.subprocess.run")
+    def test_output_file_missing(self, mock_run: MagicMock, tmp_path: Path) -> None:
+        """成功退出但输出文件缺失 -> 空调用图。"""
+        mock_run.return_value = MagicMock(returncode=0, stderr="")
+        adapter = _make_adapter(tmp_path)
+
+        graph = adapter._analyze_with_jacg("com.example.Svc.m", "downstream", 5)
+
+        assert graph.total_nodes == 1
+
+    @patch("jcia.adapters.tools.java_all_call_graph_adapter.subprocess.run")
+    def test_timeout(self, mock_run: MagicMock, tmp_path: Path) -> None:
+        """超时 -> 空调用图。"""
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd="java", timeout=300)
+        adapter = _make_adapter(tmp_path)
+
+        graph = adapter._analyze_with_jacg("com.example.Svc.m", "upstream", 5)
+
+        assert graph.total_nodes == 1
+
+    @patch.object(JavaAllCallGraphAdapter, "_extract_annotations")
+    @patch("jcia.adapters.tools.java_all_call_graph_adapter.subprocess.run")
+    def test_success_parses_output(
+        self, mock_run: MagicMock, mock_annos: MagicMock, tmp_path: Path
+    ) -> None:
+        """成功生成输出文件 -> 解析为调用图（覆盖 _parse_jacg_output 317-349）。"""
+        mock_run.return_value = MagicMock(returncode=0, stderr="")
+        mock_annos.return_value = []
+        adapter = _make_adapter(tmp_path)
+
+        method = "com.example.Svc.m"
+        method_hash = hashlib.md5(method.encode(), usedforsecurity=False).hexdigest()
+        output_file = adapter._output_dir / f"upstream_{method_hash}.json"
+        output_file.write_text(
+            '{"callGraph": [{"className": "com.example.Caller", '
+            '"methodName": "go", "children": []}]}'
+        )
+
+        graph = adapter._analyze_with_jacg(method, "upstream", 6)
+
+        assert graph.direction == CallChainDirection.UPSTREAM
+        assert graph.root.class_name == "com.example.Svc"
+        assert graph.total_nodes == 2  # root + 1 child
+
+
+class TestParseFullGraphLoop:
+    """_parse_full_graph 构建节点循环（369-370）。"""
+
+    @patch.object(JavaAllCallGraphAdapter, "_extract_annotations")
+    def test_loop_appends_nodes(self, mock_annos: MagicMock, tmp_path: Path) -> None:
+        """非空 callGraph 时构建子节点并计数。"""
+        mock_annos.return_value = []
+        adapter = _make_adapter(tmp_path)
+        data = {
+            "callGraph": [
+                {"className": "A", "methodName": "a", "children": []},
+                {"className": "B", "methodName": "b", "children": []},
+            ]
+        }
+
+        graph = adapter._parse_full_graph(data)
+
+        assert graph.root.class_name == "root"
+        assert len(graph.root.children) == 2
+        assert graph.total_nodes == 3
+
+
+class TestTraverseAndIdentify:
+    """_traverse_and_identify 四类远程调用赋值与递归（446-482）。"""
+
+    def test_all_branches_and_recursion(self, tmp_path: Path) -> None:
+        """单节点同时命中 dubbo/grpc/rest/feign，并递归处理子节点。"""
+        adapter = _make_adapter(tmp_path)
+        annotations = [
+            {"type": "@Reference", "level": "class"},
+            {"type": '@FeignClient(url="http://x")', "level": "class"},
+        ]
+        adapter._extract_annotations = Mock(return_value=annotations)  # type: ignore[method-assign]
+
+        node = CallChainNode(
+            class_name="com.example.FooStub",
+            method_name="Grpc.RestTemplate",
+            signature=None,
+        )
+        node.children.append(
+            CallChainNode(class_name="com.example.Bar", method_name="plain", signature=None)
+        )
+
+        adapter._traverse_and_identify(node)
+
+        # feign 分支最后赋值
+        assert node.metadata["call_type"] == "feign"
+        assert node.service is not None or node.metadata["service"] is None
+
+
+class TestExtractAnnotationsBranches:
+    """_extract_annotations 缓存命中/成功/异常与 _find_java_file 直接命中。"""
+
+    def test_cache_hit(self, tmp_path: Path) -> None:
+        """命中缓存直接返回（496）。"""
+        adapter = _make_adapter(tmp_path)
+        adapter._annotation_cache["Svc:m"] = [{"type": "@X"}]
+
+        assert adapter._extract_annotations("Svc", "m") == [{"type": "@X"}]
+
+    def test_success_reads_source(self, tmp_path: Path) -> None:
+        """找到源文件并解析注解、写回缓存（504-508）。"""
+        pkg = tmp_path / "com" / "example"
+        pkg.mkdir(parents=True)
+        (pkg / "Service.java").write_text("@Service\npublic class Service {}\n")
+        adapter = _make_adapter(tmp_path)
+
+        annotations = adapter._extract_annotations("com.example.Service", "method1")
+
+        assert any("@Service" in a["type"] for a in annotations)
+        assert "com.example.Service:method1" in adapter._annotation_cache
+
+    def test_read_failure_returns_empty(self, tmp_path: Path) -> None:
+        """读取源文件异常时返回空（509-511）。"""
+        adapter = _make_adapter(tmp_path)
+        bad = MagicMock()
+        bad.read_text.side_effect = OSError("io")
+        adapter._find_java_file = Mock(return_value=bad)  # type: ignore[method-assign]
+
+        assert adapter._extract_annotations("X", "m") == []
+
+    def test_find_java_file_direct_hit(self, tmp_path: Path) -> None:
+        """类路径直译的文件真实存在时直接返回（528-529）。"""
+        pkg = tmp_path / "com" / "example"
+        pkg.mkdir(parents=True)
+        target = pkg / "Widget.java"
+        target.write_text("public class Widget {}")
+        adapter = _make_adapter(tmp_path)
+
+        assert adapter._find_java_file("com.example.Widget") == target
+
+
+class TestAnnotationAndCallTypeEdges:
+    """方法级注解解析与 grpc/rest/feign 识别剩余分支。"""
+
+    def test_parse_method_level_annotation(self, tmp_path: Path) -> None:
+        """命中方法级注解正则（560-561）。"""
+        adapter = _make_adapter(tmp_path)
+        content = "@Service\npublic class C {\npublic void run() @Test\n}"
+
+        annotations = adapter._parse_annotations_from_source(content)
+
+        assert any(a["level"] == "method" for a in annotations)
+
+    def test_identify_grpc_by_method_name(self, tmp_path: Path) -> None:
+        """方法名含 grpc 特征 -> 返回类名（627-628）。"""
+        adapter = _make_adapter(tmp_path)
+
+        assert adapter._identify_grpc_call("com.example.Svc", "ch.newFutureStub(ch)") == (
+            "com.example.Svc"
+        )
+
+    def test_identify_rest_feign_branch(self, tmp_path: Path) -> None:
+        """annotations 含 FeignClient 时 REST 识别走 feign 分支（654-656）。"""
+        adapter = _make_adapter(tmp_path)
+
+        info = adapter._identify_rest_call(
+            [{"type": "@FeignClient"}], "com.example.Api", "regularMethod"
+        )
+
+        assert info is not None
+        assert info.call_type == "feign"
+
+    def test_identify_feign_call(self, tmp_path: Path) -> None:
+        """_identify_feign_call 命中 FeignClient 注解（677-680 + 695）。"""
+        adapter = _make_adapter(tmp_path)
+
+        info = adapter._identify_feign_call(
+            [{"type": '@FeignClient(url="http://svc")'}], "com.example.Api"
+        )
+
+        assert info is not None
+        assert info.call_type == "feign"
+        assert info.url == "http://svc"
+
+
+class TestDownloadJacg:
+    """_download_jacg 下载体（744-760）。"""
+
+    def test_download_success(self, tmp_path: Path) -> None:
+        """jar 不存在时下载并写入。"""
+        cache_dir = tmp_path / "cache"
+        adapter = JavaAllCallGraphAdapter(
+            repo_path=str(tmp_path), jacg_jar=str(tmp_path / "t.jar"), cache_dir=cache_dir
+        )
+        # 删除 init 生成的 jar 之外的下载目标（若存在）
+        jar_path = cache_dir / "java-all-call-graph-0.9.0-jar-with-dependencies.jar"
+        if jar_path.exists():
+            jar_path.unlink()
+
+        resp = MagicMock()
+        resp.read.return_value = b"fake-jar-bytes"
+        ctx = MagicMock()
+        ctx.__enter__.return_value = resp
+        ctx.__exit__.return_value = False
+
+        with patch(
+            "jcia.adapters.tools.java_all_call_graph_adapter.urllib.request.urlopen",
+            return_value=ctx,
+        ):
+            result = adapter._download_jacg()
+
+        assert result == jar_path
+        assert jar_path.read_bytes() == b"fake-jar-bytes"
+
+    def test_download_failure_raises(self, tmp_path: Path) -> None:
+        """下载失败抛 RuntimeError。"""
+        cache_dir = tmp_path / "cache2"
+        adapter = JavaAllCallGraphAdapter(
+            repo_path=str(tmp_path), jacg_jar=str(tmp_path / "t.jar"), cache_dir=cache_dir
+        )
+        with (
+            patch(
+                "jcia.adapters.tools.java_all_call_graph_adapter.urllib.request.urlopen",
+                side_effect=OSError("network down"),
+            ),
+            pytest.raises(RuntimeError, match="Cannot download JACG"),
+        ):
+            adapter._download_jacg()
+
+
+class TestBuildServiceTopology:
+    """build_service_topology 扫描/解析/依赖（768-805, 818-840, 858-885, 897-908）。"""
+
+    def test_topology_with_provider_and_consumer(self, tmp_path: Path) -> None:
+        """含 Dubbo provider 与 consumer 源文件时构建服务与依赖。"""
+        provider = tmp_path / "UserServiceImpl.java"
+        provider.write_text(
+            '@DubboService(version="1.0.0", group="teamA")\n' "public class UserServiceImpl {}\n"
+        )
+        consumer = tmp_path / "OrderManager.java"
+        consumer.write_text(
+            "public class OrderManager {\n"
+            '    @Reference(version="2.0.0", group="grp")\n'
+            "    private UserService remoteSvc;\n"
+            "}\n"
+        )
+        adapter = _make_adapter(tmp_path)
+
+        topology = adapter.build_service_topology()
+
+        # provider 服务被识别（含 version/group）
+        assert "IUserServiceImpl" in topology["services"]
+        provider_info = topology["services"]["IUserServiceImpl"]
+        assert provider_info["is_provider"] is True
+        assert provider_info["version"] == "1.0.0"
+        assert provider_info["group"] == "teamA"
+        # consumer 服务被识别
+        assert "UserService" in topology["services"]
+        assert topology["services"]["UserService"]["is_consumer"] is True
+        # 依赖分析：provider 依赖了 consumer 角色的服务
+        assert "UserService" in topology["dependencies"]["IUserServiceImpl"]
+
+    def test_parse_dubbo_service_no_class_returns_none(self, tmp_path: Path) -> None:
+        """无 class 关键字时返回 None（820-821）。"""
+        adapter = _make_adapter(tmp_path)
+
+        assert adapter._parse_dubbo_service("@Service nothing", tmp_path / "X.java") is None
+
+    def test_parse_dubbo_consumer_no_reference_returns_none(self, tmp_path: Path) -> None:
+        """无法匹配 @Reference 结构时返回 None（862-863）。"""
+        adapter = _make_adapter(tmp_path)
+
+        assert adapter._parse_dubbo_consumer("no annotation here", tmp_path / "X.java") is None
+
+    def test_analyze_service_dependencies_skips_self(self, tmp_path: Path) -> None:
+        """依赖分析跳过自身、收集 consumer 服务（897-908）。"""
+        adapter = _make_adapter(tmp_path)
+        all_services = {
+            "IOrder": {"is_consumer": True},
+            "IUser": {"is_provider": True},
+        }
+
+        deps = adapter._analyze_service_dependencies("IUser", all_services)
+
+        assert deps == ["IOrder"]
+
+    def test_topology_survives_read_error(self, tmp_path: Path) -> None:
+        """单个文件解析异常被捕获并跳过（797-798）。"""
+        # 名为 *.java 的目录会让 read_text 抛 IsADirectoryError，落入 except 分支
+        (tmp_path / "Broken.java").mkdir()
+        adapter = _make_adapter(tmp_path)
+
+        topology = adapter.build_service_topology()
+
+        assert topology["services"] == {}

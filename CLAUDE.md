@@ -238,7 +238,7 @@ When implementing new features:
 5. **Regression Test Execution** (Maven Surefire)
 6. **Report Generation** (JSON, HTML, Markdown)
 7. **Cross-service Remote Call Detection** (Phase 4) — Dubbo/Feign/HTTP/MQ adapters (`composite_adapter.py`) fused into the impact graph via `analyze --detect-remote-calls`; `AnalysisFusionService`, `SeverityEnhancer`, and `RemoteCallDetectionService` are complete
-8. **Coverage Targets Achieved**: Overall 84%, all layer targets met ✓
+8. **Coverage Targets Achieved**: Overall 93%, all layer targets met ✓ (Adapters layer lifted 78.0% → 93.4% by unit-testing the 4 tool adapters: skywalking_call_chain 33→100%, java_all_call_graph 61→100%, maven_surefire_test_executor 61→100%, openai 63→99%)
 
 #### Remaining Work (Enhancements, non-blocking)
 1. **Recall benchmark** — Jenkins (a monolith) validates *precision*: 0 false positives, confirmed by ripgrep finding 0 RPC/MQ patterns in the entire tree. A microservice sample repo is still needed to benchmark detection *recall* against the ≥ 90% accuracy goal.
@@ -250,14 +250,14 @@ When implementing new features:
 
 | Metric | Target | Current | Status |
 |--------|--------|---------|--------|
-| Overall Coverage | ≥ 80% | 84% | ✓ |
+| Overall Coverage | ≥ 80% | 93% | ✓ |
 | Entities Coverage | ≥ 95% | 97.8% | ✓ |
 | Services Coverage | ≥ 85% | 90.1% | ✓ |
-| Adapters Coverage | ≥ 75% | 78.0% | ✓ |
+| Adapters Coverage | ≥ 75% | 93.4% | ✓ |
 | Use Cases Coverage | — | 98.4% | ✓ |
 | Ruff Pass Rate | 100% | 100% | ✓ |
 | Pyright Errors | 0 | 0 | ✓ |
-| Test Pass Rate | 100% | 895 passed / 31 skipped | ✓ |
+| Test Pass Rate | 100% | 991 passed / 31 skipped | ✓ |
 
 ### Next Steps Priority
 

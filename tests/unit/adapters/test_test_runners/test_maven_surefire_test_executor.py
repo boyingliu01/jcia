@@ -16,6 +16,7 @@ from jcia.core.interfaces.test_runner import (
     TestExecutionResult,
     TestSuiteResult,
 )
+from jcia.core.interfaces.tool_wrapper import ToolResult
 
 
 @pytest.fixture()
@@ -603,3 +604,349 @@ class TestTestMethodInfo:
         assert info.class_name == "com.example.ServiceTest"
         assert info.method_name == "testMethod"
         assert info.full_name == "com.example.ServiceTest.testMethod"
+
+
+def _tool_result(success: bool = True, stderr: str = "") -> ToolResult:
+    """构造 ToolResult 用于 mock Maven.execute 返回值。"""
+    return ToolResult(success=success, exit_code=0 if success else 1, stdout="", stderr=stderr)
+
+
+class TestRunAllTests:
+    """_run_all_tests 覆盖（命令构建 + 执行分支）。"""
+
+    def test_run_all_tests_success(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """成功执行全部测试，命令为 mvn clean test。"""
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+        mock_maven_adapter.execute.return_value = _tool_result(success=True)
+        expected = TestSuiteResult()
+        expected.total_tests = 7
+        executor._parse_test_results = Mock(return_value=expected)  # type: ignore[method-assign]
+
+        result = executor._run_all_tests()
+
+        assert result.total_tests == 7
+        mock_maven_adapter.execute.assert_called_once_with(args=["mvn", "clean", "test"])
+
+    def test_run_all_tests_with_coverage_and_flags(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """with_coverage/skip_tests/fail_fast 会修改命令序列。"""
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+        mock_maven_adapter.execute.return_value = _tool_result(success=True)
+        executor._parse_test_results = Mock(return_value=TestSuiteResult())  # type: ignore[method-assign]
+
+        executor._run_all_tests(with_coverage=True, skip_tests=True, fail_fast=True)
+
+        called_args = mock_maven_adapter.execute.call_args.kwargs["args"]
+        assert called_args == [
+            "mvn",
+            "clean",
+            "jacoco:prepare-agent",
+            "jacoco:report",
+            "test",
+            "-DskipTests",
+            "-DfailFast",
+        ]
+
+    def test_run_all_tests_failure_logs_error(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """Maven 执行失败时进入 error 分支后仍解析结果。"""
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+        mock_maven_adapter.execute.return_value = _tool_result(success=False, stderr="boom")
+        executor._parse_test_results = Mock(return_value=TestSuiteResult())  # type: ignore[method-assign]
+
+        result = executor._run_all_tests()
+
+        assert isinstance(result, TestSuiteResult)
+
+
+class TestRunSelectedTests:
+    """_run_selected_tests 覆盖。"""
+
+    def test_run_selected_tests_success(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """构建 surefire 命令并执行。"""
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+        test_cases = [
+            TestCase(class_name="ServiceTest", method_name="testA", test_type=TestType.UNIT)
+        ]
+        mock_maven_adapter.execute.return_value = _tool_result(success=True)
+        executor._parse_test_results = Mock(return_value=TestSuiteResult())  # type: ignore[method-assign]
+
+        executor._run_selected_tests(test_cases)
+
+        called_args = mock_maven_adapter.execute.call_args.kwargs["args"]
+        assert called_args[0] == "mvn"
+        assert called_args[1] == "surefire:test"
+        assert "-Dtest=ServiceTest#testA" in called_args
+        assert "-DfailIfNoTests=false" in called_args
+
+    def test_run_selected_tests_with_coverage_fail_fast_failure(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """with_coverage/fail_fast 分支 + 执行失败告警分支。"""
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+        test_cases = [
+            TestCase(class_name="ServiceTest", method_name="testA", test_type=TestType.UNIT)
+        ]
+        mock_maven_adapter.execute.return_value = _tool_result(success=False, stderr="warn")
+        executor._parse_test_results = Mock(return_value=TestSuiteResult())  # type: ignore[method-assign]
+
+        result = executor._run_selected_tests(test_cases, with_coverage=True, fail_fast=True)
+
+        assert isinstance(result, TestSuiteResult)
+        called_args = mock_maven_adapter.execute.call_args.kwargs["args"]
+        assert "jacoco:prepare-agent" in called_args
+        assert "jacoco:report" in called_args
+        assert called_args[-1] == "-DfailFast"
+
+
+class TestParseTestResultsWithReports:
+    """_parse_test_results 遍历 surefire/failsafe 报告循环体。"""
+
+    def test_parse_results_aggregates_surefire_and_failsafe(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """surefire 与 failsafe 报告都会被聚合。"""
+        suite_xml = (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<testsuite tests="2" failures="0" errors="0" skipped="0" time="0.5">\n'
+            '  <testcase classname="com.example.A" name="t1" time="0.1"/>\n'
+            '  <testcase classname="com.example.A" name="t2" time="0.1"/>\n'
+            "</testsuite>"
+        )
+        surefire = temp_project_dir / "target" / "surefire-reports" / "TEST-A.xml"
+        surefire.write_text(suite_xml)
+        failsafe = temp_project_dir / "target" / "failsafe-reports" / "TEST-B.xml"
+        failsafe.write_text(suite_xml)
+
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+
+        result = executor._parse_test_results()
+
+        assert result.total_tests == 4
+        assert result.passed_tests == 4
+        assert len(result.test_results) == 4
+
+
+class TestConfigureJacoco:
+    """_configure_jacoco 覆盖 pom 缺失 / 含/不含 jacoco / 异常分支。"""
+
+    def test_configure_jacoco_missing_pom(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """pom.xml 不存在时直接返回。"""
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+        # 不创建 pom.xml，函数应安全返回（不抛异常）
+        executor._configure_jacoco()
+
+    def test_configure_jacoco_pom_without_plugin(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """pom.xml 无 jacoco 插件时进入 plugins is None 分支。"""
+        (temp_project_dir / "pom.xml").write_text(
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            "<project><build><plugins>"
+            "<plugin><groupId>org.apache.maven.plugins</groupId>"
+            "<artifactId>maven-compiler-plugin</artifactId></plugin>"
+            "</plugins></build></project>"
+        )
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+        executor._configure_jacoco()
+
+    def test_configure_jacoco_pom_with_plugin(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """pom.xml 已含 jacoco 插件时进入 else 分支。"""
+        (temp_project_dir / "pom.xml").write_text(
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            "<project><build><plugins>"
+            "<plugin><groupId>org.jacoco</groupId>"
+            "<artifactId>jacoco-maven-plugin</artifactId></plugin>"
+            "</plugins></build></project>"
+        )
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+        executor._configure_jacoco()
+
+    def test_configure_jacoco_invalid_pom(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """pom.xml 内容非法时进入 except 分支。"""
+        (temp_project_dir / "pom.xml").write_text("this is not xml <<<")
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+        executor._configure_jacoco()
+
+
+class TestConfigureJacocoPluginBuild:
+    """_configure_jacoco 插件构建块（405-441）。
+
+    生产代码用 defusedxml.ElementTree 作为 ET，它不提供 Element/SubElement
+    工厂函数，且第 434 行的 text()='...' 谓词不受 ElementTree XPath 子集支持。
+    因此该构建块在生产环境始终落入 except 分支（源码注释亦标明其仅为演示）。
+    这里将模块级 ET 替换为可控 mock，以真实执行 plugins 命中/未命中两条分支，
+    并对 logger 行为做出断言。
+    """
+
+    @staticmethod
+    def _executor_with_pom(
+        mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> MavenSurefireTestExecutor:
+        (temp_project_dir / "pom.xml").write_text("<project/>")
+        return MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+
+    def test_build_plugin_not_found(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """未命中 jacoco 插件时记录 info 提示。"""
+        executor = self._executor_with_pom(mock_maven_adapter, temp_project_dir)
+        mock_et = MagicMock()
+        mock_et.parse.return_value.getroot.return_value.find.return_value = None
+        with patch("jcia.adapters.test_runners.maven_surefire_test_executor.ET", mock_et), patch(
+            "jcia.adapters.test_runners.maven_surefire_test_executor.logger"
+        ) as mock_logger:
+            executor._configure_jacoco()
+        mock_logger.info.assert_any_call("JaCoCo plugin not found, would add (implementation note)")
+
+    def test_build_plugin_found(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """已命中 jacoco 插件时记录 debug。"""
+        executor = self._executor_with_pom(mock_maven_adapter, temp_project_dir)
+        mock_et = MagicMock()
+        mock_et.parse.return_value.getroot.return_value.find.return_value = MagicMock()
+        with patch("jcia.adapters.test_runners.maven_surefire_test_executor.ET", mock_et), patch(
+            "jcia.adapters.test_runners.maven_surefire_test_executor.logger"
+        ) as mock_logger:
+            executor._configure_jacoco()
+        mock_logger.debug.assert_any_call("JaCoCo plugin already configured")
+
+
+class TestParseJacocoCoverageError:
+    """_parse_jacoco_coverage 异常分支。"""
+
+    def test_parse_jacoco_coverage_invalid(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """jacoco.xml 存在但内容非法时返回默认值。"""
+        jacoco_xml = temp_project_dir / "target" / "site" / "jacoco" / "jacoco.xml"
+        jacoco_xml.write_text("not valid xml <<<")
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+
+        result = executor._parse_jacoco_coverage()
+
+        assert result["line_coverage"] == 0.0
+        assert result["total_lines"] == 0
+
+
+class TestExecuteWithCoverageAndReport:
+    """execute_with_coverage / get_coverage_report / execute_incremental_tests 编排。"""
+
+    def test_execute_with_coverage(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """配置 jacoco、执行测试、解析覆盖率并写回结果。"""
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+        executor._configure_jacoco = Mock()  # type: ignore[method-assign]
+        base_result = TestSuiteResult()
+        executor.execute_tests = Mock(return_value=base_result)  # type: ignore[method-assign]
+        executor._parse_jacoco_coverage = Mock(  # type: ignore[method-assign]
+            return_value={"line_coverage": 82.5, "total_lines": 100, "covered_lines": 82}
+        )
+
+        result = executor.execute_with_coverage()
+
+        assert result.coverage_percent == 82.5
+        executor._configure_jacoco.assert_called_once()
+
+    def test_get_coverage_report(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """get_coverage_report 组装 execute_with_coverage 的结果。"""
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+        suite = TestSuiteResult()
+        suite.coverage_percent = 55.0
+        suite.total_tests = 10
+        suite.passed_tests = 8
+        suite.failed_tests = 2
+        executor.execute_with_coverage = Mock(return_value=suite)  # type: ignore[method-assign]
+
+        report = executor.get_coverage_report(temp_project_dir)
+
+        assert report["line_coverage"] == 55.0
+        assert report["total_tests"] == 10
+        assert report["passed_tests"] == 8
+        assert report["failed_tests"] == 2
+
+    def test_execute_incremental_tests(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """增量测试：加载基线 -> 选择受影响 -> 执行。"""
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+        executor._load_baseline = Mock(return_value={"test_results": []})  # type: ignore[method-assign]
+        affected = [
+            TestCase(class_name="ServiceTest", method_name="testA", test_type=TestType.UNIT)
+        ]
+        executor._select_affected_tests = Mock(return_value=affected)  # type: ignore[method-assign]
+        executor.execute_tests = Mock(return_value=TestSuiteResult())  # type: ignore[method-assign]
+
+        result = executor.execute_incremental_tests(
+            baseline_file=Path("/baseline.json"), changed_methods=["com.example.Service.method"]
+        )
+
+        assert isinstance(result, TestSuiteResult)
+        executor.execute_tests.assert_called_once_with(affected)
+
+
+class TestIsTestAffectedFirstCondition:
+    """_is_test_affected 首个匹配条件（类名包含变更类名）。"""
+
+    def test_is_test_affected_by_class_name_substring(
+        self, mock_maven_adapter: MagicMock, temp_project_dir: Path
+    ) -> None:
+        """变更类名作为子串命中测试类名时返回 True。"""
+        test = TestExecutionResult(
+            test_class="com.example.UserServiceTest",
+            test_method="doThing",
+            status=TestStatus.PASSED,
+            duration_ms=10,
+        )
+        executor = MavenSurefireTestExecutor(
+            project_path=temp_project_dir, maven_adapter=mock_maven_adapter
+        )
+
+        # "userservice" 是 "com.example.userservicetest" 的子串
+        assert executor._is_test_affected(test, ["com.example.UserService"]) is True
