@@ -97,8 +97,8 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
         if not java_files:
             java_files = list(self._repo_path.rglob("*.java"))
 
-        # 过滤掉测试文件
-        java_files = [f for f in java_files if "/test/" not in str(f)]
+        # 注意：不按路径过滤测试文件——src_dirs 显式包含 src/test/java，
+        # 测试类缓存是 find_test_classes（变更方法→测试选择）的核心输入
 
         logger.info(f"Found {len(java_files)} Java source files")
 
@@ -544,7 +544,7 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
             List[str]: 测试类列表
         """
         # 简单模式：类名 + Test 或 Test + 类名
-        simple_class_name = class_name.split(".")[-1]
+        simple_class_name = class_name.rsplit(".", maxsplit=1)[-1]
 
         test_patterns = [
             f"{simple_class_name}Test",

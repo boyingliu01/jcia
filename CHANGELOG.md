@@ -39,9 +39,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 创建 jcia/cli/__init__.py，修复 AGENTS.md 记录的 CLI 入口点缺失问题（entry point 指向 jcia.cli.main:cli）
 - 补齐 jcia/infrastructure/database/__init__.py 包标记
 - 修复 PyDrillerAdapter 变更文件路径缺陷：原用 `ModifiedFile.filename`（仅 basename，如 `CspFilter.java`）作为 `file_path`，导致下游 `repo_path / file_path` 无法定位磁盘文件，远程调用检测恒报 "File not found" 并返回 0 结果；改用 `new_path`（相对仓库根的完整路径）并统一分隔符为正斜杠，缺失时回退 `filename`。该缺陷此前因单测 mock 把 `filename` 设为完整路径而被掩盖
+- Delphi 三模型交叉走查（whalecloud g-qwen3.8-flash / g-deepseek-v4-flash / g-glm-5.3-flash）发现的缺陷修复：
+  - CLI 入口点解析错误（Critical）：`setup.py` 声明 `jcia.cli:main` 而 `jcia/cli/__init__.py` 仅导出 `cli`，`main` 属性实际解析为 import 系统自动绑定的 `jcia.cli.main` 子模块对象（不可调用），安装后的 `jcia` 命令启动即抛 TypeError；`__init__.py` 显式增加 `main = cli` 别名、`setup.py` 入口改为 `jcia.cli:cli`，并新增入口点回归测试
+  - `PyDrillerAdapter._collect_commits` 增加祖先关系校验：from_commit 非 to_commit 祖先时，简单 range `<from>..<to>` 会静默返回两分支间的意外提交集，现显式抛 `ValueError`（`from == to` 闭区间语义经测试锁定不变）
+  - 移除 `source_code_call_graph_adapter._scan_project` 的 `"/test/" in str(f)` 过滤：该过滤在 Windows 反斜杠路径下失效，且与 `find_test_classes`（依赖测试类缓存做变更→测试选择）功能矛盾，POSIX 上会破坏该功能；改为注释说明测试类必须保留并以测试锁定
 
 ### Testing
-- 测试套件：991 passed / 31 skipped
+- 测试套件：995 passed / 31 skipped（含 Delphi 走查后新增的 4 个回归测试）
 - 实测总覆盖率 84% → 93%（目标 ≥ 80%）；Adapters 层覆盖率 78.04% → 93%（目标 ≥ 75%）
 - 新增 4 个工具适配器单元测试，将薄弱环节拉满：
   - `skywalking_call_chain_adapter` 33% → 100%

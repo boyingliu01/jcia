@@ -57,7 +57,11 @@ class PyDrillerAdapter(ChangeAnalyzer):
                     message=getattr(commit, "msg", "") or "",
                     author=getattr(author, "name", "") or "",
                     email=getattr(author, "email", "") or "",
-                    timestamp=getattr(commit, "author_date", datetime.min) or datetime.min,
+                    # datetime.min 为有意的 naive 哨兵（缺 author_date 时的占位），
+                    # 不注入时区以避免与既有 naive/aware 混合数据流行为变化
+                    timestamp=(
+                        getattr(commit, "author_date", datetime.min) or datetime.min  # noqa: DTZ901
+                    ),
                     parents=[getattr(p, "hash", "") for p in parents],
                 )
                 change_set.commits.append(commit_info)
@@ -153,10 +157,21 @@ class PyDrillerAdapter(ChangeAnalyzer):
 
         Returns:
             list[Any]: 按时间升序排列的 PyDriller Commit 对象列表
+
+        Raises:
+            ValueError: from_commit 不是 to_commit 的祖先（简单 range 在该场景
+                会静默返回两分支间的意外提交集，必须显式失败）
         """
         repo = git.repo
         start = repo.commit(from_commit)
         to_ref = to_commit or "HEAD"
+        to_commit_obj = repo.commit(to_ref)
+        if not repo.is_ancestor(start, to_commit_obj):
+            msg = (
+                f"from_commit {from_commit} 不是 to_commit {to_ref} 的祖先，"
+                "无法构造确定性的闭区间提交范围"
+            )
+            raise ValueError(msg)
         raw_commits: list[Any] = [start]
         raw_commits.extend(repo.iter_commits(rev=f"{start.hexsha}..{to_ref}", reverse=True))
         return [git.get_commit_from_gitpython(rc) for rc in raw_commits]

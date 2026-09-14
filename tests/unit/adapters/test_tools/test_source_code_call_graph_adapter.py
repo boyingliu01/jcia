@@ -1,6 +1,7 @@
 """SourceCodeCallGraphAnalyzer 单元测试."""
 
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -14,7 +15,7 @@ from jcia.core.interfaces.call_chain_analyzer import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_java_project(tmp_path: Path) -> Path:
     """创建临时 Java 项目目录结构."""
     # 创建标准 Maven 项目结构
@@ -96,7 +97,7 @@ public class ServiceTest {
     return tmp_path
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_java_project_core_style(tmp_path: Path) -> Path:
     """创建 core 风格的 Java 项目目录结构."""
     core_src_main = tmp_path / "core" / "src" / "main" / "java" / "com" / "core"
@@ -210,6 +211,21 @@ class TestSourceCodeCallGraphAnalyzer:
         assert len(analyzer._class_methods_cache) > 0
         assert "com.example.Service" in analyzer._class_methods_cache
         assert "com.example.Helper" in analyzer._class_methods_cache
+
+    def test_scan_project_keeps_test_classes_for_discovery(self, temp_java_project: Path) -> None:
+        """测试类必须保留在扫描缓存中，供 find_test_classes 使用.
+
+        src_dirs 显式包含 src/test/java：收集测试类是变更方法→测试选择的核心
+        输入，扫描阶段不得按路径过滤测试文件（该过滤曾按 '/test/' in str(f)
+        实现，在 Windows 反斜杠路径下失效，且在 POSIX 上会破坏
+        find_test_classes，故彻底移除并以此测试锁定行为）。
+        """
+        # Arrange & Act
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))
+
+        # Assert
+        assert "com.example.ServiceTest" in analyzer._class_methods_cache
+        assert "com.example.Service" in analyzer._class_methods_cache
 
     def test_scan_project_core_style(self, temp_java_project_core_style: Path) -> None:
         """测试扫描 core 风格项目."""
@@ -1179,8 +1195,6 @@ class TestSourceCodeCallGraphAnalyzerCoverage:
         java_file.write_text("package com.example;\npublic class Test {}", encoding="utf-8")
 
         # 使用 mock 模拟读取异常
-        from unittest.mock import patch
-
         with patch.object(Path, "read_text", side_effect=OSError("Permission denied")):
             analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(tmp_path))
             # 应该正常初始化，只是跳过无法读取的文件

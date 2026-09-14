@@ -324,3 +324,37 @@ class TestPyDrillerAdapter:
 
         mock_git_class.assert_not_called()
         mock_exists.assert_called()
+
+    def test_collect_commits_single_commit_range(self) -> None:
+        """from_commit == to_commit 时返回仅含该提交的闭区间."""
+        # Arrange
+        adapter = PyDrillerAdapter(repo_path="/fake/repo")
+        mock_git = MagicMock()
+        mock_git.repo.commit.return_value = MagicMock(hexsha="aaa111")
+        mock_git.repo.is_ancestor.return_value = True
+        mock_git.repo.iter_commits.return_value = []
+        wrapped_start = object()
+        mock_git.get_commit_from_gitpython.return_value = wrapped_start
+
+        # Act
+        result = adapter._collect_commits(mock_git, "aaa111", "aaa111")
+
+        # Assert
+        assert result == [wrapped_start]
+        mock_git.repo.iter_commits.assert_called_once_with(rev="aaa111..aaa111", reverse=True)
+
+    def test_collect_commits_non_ancestor_range_raises(self) -> None:
+        """from_commit 不是 to_commit 祖先时显式抛 ValueError.
+
+        简单 range <from>..<to> 在非祖先场景会静默返回两分支间的意外提交集，
+        必须在枚举前校验祖先关系并显式失败，而非给出不可信结果。
+        """
+        # Arrange
+        adapter = PyDrillerAdapter(repo_path="/fake/repo")
+        mock_git = MagicMock()
+        mock_git.repo.commit.return_value = MagicMock(hexsha="aaa111")
+        mock_git.repo.is_ancestor.return_value = False
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="祖先"):
+            adapter._collect_commits(mock_git, "aaa111", "bbb222")
