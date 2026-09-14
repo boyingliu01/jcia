@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-14
+
+> 首个正式发布版本：在既有累计功能之上完成发布就绪收尾——补齐 LICENSE、接入 CI/CD、校正仓库元数据与文档一致性，版本升至 0.2.0（Beta）。
+
+### Release Readiness
+- 新增根目录 `LICENSE`（MIT），与 `pyproject.toml` / README 的许可证声明对齐
+- 新增 GitHub Actions：`ci.yml`（ruff / format / import-linter / pyright / mypy / bandit + Python 3.10–3.12 测试矩阵 + 覆盖率门槛 ≥ 80% + 集成测试非阻断）与 `release.yml`（`v*` tag 触发 `python -m build` + `twine check` + PyPI trusted publishing）
+- 发布元数据校正：`[project.urls]` 及 README / `promotion/*` / `docs/*` / `scripts/*` 中的占位 `github.com/your-org/jcia` 全量替换为真实仓库 `github.com/boyingliu01/jcia`
+- 版本 `0.1.0 → 0.2.0`（`pyproject` / `jcia.__version__` / CLI `--version` 统一为单一来源，CLI 改读 `jcia.__version__`）；`Development Status` 由 `3 - Alpha` 升级为 `4 - Beta`
+- README 命令行与实况对齐：移除不存在的 `jcia regression` 命令与 `jcia report --output`（实际为必填 `--output-dir`），补齐 `report` / `config` 选项，覆盖率 badge `89% → 93%`
+- 修复 `tests/unit/cli/test_main.py` 遗留的 `PT001`（`@pytest.fixture()` 空括号），使全量 `ruff check jcia tests` 通过
+
 ### Added
 - PROJECT_CONSTITUTION.md - 项目宪法，定义开发原则和流程
 - AGENTS.md - Agent 开发指南（更新）
@@ -51,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 移除 `source_code_call_graph_adapter._scan_project` 的 `"/test/" in str(f)` 过滤：该过滤在 Windows 反斜杠路径下失效，且与 `find_test_classes`（依赖测试类缓存做变更→测试选择）功能矛盾，POSIX 上会破坏该功能；改为注释说明测试类必须保留并以测试锁定
 
 ### Testing
-- 测试套件：995 passed / 31 skipped（含 Delphi 走查后新增的 4 个回归测试）
+- 测试套件：1005 passed / 31 skipped（含 Delphi 走查后新增的 4 个回归测试）
 - 实测总覆盖率 84% → 93%（目标 ≥ 80%）；Adapters 层覆盖率 78.04% → 93%（目标 ≥ 75%）
 - 新增 4 个工具适配器单元测试，将薄弱环节拉满：
   - `skywalking_call_chain_adapter` 33% → 100%
@@ -140,6 +152,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/your-org/jcia/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/your-org/jcia/releases/tag/v0.1.0
-[0.0.1]: https://github.com/your-org/jcia/releases/tag/v0.0.1
+[Unreleased]: https://github.com/boyingliu01/jcia/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/boyingliu01/jcia/releases/tag/v0.2.0
+[0.1.0]: https://github.com/boyingliu01/jcia/releases/tag/v0.1.0
+[0.0.1]: https://github.com/boyingliu01/jcia/releases/tag/v0.0.1

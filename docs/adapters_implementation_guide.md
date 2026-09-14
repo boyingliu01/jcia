@@ -536,7 +536,7 @@ MIT License
 
 ## 联系方式
 
-- 问题反馈: [GitHub Issues](https://github.com/your-org/jcia/issues)
+- 问题反馈: [GitHub Issues](https://github.com/boyingliu01/jcia/issues)
 - 邮箱: support@example.com
 
 ---

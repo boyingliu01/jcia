@@ -100,7 +100,7 @@ pip install jcia
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-org/jcia.git
+git clone https://github.com/boyingliu01/jcia.git
 cd jcia
 
 # 方法1：使用pip安装（推荐）

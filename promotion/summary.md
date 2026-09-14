@@ -244,7 +244,7 @@ promotion/
 
 如果您在使用这些推广材料时有任何建议或发现需要更新的内容，请通过以下方式反馈：
 
-- GitHub Issues: https://github.com/your-org/jcia/issues
+- GitHub Issues: https://github.com/boyingliu01/jcia/issues
 - 邮箱：jcia-dev@example.org
 
 ### 版本历史

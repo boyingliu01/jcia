@@ -65,7 +65,7 @@ jcia config --show
 
 ### 方式二：源码运行
 ```bash
-git clone https://github.com/your-org/jcia.git
+git clone https://github.com/boyingliu01/jcia.git
 cd jcia
 pip install -r requirements.txt
 python -m jcia analyze --repo-path /your/repo --from-commit abc123 --to-commit def456
@@ -73,7 +73,7 @@ python -m jcia analyze --repo-path /your/repo --from-commit abc123 --to-commit d
 
 ## 详细文档
 
-- GitHub仓库：https://github.com/your-org/jcia
+- GitHub仓库：https://github.com/boyingliu01/jcia
 - 使用指南：查看项目 README.md
 - API文档：查看项目 docs/ 目录
 
@@ -81,7 +81,7 @@ python -m jcia analyze --repo-path /your/repo --from-commit abc123 --to-commit d
 
 如有任何问题或建议，欢迎通过以下方式联系我们：
 
-- GitHub Issues：https://github.com/your-org/jcia/issues
+- GitHub Issues：https://github.com/boyingliu01/jcia/issues
 - 邮箱：jcia-dev@example.org
 
 ---
@@ -191,7 +191,7 @@ severity:
 
 如有任何问题或建议，欢迎通过以下方式联系我们：
 
-- GitHub Issues：https://github.com/your-org/jcia/issues
+- GitHub Issues：https://github.com/boyingliu01/jcia/issues
 - 邮箱：jcia-dev@example.org
 
 ---
@@ -252,7 +252,7 @@ JCIA是一款**智能化的Java代码影响分析工具**，能够：
 
 **报名方式很简单：**
 
-1. 在GitHub上Star项目：https://github.com/your-org/jcia
+1. 在GitHub上Star项目：https://github.com/boyingliu01/jcia
 2. 在Issues中提交你的使用反馈
 3. 或发送邮件至：jcia-dev@example.org
 
@@ -271,7 +271,7 @@ JCIA是一款**智能化的Java代码影响分析工具**，能够：
 
 ---
 
-*欢迎访问项目主页了解更多：https://github.com/your-org/jcia*
+*欢迎访问项目主页了解更多：https://github.com/boyingliu01/jcia*
 
 ---
 

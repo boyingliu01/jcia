@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)]
 [![License](https://img.shields.io/badge/license-MIT-green.svg)]
-[![Code Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen.svg)]
+[![Code Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen.svg)]
 
 **JCIA** 是一个 Python 工具，用于分析 Java 代码变更的影响范围，智能选择需要运行的测试用例，并提供回归分析能力。
 
@@ -22,7 +22,7 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-org/jcia.git
+git clone https://github.com/boyingliu01/jcia.git
 cd jcia
 
 # 创建虚拟环境
@@ -66,11 +66,8 @@ jcia analyze --repo-path /path/to/repo --commit-range abc123..def456 --detect-re
 # 生成测试用例
 jcia test --repo-path /path/to/project --target-class com.example.Service
 
-# 执行回归测试
-jcia regression --repo-path /path/to/project --baseline-commit abc123 --regression-commit def456
-
 # 生成报告
-jcia report --format html --output ./report.html
+jcia report --output-dir ./reports --format html
 
 # 配置管理
 jcia config --show
@@ -190,11 +187,11 @@ make check
 | | `--target-class` | 目标类（可多次使用）|
 | | `--coverage-file` | 覆盖率报告文件 |
 | | `--min-confidence` | 最低置信度阈值 |
-| `regression` | `--repo-path` | 项目路径 |
-| | `--baseline-commit` | 基线提交 |
-| | `--regression-commit` | 回归提交 |
-| | `--execute-coverage` | 执行并收集覆盖率 |
-| | `--save-results` | 保存测试结果 |
+| `report` | `--output-dir` | 报告输出目录（必填）|
+| | `--format` | 报告格式（json/html/markdown/console，默认 json）|
+| | `--include-details` | 包含详细信息 |
+| `config` | `--show` | 显示当前配置项 |
+| | `--set` | 设置配置项（如 analyzer.max_depth=15）|
 
 ### 环境变量
 
@@ -223,8 +220,8 @@ make check
 ## 支持
 
 - 📧 Email: jcia-dev@example.org
-- 🐛 Issues: [GitHub Issues](https://github.com/your-org/jcia/issues)
-- 📖 Docs: [项目文档](https://github.com/your-org/jcia#readme)
+- 🐛 Issues: [GitHub Issues](https://github.com/boyingliu01/jcia/issues)
+- 📖 Docs: [项目文档](https://github.com/boyingliu01/jcia#readme)
 
 ## 更新日志
 

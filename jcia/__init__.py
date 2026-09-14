@@ -3,7 +3,7 @@
 代码变更影响分析工具，支持Maven项目的一键式代码变更影响分析、测试生成与回归验证。
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "JCIA Team"
 __email__ = "jcia@example.com"
 

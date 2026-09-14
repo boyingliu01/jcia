@@ -7,6 +7,7 @@ import os
 
 import click
 
+from jcia import __version__
 from jcia.adapters.git.pydriller_adapter import PyDrillerAdapter
 from jcia.adapters.tools.mock_call_chain_analyzer import MockCallChainAnalyzer
 from jcia.core.use_cases.analyze_impact import AnalyzeImpactRequest, AnalyzeImpactUseCase
@@ -31,7 +32,7 @@ def _generate_mock_tests(target_classes: list[str], min_confidence: float) -> No
 
 
 @click.group()
-@click.version_option(version="0.1.0", message="JCIA Version %(version)s")
+@click.version_option(version=__version__, message="JCIA Version %(version)s")
 def cli() -> None:
     """JCIA - Java Code Impact Analyzer.
 

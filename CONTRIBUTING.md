@@ -8,7 +8,7 @@
 
 如果您发现了 bug，请：
 
-1. 在 [GitHub Issues](https://github.com/your-org/jcia/issues) 搜索现有 issue
+1. 在 [GitHub Issues](https://github.com/boyingliu01/jcia/issues) 搜索现有 issue
 2. 如果没有找到，创建新的 issue
 3. 在 issue 中提供：
    - 清晰的标题和描述
@@ -20,7 +20,7 @@
 
 ### 提出新功能
 
-1. 在 [GitHub Issues](https://github.com/your-org/jcia/issues) 创建 feature request
+1. 在 [GitHub Issues](https://github.com/boyingliu01/jcia/issues) 创建 feature request
 2. 描述新功能的用途和价值
 3. 讨论实现方案
 4. 等待社区反馈
@@ -288,8 +288,8 @@ def calculate_impact_score(
 ## 获取帮助
 
 - 📧 邮件：support@example.com
-- 💬 讨论：[GitHub Discussions](https://github.com/your-org/jcia/discussions)
-- 🐛 问题：[GitHub Issues](https://github.com/your-org/jcia/issues)
+- 💬 讨论：[GitHub Discussions](https://github.com/boyingliu01/jcia/discussions)
+- 🐛 问题：[GitHub Issues](https://github.com/boyingliu01/jcia/issues)
 
 ## 行为准则
 

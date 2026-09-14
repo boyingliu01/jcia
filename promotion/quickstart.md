@@ -20,7 +20,7 @@ jcia --version
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-org/jcia.git
+git clone https://github.com/boyingliu01/jcia.git
 cd jcia
 
 # 安装依赖
@@ -497,17 +497,17 @@ print(interpret_severity(score, dimensions))
 ### 推荐资源
 
 **官方文档：**
-- [完整用户手册](https://github.com/your-org/jcia/blob/main/docs/)
-- [API参考文档](https://github.com/your-org/jcia/blob/main/docs/api.md)
-- [配置参考](https://github.com/your-org/jcia/blob/main/docs/configuration.md)
+- [完整用户手册](https://github.com/boyingliu01/jcia/blob/main/docs/)
+- [API参考文档](https://github.com/boyingliu01/jcia/blob/main/docs/api.md)
+- [配置参考](https://github.com/boyingliu01/jcia/blob/main/docs/configuration.md)
 
 **视频教程：**
-- [JCIA入门视频（15分钟）](https://github.com/your-org/jcia#tutorials)
-- [高级配置教程（30分钟）](https://github.com/your-org/jcia#tutorials)
-- [CI/CD集成实战（45分钟）](https://github.com/your-org/jcia#tutorials)
+- [JCIA入门视频（15分钟）](https://github.com/boyingliu01/jcia#tutorials)
+- [高级配置教程（30分钟）](https://github.com/boyingliu01/jcia#tutorials)
+- [CI/CD集成实战（45分钟）](https://github.com/boyingliu01/jcia#tutorials)
 
 **社区支持：**
-- GitHub Issues: https://github.com/your-org/jcia/issues
+- GitHub Issues: https://github.com/boyingliu01/jcia/issues
 - 邮箱：jcia-dev@example.org
 
 ### 常见问题速查
@@ -563,8 +563,8 @@ jcia config --help
 **需要帮助？**
 
 - 📧 邮箱：jcia-dev@example.org
-- 🐛 Issues：https://github.com/your-org/jcia/issues
-- 📖 文档：https://github.com/your-org/jcia
+- 🐛 Issues：https://github.com/boyingliu01/jcia/issues
+- 📖 文档：https://github.com/boyingliu01/jcia
 
 ---
 

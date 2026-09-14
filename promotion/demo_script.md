@@ -285,7 +285,7 @@ pipeline {
 > jcia analyze --repo-path . --from-commit HEAD~1 --to-commit HEAD
 > ```
 >
-> 详细文档：https://github.com/your-org/jcia
+> 详细文档：https://github.com/boyingliu01/jcia
 >
 > 技术支持：jcia-dev@example.org
 >

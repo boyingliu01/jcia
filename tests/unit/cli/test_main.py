@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
+from jcia import __version__
 from jcia.cli.main import cli
 
 
@@ -22,7 +23,7 @@ class TestCLI:
         result = runner.invoke(cli, ["--version"])
 
         assert result.exit_code == 0
-        assert "0.1.0" in result.output
+        assert __version__ in result.output
 
     def test_cli_help(self, runner: CliRunner) -> None:
         """测试帮助信息."""
