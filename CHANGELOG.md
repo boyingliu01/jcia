@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 版本 `0.1.0 → 0.2.0`（`pyproject` / `jcia.__version__` / CLI `--version` 统一为单一来源，CLI 改读 `jcia.__version__`）；`Development Status` 由 `3 - Alpha` 升级为 `4 - Beta`
 - README 命令行与实况对齐：移除不存在的 `jcia regression` 命令与 `jcia report --output`（实际为必填 `--output-dir`），补齐 `report` / `config` 选项，覆盖率 badge `89% → 93%`
 - 修复 `tests/unit/cli/test_main.py` 遗留的 `PT001`（`@pytest.fixture()` 空括号），使全量 `ruff check jcia tests` 通过
+- 消除占位邮箱外泄：README「支持」章节的 `jcia-dev@example.org` 经 `readme = "README.md"` 进入 `METADATA` 的 `long_description`，发布后会永久渲染在 PyPI 项目页且不可编辑（yank 亦保留历史），故删除该行、支持渠道只保留 GitHub Issues；同时删除 `jcia/__init__.py` 中全仓零引用的 `__email__ = "jcia@example.com"`（实测已随 wheel 与 sdist 分发）
+- `release.yml` 加固：`build` 在 `twine check` 后调用新增的 `scripts/check_dist_placeholders.py`，解开 wheel 与 sdist 的每个成员逐行扫描占位域名（`twine check` 只校验元数据格式、pre-push 的 Gate MW 只比对 commit diff，二者结构上都抓不到这类缺陷）；`publish-pypi` 显式 `skip-existing: "true"`——上游默认为 `false`，一旦发布成功后误点 Re-run all jobs 必返 409，而 `github-release` 因 `needs` 不满足永不执行，会形成「PyPI 已发布、GitHub Release 缺失且 UI 无恢复路径」的终态
+- 新增 `docs/RELEASE_RUNBOOK.md`：只收录已实测核实的发布流程——PyPI trusted publisher 字段逐字取值（标签取自 warehouse 模板源码，其中「Workflow name」实际要求填文件名）、2FA 与已验证主邮箱两道硬门槛、标签必须 peel 到 HEAD 的取证姿势、故障恢复路径
 
 ### Added
 - PROJECT_CONSTITUTION.md - 项目宪法，定义开发原则和流程

@@ -5,7 +5,6 @@
 
 __version__ = "0.2.0"
 __author__ = "JCIA Team"
-__email__ = "jcia@example.com"
 
 from jcia.core.entities.change_set import ChangeSet
 from jcia.core.entities.impact_graph import ImpactGraph

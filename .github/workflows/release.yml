@@ -52,6 +52,12 @@ jobs:
         run: python -m build
       - name: Validate distributions
         run: twine check dist/*
+      # Placeholders such as example.org become permanent once the release is
+      # public: the README reaches the PyPI page via METADATA's long_description
+      # and cannot be edited afterwards (a yank keeps history). twine check does
+      # not catch it, and Gate MW cannot either -- it only diffs commits.
+      - name: Guard distribution against placeholder contacts
+        run: python scripts/check_dist_placeholders.py
       - name: Smoke test installed artifact
         env:
           REF: ${{ github.ref_name }}
@@ -91,6 +97,12 @@ jobs:
           run-id: ${{ github.run_id }}
       - name: Publish to PyPI (trusted publishing / OIDC)
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # Upstream default is "false". Without it, re-running a succeeded
+          # release run dies on HTTP 409, and because github-release needs this
+          # job it never executes again -- leaving PyPI published but the GitHub
+          # Release missing with no UI-reachable recovery path.
+          skip-existing: "true"
 
   github-release:
     name: Create GitHub Release
