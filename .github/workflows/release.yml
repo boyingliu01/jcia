@@ -52,7 +52,7 @@ jobs:
         run: python -m build
       - name: Validate distributions
         run: twine check dist/*
-      # Placeholders such as example.org become permanent once the release is
+      # Placeholders such as example[.]org become permanent once the release is
       # public: the README reaches the PyPI page via METADATA's long_description
       # and cannot be edited afterwards (a yank keeps history). twine check does
       # not catch it, and Gate MW cannot either -- it only diffs commits.

@@ -133,8 +133,20 @@ git for-each-ref --format='%(objectname) %(objecttype) *%(*objectname)' refs/tag
 ## 3. 发布物内容自查（已自动化进 CI）
 
 `build` job 的 *Guard distribution against placeholder contacts* 步骤调用
-`scripts/check_dist_placeholders.py`，解开 wheel 与 sdist 的**每一个成员**，
-命中 `example.(org|com|net)` 即 `exit 1` 并逐行报出位置。
+`scripts/check_dist_placeholders.py`，对 `dist/` 下**每一个文件**做封闭分类，
+解开其全部成员逐行扫描，命中 `example[.](org|com|net)` 即 `exit 1` 并逐行报出位置：
+
+| 产物形态 | 处理方式 |
+|---|---|
+| `.whl` | 扫描所有 zip 成员（元数据 + 已安装包源码） |
+| `.tar.gz` / `.tgz` / `.tar.bz2` / `.tbz2` / `.tar` | 扫描所有常规文件（PKG-INFO、README.md、包源码） |
+| `.zip` | 扫描所有 zip 成员——twine 认可 zip 形态 sdist，故它是**受支持形态**而非硬失败 |
+| 其余 | 尽力扫描（gzip 帧自动解压）并**追加一条阻断结论** |
+
+最后一行是 fail-closed 的关键：`publish` 用 `dist/*` 上传整个目录，若守卫对读不懂的文件
+保持沉默，就会在"guard OK"的谎报下把它发布出去。分类判据与候选集共用同一组后缀常量
+（`_WHEEL_SUFFIXES` / `_TAR_SDIST_SUFFIXES` / `_ZIP_SUFFIXES`），因此"被选中但无分支处理"
+的空洞在结构上无法再出现。
 
 理由：`pyproject.toml` 的 `readme = "README.md"` 会把整篇 README 塞进
 `METADATA` 的 long_description，发布后**永久渲染在 PyPI 项目页上，不可编辑，yank 也保留历史**。
@@ -147,14 +159,23 @@ python -m build
 python scripts/check_dist_placeholders.py   # 期望：placeholder guard OK
 ```
 
-守卫实现刻意放在 `scripts/` 而非 `docs/` 或仓库根：已核实 `scripts/` **不进 sdist**，
-否则守卫脚本自己写的匹配模式会被自己扫出来（同目录下的 `init_test_repo.py` 就含 `test@example.com`）。
+有两处独立的防自咬机制，职责不同，不要混淆：
+
+- **字符类** `exampl[e]\.` 保证本守卫源码里不含任何会被自己标记的字符串——这才是"守卫不扫自己"
+  的直接原因（已实测：对守卫源码跑 `PLACEHOLDER_RE.findall` 返回空列表）。
+- **放在 `scripts/`** 的意义在于该目录**不进 sdist**，于是同目录 `init_test_repo.py` 里
+  git-config 夹具用的 `test@example[.]com` 不会被误伤进发布门。
 
 已核实事实：
 
-- sdist **不含** `tests/`（0 个成员），全成员扫描不会因测试夹具里的 `example.com` 误报。
+- sdist **不含** `tests/`（0 个成员），全成员扫描不会因测试夹具里的 `example[.]com` 误报。
 - sdist 与 wheel 均**不含** `promotion/`，该目录下的占位邮箱不进任何发布物。
+- sdist 顶层仅 `LICENSE`、`PKG-INFO`、`README.md`、`jcia/`、`jcia.egg-info/`、
+  `pyproject.toml`、`setup.cfg`、`setup.py`；`docs/`、`scripts/`、`.github/` 均不在其中。
 - `twine check` **不拦** markdown 正文里的占位邮箱——它只校验元数据格式，所以必须有上面这道专用守卫。
+- `CHANGELOG.md` 目前也不进 sdist（无 `MANIFEST.in`）。正因如此，其中的占位邮箱写成
+  `example[.]org` 脱敏形式：一旦将来让它随包分发，字面量会让守卫以"发布物含占位邮箱"
+  **永久阻断流水线**，而报错指向的是一条合法的变更记录。
 
 ---
 
@@ -187,6 +208,21 @@ gh release view v0.2.0
 > 已核实语义边界（twine 源码级）：`skip-existing` 作用域是「版本 + 文件名」，
 > 仅吞掉 409 与消息含 `already exist` 的 400；其余 400/5xx 依然 fail。
 > 所以它不会掩盖真实的上传错误。
+
+**Re-run 之后必须知道的两个事实**（已实测）：
+
+1. 两个 job 各自的 *Download dist artifact* 步骤（`actions/download-artifact@v4`）都显式
+   pin 了 `run-id: ${{ github.run_id }}`（实测位于 `release.yml` L97 与 L120），
+   即各自只从**本次 run** 拉 artifact。Re-run 会生成一个全新的 run：新 build 产物的文件名
+   与旧的一致，因此上传时逐个撞 409 被 skip——**PyPI 上留的是原 run 的字节**，
+   而 `github-release` 挂到 Release 上的是**新 run 的字节**。两侧的 sha256 不必相同。
+2. 本项目**构建不是字节可复现的**：同一份源码连续两次 `python -m build`，
+   wheel 的 sha256 即不同（zip 成员携带 mtime）。所以"比对 PyPI 与 GitHub Release 附件的
+   sha256"这种核对方式**只在同一次 run 内**有意义，跨 run 比对得出的差异不代表内容被改动。
+
+结论：Re-run 是**恢复可达性**的手段，不是**保证双端同源**的手段。若发布后需要 PyPI 与
+GitHub Release 的附件严格一致，唯一姿势是手动把原 run 的 `dist` artifact 下载下来再上传
+（见下方手动路径），而不是依赖 Re-run。
 
 若不开关（历史遗留场景）：publish 成功后 Re-run 会在 `publish-pypi` 直接 400 失败，
 而 `github-release` 因 `needs` 不满足永不执行，形成
@@ -228,3 +264,18 @@ PyPI **不允许覆盖**已上传的版本，唯一手段是 yank：
   `*-alpha*|*-beta*|*-rc*|*pre*|*dev*`。已核实该模式**不覆盖** `v0.2.0rc1` / `v1.0.0-RC1`
   这类无连字符/大写形态，会被误标为 `--latest`。本次 `v0.2.0` 为稳定版，不触发该缺口；
   未来发 RC 前须先补此判定。
+
+---
+
+## 7. 已确认顺延的后续项（不在 0.2.0 范围内）
+
+- **守卫自身无单测，且 `scripts/` 不在任何 CI 门内**。`ci.yml` 目前不覆盖 `scripts/`，
+  因此 `check_dist_placeholders.py` 的回归只能在 release run 里才第一次被执行——
+  守卫若在改动中静默失效（例如分类判据与候选集再次不闭合），没有任何门能提前发现。
+  计划：补 `tests/unit/scripts/test_check_dist_placeholders.py`（复用 0.2.0 发布前手工跑过的
+  五类用例：干净 wheel/sdist、`.zip` 载泄漏、`.zip` 干净、`evil.txt.gz` 未知形态、tar 内成员泄漏）
+  并在 `ci.yml` 精确增加该文件的触发路径。已实测：直接把 `scripts/` 并入现有 lint 门
+  （`ruff check jcia tests scripts`）会因存量债务报出 193 条错误、另有 3 个文件解析失败，
+  所以触发路径必须精确到单文件，不能靠放宽 glob。
+- **CONTRIBUTING.md / `promotion/` 内的占位邮箱未清理**（用户裁决排除在本次范围外）。
+  已实测这些目录不进任何发布物，故不影响 PyPI 页面，但仓库内浏览仍可见。
