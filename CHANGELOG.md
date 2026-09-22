@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-22
+
+> 维护性补丁（功能行为无变化）：按维护者要求清理仓库中「临时/一次性、不需长久保留」的产物，并同步配置与文档（PR #21）。
+
+### Removed
+- 根目录一次性驱动/验证脚本 ×6（`pyproject.toml` 原有注释即标注为「一次性脚本」，全仓 grep 零消费方）：`run_ai_tests.py`、`run_jenkins_analysis.py`、`run_jenkins_analysis_detailed.py`、`run_jenkins_analysis_full.py`、`run_jenkins_validation.py`、`run_validation_simple.py`
+- `scripts/` 下 6 个同名旧副本（`run_*.py`）与 `scripts/utils/check_coverage.py`（唯一功能是读取被删的根快照；权威读取器 `scripts/analysis/analyze_coverage.py` 保留）
+- 冗余测试 `test_remote_call_entities.py`：经断言逐条比对，为 `tests/unit/core/test_remote_call.py` 的严格子集，去重删除而非搬运
+- 根目录历史快照与报告副本：`coverage.json`、`bandit_report.json`、`security_fix_report.md`。前两者实测比 `report/` 内同名文件更新（67 文件/92.2% vs 49 文件/72.0%；bandit 2026-02-22 无 B324 vs 2026-02-10 含 B324），已先逐字节并入 `report/` 权威路径再删除根副本，数据零丢失
+
+### Changed
+- `pyproject.toml`：coverage `omit` 移除 6 个已删除文件名（保留 `setup.py` 与防通配符误伤告诫注释）；删除专为根脚本设置的 `[[tool.mypy.overrides]]` 整块；ruff `per-file-ignores` 的 `/*.py` 注释改述为实际覆盖面
+- `.gitignore`：新增 `/coverage.json`、`/bandit_report.json`，防止本地重跑产生噪声
+- `.claude/settings.local.json`：删除 1 行指向已删除脚本的死许可
+- 文档闭环：`docs/adapters_implementation_guide.md`、`docs/adapters_implementation_summary.md`、`.speckit/tasks.md` 消除对被删文件的悬空引用，并给出 `git log --diff-filter=D` 恢复面包屑
+- 本地 gitignored 工作区清理（不入库）：`build/`、`dist/`、`htmlcov/`、工具缓存（`.mypy_cache/`、`.ruff_cache/`、`.pytest_cache/`、`.grimp_cache/`、`.import_linter_cache/`）、`jcia.egg-info/` 与散落 `__pycache__`/`.pyc`，合计约 187 MB
+- 版本 `0.2.0 → 0.2.1`
+
 ## [0.2.0] - 2026-09-14
 
 > 首个正式发布版本：在既有累计功能之上完成发布就绪收尾——补齐 LICENSE、接入 CI/CD、校正仓库元数据与文档一致性，版本升至 0.2.0（Beta）。
@@ -156,7 +174,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/boyingliu01/jcia/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/boyingliu01/jcia/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/boyingliu01/jcia/releases/tag/v0.2.1
 [0.2.0]: https://github.com/boyingliu01/jcia/releases/tag/v0.2.0
 [0.1.0]: https://github.com/boyingliu01/jcia/releases/tag/v0.1.0
 [0.0.1]: https://github.com/boyingliu01/jcia/releases/tag/v0.0.1

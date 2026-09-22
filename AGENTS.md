@@ -4,7 +4,7 @@ Guide for agentic coding agents working with JCIA (Java Code Impact Analyzer).
 
 **Project**: Python 3.10+ clean architecture tool for analyzing Java code change impact and intelligent test selection.
 
-**Version**: 0.2.0
+**Version**: 0.2.1
 **License**: MIT
 **Language**: Python (3.10, 3.11, 3.12)
 
