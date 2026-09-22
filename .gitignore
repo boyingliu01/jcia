@@ -35,6 +35,9 @@ env/
 
 # Testing
 .coverage
+# 根目录本地重跑生成的快照（权威版在 report/ 下被跟踪），防未跟踪噪声
+/coverage.json
+/bandit_report.json
 .pytest_cache/
 htmlcov/
 .tox/

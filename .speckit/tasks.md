@@ -29,7 +29,7 @@
 |----|------|------|------|
 | TASK-001 | 远程调用实体设计（RemoteCallNode / RemoteEndpoint / RemoteCallInfo） | ✅ 完成 | `core/entities/remote_call.py` (220 行) |
 | TASK-002 | RemoteCallNode 实体测试 | ✅ 完成 | `tests/unit/core/test_remote_call.py` (486 行) |
-| TASK-003 | RemoteEndpoint 实体测试 | ✅ 完成 | 同上 + `test_remote_call_entities.py` (268 行) |
+| TASK-003 | RemoteEndpoint 实体测试 | ✅ 完成 | 同上 + `tests/unit/core/test_remote_call.py`（仓库根旧版 `test_remote_call_entities.py` 为其冗余子集，已于 2026-09 清理删除） |
 | TASK-004 | RemoteCallAnalyzer 接口 | ✅ 完成 | `tests/unit/core/test_interfaces/test_remote_call_analyzer.py` (174 行) |
 
 **Phase 1 完成标志**: ✅ 实体测试通过 · ✅ 实体覆盖率 97.8% · ✅ 接口定义完整
@@ -72,7 +72,7 @@
 | TASK-018 | 端到端 / 用例级集成测试 | ✅ 完成 | `tests/unit/use_cases/test_analyze_impact.py` (576)：`test_use_case_accepts_optional_remote_call_services`、`test_execute_fuses_remote_calls_when_enabled`、`test_request_detect_remote_calls_defaults_false` |
 | — | 主用例集成（可选依赖注入） | ✅ 完成 | `use_cases/analyze_impact.py`：可选注入 `remote_call_detector` / `fusion_service` / `severity_enhancer`，默认关闭，向后兼容 |
 | — | CLI 集成 | ✅ 完成 | `cli/main.py`：`--detect-remote-calls` 开关 + "跨服务远程调用"输出 |
-| TASK-019 | 真实项目（Jenkins）验证 | ⏳ 待验证 | 根目录存在 `run_jenkins_analysis*.py` 脚本，但**尚无**开启远程调用后的准确率（≥90%）实测记录 |
+| TASK-019 | 真实项目（Jenkins）验证 | ⏳ 待验证 | 原仓库根及 `scripts/` 下的 `run_jenkins_analysis*.py` 一次性脚本已于 2026-09 清理全部删除（见 `git log --diff-filter=D`）；**尚无**开启远程调用后的准确率（≥90%）实测记录，验证需重建驱动 |
 | TASK-020 | 文档更新（README / CLAUDE / API） | 🔄 部分 | 本轮已更新 `PROJECT_STATUS.md` 与 `.speckit/tasks.md`；README / CLAUDE.md / AGENTS.md 的远程调用同步待办 |
 | TASK-021 | 性能基准测试 | ⏳ 待办 | `tests/performance/performance_profiler.py` 已就绪，但无对比基准结果记录 |
 

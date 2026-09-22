@@ -193,8 +193,8 @@ ignore = [
     "PT018", # 断言应拆分（测试中 assert a and b 常见，不影响正确性）
     "PGH003",# type:ignore 需指定规则码（测试从简）
 ]
-# 仓库根一次性分析/验证脚本：print 即其输出界面，HTML 渲染函数天然长行高复杂度，
-# 直接探针私有适配器接口/字符串拼接日志属脚本角色，不纳入包本体质量门禁
+# 仓库根 .py（历史上还包含 run_*.py 一次性脚本，2026-09 已全部删除，现仅 setup.py）：
+# print 即其输出界面，脚本角色不纳入包本体质量门禁；setup.py 兼容桩同样适用
 "/*.py" = ["T201", "E501", "C901", "PLR1722", "G003", "SLF001"]
 
 [tool.ruff.lint.pydocstyle]
@@ -311,17 +311,11 @@ omit = [
     "*/test_*",
     "jcia/__main__.py",
     "jcia/core/interfaces/*",
-    # 仓库根目录的一次性驱动/验证脚本（非 jcia 库代码，不被包导入）。
-    # pre-commit 覆盖率门用 `pytest --cov=.` 会覆盖 source=["jcia"] 并计入这些
-    # 0% 脚本，把总覆盖率拉低到 69%。显式排除以对齐项目本意的 source=["jcia"]。
-    # 注意：逐个列精确文件名，不用 run_*.py 通配符，避免误伤
+    # setup.py 只是构建兼容入口桩，非 jcia 库代码，也不被包导入。
+    # 历史上此处还逐个列有仓库根的一次性驱动/验证脚本（run_*.py 等），
+    # 那些脚本已于 2026-09 清理删除。若将来再引入同类非库脚本，仍需
+    # 逐个列精确文件名、不用 run_*.py 通配符，避免误伤
     # jcia/core/use_cases/run_regression.py（100% 覆盖的库代码）。
-    "run_ai_tests.py",
-    "run_jenkins_analysis.py",
-    "run_jenkins_analysis_detailed.py",
-    "run_jenkins_analysis_full.py",
-    "run_jenkins_validation.py",
-    "run_validation_simple.py",
     "setup.py",
 ]
 
@@ -372,22 +366,8 @@ disallow_incomplete_defs = false   # 允许部分注解的测试 helper
 disallow_untyped_calls = false     # 调用未注解的测试 helper 不拦截
 disable_error_code = ["method-assign"]  # Mock 替换实例方法（monkeypatch 惯用法），非缺陷
 
-# —— 仓库根一次性分析/演示脚本专项放宽 ——
-# 这些 run_*.py / test_*_entities.py 是仓库根的一次性脚本，非 jcia 包生产代码，
-# 与 [tool.ruff.lint.per-file-ignores] 中 "/*.py" 的豁免属同一角色定位；主检查器
-# pyright 的作用域为 `pyright jcia tests`，本就不覆盖这些脚本。mypy 作为辅助检查器
-# 对齐 pyright 的作用域，避免对无人维护的临时脚本产生比主检查器更严的拦截。
-[[tool.mypy.overrides]]
-module = [
-    "run_ai_tests",
-    "run_jenkins_analysis",
-    "run_jenkins_analysis_detailed",
-    "run_jenkins_analysis_full",
-    "run_jenkins_validation",
-    "test_remote_call_entities",
-]
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
-disallow_untyped_calls = false
-check_untyped_defs = false
+# —— 仓库根一次性脚本专项放宽：已随脚本删除一并移除 ——
+# 此处曾为 run_*.py / test_remote_call_entities.py 放宽 mypy 严格度。那些脚本
+# 已删除（其中 RemoteCall 实体测试早已由 tests/unit/core/test_remote_call.py
+# 覆盖，走 [[tool.mypy.overrides]] module = "tests.*" 规则），故不再需要独立块。
 
