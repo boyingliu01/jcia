@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "jcia"
-version = "0.2.0"
+version = "0.2.1"
 description = "Java Code Impact Analyzer - 代码变更影响分析工具"
 readme = "README.md"
 license = {text = "MIT"}
