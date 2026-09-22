@@ -249,7 +249,7 @@
 
 ### 验证脚本
 
-**文件**: `run_validation_simple.py`
+**文件**: `run_validation_simple.py`（已于 2026-09 根目录一次性产物清理中删除；下列验证内容现由 `tests/unit` 与 `tests/integration` 覆盖）
 
 **验证内容**:
 - 所有适配器的基本功能验证

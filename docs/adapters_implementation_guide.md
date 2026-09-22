@@ -329,16 +329,15 @@ print(f"指标点数: {len(trends['metrics'])}")
 
 ### 运行验证脚本
 
-```bash
-# 使用 Jenkins 工作空间路径验证所有适配器
-python run_jenkins_validation.py --jenkins-workspace /path/to/project
-
-# 使用当前目录验证
-python run_jenkins_validation.py
-
-# 查看帮助
-python run_jenkins_validation.py --help
-```
+> **已失效（2026-09 清理）**：本节原指向仓库根的一次性脚本 `run_jenkins_validation.py`，
+> 该脚本及其在 `scripts/` 下的同名旧副本已随一次性产物清理一并删除，
+> 历史记录见 `git log --diff-filter=D -- run_jenkins_validation.py scripts/run_jenkins_validation.py`。
+> 适配器验证现由测试套件承担：
+>
+> ```bash
+> pytest tests/integration -v          # 适配器与外部系统的集成验证
+> pytest tests/unit -v --cov=jcia      # 单元验证 + 覆盖率
+> ```
 
 ### 验证报告
 

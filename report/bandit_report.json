@@ -1,17 +1,17 @@
 {
   "errors": [],
-  "generated_at": "2026-02-10T04:31:24Z",
+  "generated_at": "2026-02-22T10:46:34Z",
   "metrics": {
     "_totals": {
-      "CONFIDENCE.HIGH": 5,
+      "CONFIDENCE.HIGH": 4,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 1,
+      "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 3,
       "SEVERITY.MEDIUM": 1,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 10064,
+      "loc": 11477,
       "nosec": 0,
       "skipped_tests": 6
     },
@@ -76,7 +76,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 630,
+      "loc": 600,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -89,7 +89,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 457,
+      "loc": 434,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -154,7 +154,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 176,
+      "loc": 179,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -206,7 +206,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 422,
+      "loc": 425,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -224,15 +224,15 @@
       "skipped_tests": 0
     },
     "jcia/adapters\\tools\\java_all_call_graph_adapter.py": {
-      "CONFIDENCE.HIGH": 5,
+      "CONFIDENCE.HIGH": 4,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 1,
+      "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 3,
       "SEVERITY.MEDIUM": 1,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 677,
+      "loc": 654,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -258,7 +258,20 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 567,
+      "loc": 564,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "jcia/adapters\\tools\\source_code_call_graph_adapter.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 323,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -271,7 +284,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 327,
+      "loc": 322,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -414,7 +427,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 123,
+      "loc": 125,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -479,7 +492,20 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 13,
+      "loc": 27,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "jcia/core\\services\\analysis_fusion_service.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 644,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -519,6 +545,32 @@
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 220,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "jcia/core\\services\\severity_calculator.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 376,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "jcia/core\\services\\severity_enhancer.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 133,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -583,7 +635,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 342,
+      "loc": 341,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -813,14 +865,14 @@
       "line_range": [
         11
       ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.3/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b404-import-subprocess",
       "test_id": "B404",
       "test_name": "blacklist"
     },
     {
-      "code": "204         try:\n205             result = subprocess.run(\n206                 cmd, capture_output=True, text=True, timeout=600, check=False\n207             )\n208 \n",
+      "code": "205         try:\n206             result = subprocess.run(cmd, capture_output=True, text=True, timeout=600, check=False)\n207 \n",
       "col_offset": 21,
-      "end_col_offset": 13,
+      "end_col_offset": 98,
       "filename": "jcia/adapters\\tools\\java_all_call_graph_adapter.py",
       "issue_confidence": "HIGH",
       "issue_cwe": {
@@ -829,40 +881,18 @@
       },
       "issue_severity": "LOW",
       "issue_text": "subprocess call - check for execution of untrusted input.",
-      "line_number": 205,
+      "line_number": 206,
       "line_range": [
-        205,
-        206,
-        207
+        206
       ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.3/plugins/b603_subprocess_without_shell_equals_true.html",
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b603_subprocess_without_shell_equals_true.html",
       "test_id": "B603",
       "test_name": "subprocess_without_shell_equals_true"
     },
     {
-      "code": "262         # \u521b\u5efa\u8f93\u51fa\u6587\u4ef6\n263         method_hash = hashlib.md5(method.encode()).hexdigest()\n264         output_file = self._output_dir / f\"{direction}_{method_hash}.json\"\n",
-      "col_offset": 22,
-      "end_col_offset": 50,
-      "filename": "jcia/adapters\\tools\\java_all_call_graph_adapter.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 327,
-        "link": "https://cwe.mitre.org/data/definitions/327.html"
-      },
-      "issue_severity": "HIGH",
-      "issue_text": "Use of weak MD5 hash for security. Consider usedforsecurity=False",
-      "line_number": 263,
-      "line_range": [
-        263
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.3/plugins/b324_hashlib.html",
-      "test_id": "B324",
-      "test_name": "hashlib"
-    },
-    {
-      "code": "286         try:\n287             result = subprocess.run(\n288                 cmd, capture_output=True, text=True, timeout=300, check=False\n289             )\n290 \n",
+      "code": "286         try:\n287             result = subprocess.run(cmd, capture_output=True, text=True, timeout=300, check=False)\n288 \n",
       "col_offset": 21,
-      "end_col_offset": 13,
+      "end_col_offset": 98,
       "filename": "jcia/adapters\\tools\\java_all_call_graph_adapter.py",
       "issue_confidence": "HIGH",
       "issue_cwe": {
@@ -873,16 +903,14 @@
       "issue_text": "subprocess call - check for execution of untrusted input.",
       "line_number": 287,
       "line_range": [
-        287,
-        288,
-        289
+        287
       ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.3/plugins/b603_subprocess_without_shell_equals_true.html",
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b603_subprocess_without_shell_equals_true.html",
       "test_id": "B603",
       "test_name": "subprocess_without_shell_equals_true"
     },
     {
-      "code": "768             # \u4f7f\u7528 urllib \u4e0b\u8f7d\n769             with urllib.request.urlopen(download_url) as response, open(jar_path, \"wb\") as out_file:\n770                 data = response.read()\n",
+      "code": "756             # \u4f7f\u7528 urllib \u4e0b\u8f7d\n757             with urllib.request.urlopen(download_url) as response, open(jar_path, \"wb\") as out_file:\n758                 data = response.read()\n",
       "col_offset": 17,
       "end_col_offset": 53,
       "filename": "jcia/adapters\\tools\\java_all_call_graph_adapter.py",
@@ -893,11 +921,11 @@
       },
       "issue_severity": "MEDIUM",
       "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
-      "line_number": 769,
+      "line_number": 757,
       "line_range": [
-        769
+        757
       ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.3/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b310-urllib-urlopen",
       "test_id": "B310",
       "test_name": "blacklist"
     }
