@@ -82,3 +82,7 @@ jenkins/
 .qoder/
 .sprint-state/
 .code-walkthrough-result.json
+
+# dev-workflow/ 的悬空 submodule 引用已从仓库移除（.gitmodules 从未存在，
+# clone 者只能得到空目录），本地目录保留为个人工具链使用。见 docs/OPEN_SOURCE_TODO.md 3.2
+dev-workflow/
