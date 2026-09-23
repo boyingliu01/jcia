@@ -39,6 +39,15 @@ jobs:
       - name: Ruff format check
         run: python -m ruff format --check jcia tests
 
+      # scripts/ predates the lint config and is not swept wholesale, but the
+      # two release guards gate PyPI publishing: they hold the same bar as
+      # jcia/tests, enforced file-scoped instead of directory-wide.
+      - name: Ruff lint (release guards)
+        run: python -m ruff check scripts/check_dist_placeholders.py scripts/check_wheel_assets.py
+
+      - name: Ruff format check (release guards)
+        run: python -m ruff format --check scripts/check_dist_placeholders.py scripts/check_wheel_assets.py
+
       - name: Architecture contracts (import-linter)
         run: lint-imports
 

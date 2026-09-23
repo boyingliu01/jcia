@@ -346,6 +346,29 @@ class TestSourceCodeCallGraphAnalyzer:
 
         assert isinstance(test_classes, list)
 
+    def test_find_test_classes_requires_exact_simple_name(self, temp_java_project: Path) -> None:
+        """测试类名必须精确匹配：近似类名不得因子串命中被误报（#18）."""
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))
+        # 这些类的简单名含 ServiceTest / TestService 子串，但都不是 Service 的测试类
+        analyzer._class_methods_cache["com.example.ServiceTestHelper"] = {}
+        analyzer._class_methods_cache["com.example.TestServiceUtil"] = {}
+        analyzer._class_methods_cache["com.example.LegacyServiceTest"] = {}
+        analyzer._class_methods_cache["com.example.TestServiceFactory"] = {}
+
+        test_classes = analyzer.find_test_classes("Service")
+
+        assert test_classes == ["com.example.ServiceTest"]
+
+    def test_find_test_classes_prefix_pattern_and_fqn(self, temp_java_project: Path) -> None:
+        """测试 Test 前缀模式与全限定名入参均按精确简单名命中（#18）."""
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))
+        analyzer._class_methods_cache["com.example.TestService"] = {}
+        analyzer._class_methods_cache["com.example.XTestService"] = {}
+
+        test_classes = analyzer.find_test_classes("com.example.Service")
+
+        assert test_classes == ["com.example.ServiceTest", "com.example.TestService"]
+
     def test_find_callers(self, temp_java_project: Path) -> None:
         """测试查找调用者方法."""
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))

@@ -19,18 +19,15 @@ class HTMLReporter(BaseReporter):
         self,
         output_dir: Path | None = None,
         include_charts: bool = True,
-        template_path: Path | None = None,
     ) -> None:
         """初始化HTML报告生成器.
 
         Args:
             output_dir: 输出目录
             include_charts: 是否包含图表
-            template_path: 自定义模板路径
         """
         super().__init__(output_dir)
         self._include_charts = include_charts
-        self._template_path = template_path
 
     def get_format(self) -> str:
         """获取报告格式.

@@ -543,18 +543,18 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
         Returns:
             List[str]: 测试类列表
         """
-        # 简单模式：类名 + Test 或 Test + 类名
+        # 简单模式：类名 + Test 或 Test + 类名。
+        # 按简单类名精确匹配，避免子串误配（如 TestFoo 命中 TestFooBar）。
         simple_class_name = class_name.rsplit(".", maxsplit=1)[-1]
 
-        test_patterns = [
+        test_patterns = {
             f"{simple_class_name}Test",
             f"Test{simple_class_name}",
-        ]
+        }
 
         test_classes = []
-        for pattern in test_patterns:
-            for known_class in self._class_methods_cache:
-                if pattern in known_class:
-                    test_classes.append(known_class)
+        for known_class in self._class_methods_cache:
+            if known_class.rsplit(".", maxsplit=1)[-1] in test_patterns:
+                test_classes.append(known_class)
 
         return test_classes

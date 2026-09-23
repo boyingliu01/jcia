@@ -58,6 +58,13 @@ jobs:
       # not catch it, and Gate MW cannot either -- it only diffs commits.
       - name: Guard distribution against placeholder contacts
         run: python scripts/check_dist_placeholders.py
+      # setuptools packages only .py modules by default: a non-.py resource that
+      # is undeclared in [tool.setuptools.package-data] -- or silently skipped
+      # by its glob (dot files such as .gitkeep) -- is dropped from the wheel
+      # with no warning from build or twine check. This guard asserts every
+      # declared resource file actually made it into the wheel.
+      - name: Guard wheel against missing package resources
+        run: python scripts/check_wheel_assets.py
       - name: Smoke test installed artifact
         env:
           REF: ${{ github.ref_name }}

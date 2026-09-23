@@ -66,6 +66,12 @@ where = ["."]
 include = ["jcia*"]
 exclude = ["tests*"]
 
+[tool.setuptools.package-data]
+# 包内非 .py 资源必须显式声明，否则 wheel 会静默丢弃（#20-C）：
+# jcia/reports/templates/ 当前仅有 .gitkeep 占位，一旦放入真实模板即随包分发。
+# 构建期由 scripts/check_wheel_assets.py 断言资源确实进入 wheel。
+jcia = ["reports/templates/*"]
+
 [tool.ruff]
 target-version = "py310"
 line-length = 100
