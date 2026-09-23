@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Guard release artifacts against placeholder contact addresses.
 
 A published PyPI release is immutable: the README reaches the project page via

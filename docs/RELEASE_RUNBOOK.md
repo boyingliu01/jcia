@@ -144,9 +144,10 @@ git for-each-ref --format='%(objectname) %(objecttype) *%(*objectname)' refs/tag
 | 其余 | 尽力扫描（gzip 帧自动解压）并**追加一条阻断结论** |
 
 最后一行是 fail-closed 的关键：`publish` 用 `dist/*` 上传整个目录，若守卫对读不懂的文件
-保持沉默，就会在"guard OK"的谎报下把它发布出去。分类判据与候选集共用同一组后缀常量
-（`_WHEEL_SUFFIXES` / `_TAR_SDIST_SUFFIXES` / `_ZIP_SUFFIXES`），因此"被选中但无分支处理"
-的空洞在结构上无法再出现。
+保持沉默，就会在"guard OK"的谎报下把它发布出去。候选集是 `dist/` 下**全部文件**、不做后缀
+筛选；`_WHEEL_SUFFIXES` / `_TAR_SDIST_SUFFIXES` / `_ZIP_SUFFIXES` 三个常量只被 `_classify()`
+使用——每份产物都经它映射到唯一分支或 fail-closed 分支，未识别类型既被尽力扫描又被追加
+阻断结论，"被选中但无分支处理"的空洞在结构上无法再出现。
 
 理由：`pyproject.toml` 的 `readme = "README.md"` 会把整篇 README 塞进
 `METADATA` 的 long_description，发布后**永久渲染在 PyPI 项目页上，不可编辑，yank 也保留历史**。
@@ -164,14 +165,15 @@ python scripts/check_dist_placeholders.py   # 期望：placeholder guard OK
 - **字符类** `exampl[e]\.` 保证本守卫源码里不含任何会被自己标记的字符串——这才是"守卫不扫自己"
   的直接原因（已实测：对守卫源码跑 `PLACEHOLDER_RE.findall` 返回空列表）。
 - **放在 `scripts/`** 的意义在于该目录**不进 sdist**，于是同目录 `init_test_repo.py` 里
-  git-config 夹具用的 `test@example[.]com` 不会被误伤进发布门。
+  git-config 夹具用的 `test@example.com` 不会被误伤进发布门。
 
 已核实事实：
 
-- sdist **不含** `tests/`（0 个成员），全成员扫描不会因测试夹具里的 `example[.]com` 误报。
+- sdist **不含** `tests/`（0 个成员），全成员扫描不会因测试夹具里的 `example.com` 误报。
 - sdist 与 wheel 均**不含** `promotion/`，该目录下的占位邮箱不进任何发布物。
-- sdist 顶层仅 `LICENSE`、`PKG-INFO`、`README.md`、`jcia/`、`jcia.egg-info/`、
-  `pyproject.toml`、`setup.cfg`、`setup.py`；`docs/`、`scripts/`、`.github/` 均不在其中。
+- sdist 是单一版本根 `jcia-<version>/`，其下的条目恰为 `LICENSE`、`PKG-INFO`、`README.md`、
+  `jcia/`、`jcia.egg-info/`、`pyproject.toml`、`setup.cfg`、`setup.py`；`docs/`、`scripts/`、
+  `.github/` 均不在其中。
 - `twine check` **不拦** markdown 正文里的占位邮箱——它只校验元数据格式，所以必须有上面这道专用守卫。
 - `CHANGELOG.md` 目前也不进 sdist（无 `MANIFEST.in`）。正因如此，其中的占位邮箱写成
   `example[.]org` 脱敏形式：一旦将来让它随包分发，字面量会让守卫以"发布物含占位邮箱"
@@ -211,14 +213,17 @@ gh release view v0.2.0
 
 **Re-run 之后必须知道的两个事实**（已实测）：
 
-1. 两个 job 各自的 *Download dist artifact* 步骤（`actions/download-artifact@v4`）都显式
-   pin 了 `run-id: ${{ github.run_id }}`（实测位于 `release.yml` L97 与 L120），
-   即各自只从**本次 run** 拉 artifact。Re-run 会生成一个全新的 run：新 build 产物的文件名
-   与旧的一致，因此上传时逐个撞 409 被 skip——**PyPI 上留的是原 run 的字节**，
-   而 `github-release` 挂到 Release 上的是**新 run 的字节**。两侧的 sha256 不必相同。
+1. Re-run all jobs **复用同一 run_id、只递增 attempt，不产生新 run**；且一个 run 只有一套
+   artifacts——按下 Re-run 时原 attempt 的 dist 会被移除并替换为新 attempt 重新构建上传的那套
+   （GitHub 官方确认的语义；re-run 单个/部分 job 的行为不同，不会删除原 artifacts）。
+   两个 job 各自的 *Download dist artifact* 步骤（`actions/download-artifact@v4`）都显式
+   pin 了 `run-id: ${{ github.run_id }}`（实测位于 `release.yml` L97 与 L120），拉到的就是这个
+   run **最新 attempt** 的 dist——即重跑后重新构建的字节；而 PyPI 上因 409 被 skip，
+   留的是**首跑**的字节。两侧的 sha256 不必相同。
 2. 本项目**构建不是字节可复现的**：同一份源码连续两次 `python -m build`，
-   wheel 的 sha256 即不同（zip 成员携带 mtime）。所以"比对 PyPI 与 GitHub Release 附件的
-   sha256"这种核对方式**只在同一次 run 内**有意义，跨 run 比对得出的差异不代表内容被改动。
+   wheel 与 sdist 的 sha256 双双不同（zip/tar 成员携带 mtime）。所以"比对 PyPI 与
+   GitHub Release 附件的 sha256"这种核对方式**只在同一次 build、同一个 attempt 内**有意义，
+   跨 attempt 比对得出的差异不代表内容被改动。
 
 结论：Re-run 是**恢复可达性**的手段，不是**保证双端同源**的手段。若发布后需要 PyPI 与
 GitHub Release 的附件严格一致，唯一姿势是手动把原 run 的 `dist` artifact 下载下来再上传

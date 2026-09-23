@@ -205,7 +205,7 @@ jcia/
     ├── html_reporter.py
     ├── json_reporter.py
     ├── markdown_reporter.py
-    └── templates/
+    └── templates/          # 预留目录，当前仅 .gitkeep（无模板加载器，见 #20-C）
 
 tests/
 ├── unit/                 # Unit tests

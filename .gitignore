@@ -82,3 +82,12 @@ jenkins/
 .qoder/
 .sprint-state/
 .code-walkthrough-result.json
+
+# dev-workflow/ 的悬空 submodule 引用已从仓库移除（.gitmodules 从未存在，
+# clone 者只能得到空目录），本地目录保留为个人工具链使用。见 docs/OPEN_SOURCE_TODO.md 3.2
+dev-workflow/
+
+# tests/test_data/jenkins_test_repo 同为悬空 submodule 引用（.gitmodules 全历史
+# 从未存在，checkout 报 "No url found for submodule path"），已移除仓库引用。
+# 目录内容为本地生成物：scripts/create_test_repo.py / init_test_repo.py 按需重建。
+tests/test_data/jenkins_test_repo/

@@ -15,7 +15,6 @@ class TestHTMLReporter:
 
         assert reporter.output_dir == Path.cwd()
         assert reporter._include_charts is True
-        assert reporter._template_path is None
 
     def test_init_custom(self, tmp_path: Path) -> None:
         """测试自定义初始化."""

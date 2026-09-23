@@ -140,10 +140,13 @@ class TestGenerateTestsUseCase:
             assert isinstance(response, GenerateTestsResponse)
             assert response.generated_count == 1
 
-    def test_validate_request_invalid_path(self, use_case: GenerateTestsUseCase) -> None:
+    def test_validate_request_invalid_path(
+        self, use_case: GenerateTestsUseCase, valid_project_path: Path
+    ) -> None:
         """测试验证请求：无效路径."""
-        # Arrange
-        request = GenerateTestsRequest(project_path=Path("/nonexistent/path"))
+        # Arrange（从 tmp_path 派生保证不存在的路径：写死 "/nonexistent/path" 在
+        # Windows 上会解析为当前盘符下的真实路径，宿主状态可使其意外存在）
+        request = GenerateTestsRequest(project_path=valid_project_path / "does_not_exist")
 
         # Act & Assert
         with pytest.raises(ValueError, match="项目路径不存在"):

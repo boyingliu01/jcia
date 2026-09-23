@@ -245,10 +245,13 @@ class TestAnalyzeImpactUseCase:
         with pytest.raises(ValueError, match="调用链分析器未配置"):
             use_case.execute(request)
 
-    def test_validate_request_invalid_path(self, use_case: AnalyzeImpactUseCase) -> None:
+    def test_validate_request_invalid_path(
+        self, use_case: AnalyzeImpactUseCase, valid_repo_path: Path
+    ) -> None:
         """测试验证请求：无效路径."""
-        # Arrange
-        request = AnalyzeImpactRequest(repo_path=Path("/nonexistent/path"))
+        # Arrange（从 tmp_path 派生保证不存在的路径：写死 "/nonexistent/path" 在
+        # Windows 上会解析为当前盘符下的真实路径，宿主状态可使其意外存在）
+        request = AnalyzeImpactRequest(repo_path=valid_repo_path / "does_not_exist")
 
         # Act & Assert
         with pytest.raises(ValueError, match="仓库路径不存在"):
