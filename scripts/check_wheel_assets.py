@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Guard built wheels against silently dropped package resources.
 
 setuptools packages ``.py`` modules automatically but ignores every other file
