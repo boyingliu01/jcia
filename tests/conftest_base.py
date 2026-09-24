@@ -1,11 +1,37 @@
 """pytest配置和共享fixture."""
 
+import os
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+
+# Git 在运行 pre-commit 等钩子时会导出 GIT_DIR/GIT_WORK_TREE/GIT_PREFIX 等
+# 上下文变量（见 git 文档 githooks(5)）。这些变量会泄漏进以子进程方式创建
+# 临时仓库的测试并劫持其 git 操作（例如把文件暂存进真实仓库的索引，或让
+# 临时仓库继承宿主的 core.hooksPath）。在 conftest 导入时一次性清理，
+# 保证无论以钩子、CI 还是本地方式启动，整个测试会话都运行在干净的 git 环境。
+_GIT_CONTEXT_VARS = (
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    "GIT_COMMON_DIR",
+    "GIT_CONFIG",
+    "GIT_CONFIG_COUNT",
+    "GIT_CONFIG_PARAMETERS",
+    "GIT_DIR",
+    "GIT_GRAFT_FILE",
+    "GIT_IMPLICIT_WORK_TREE",
+    "GIT_INDEX_FILE",
+    "GIT_NO_REPLACE_OBJECTS",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_PREFIX",
+    "GIT_REPLACE_REF_BASE",
+    "GIT_SHALLOW_FILE",
+    "GIT_WORK_TREE",
+)
+for _var in _GIT_CONTEXT_VARS:
+    os.environ.pop(_var, None)
 
 
 @pytest.fixture

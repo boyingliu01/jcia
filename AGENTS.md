@@ -4,7 +4,7 @@ Guide for agentic coding agents working with JCIA (Java Code Impact Analyzer).
 
 **Project**: Python 3.10+ clean architecture tool for analyzing Java code change impact and intelligent test selection.
 
-**Version**: 0.2.1
+**Version**: 0.2.2
 **License**: MIT
 **Language**: Python (3.10, 3.11, 3.12)
 
@@ -92,6 +92,12 @@ pytest tests/unit --cov=jcia --cov-report=html --cov-report=term-missing
 
 ```powershell
 # Lint check (Ruff)
+# Canonical scope: `ruff check jcia tests` + the two release-guard scripts
+# (scripts/check_dist_placeholders.py, scripts/check_wheel_assets.py) — the
+# same set ci.yml enforces, and make lint/format/typecheck/mypy-check cover
+# exactly this set. The rest of scripts/ predates the lint config, so a
+# repo-wide `ruff check .` reports pre-existing findings there and is not
+# the gate.
 make lint
 
 # Format code

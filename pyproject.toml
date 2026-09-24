@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "jcia"
-version = "0.2.1"
+version = "0.2.2"
 description = "Java Code Impact Analyzer - 代码变更影响分析工具"
 readme = "README.md"
 license = {text = "MIT"}
@@ -47,6 +47,7 @@ dev = [
     "bandit[toml]>=1.7.6",
     "pre-commit>=3.6.0",
     "mypy>=1.7.0",
+    "tomli>=2.0; python_version < '3.11'",  # 守卫 TOML 回退（3.10 CI 矩阵，见 scripts/check_wheel_assets.py）
 ]
 ai = [
     "openai>=1.0.0",
@@ -69,7 +70,9 @@ exclude = ["tests*"]
 [tool.setuptools.package-data]
 # 包内非 .py 资源必须显式声明，否则 wheel 会静默丢弃（#20-C）：
 # jcia/reports/templates/ 当前仅有 .gitkeep 占位，一旦放入真实模板即随包分发。
-# 构建期由 scripts/check_wheel_assets.py 断言资源确实进入 wheel。
+# 构建期守卫 scripts/check_wheel_assets.py 直接从本表派生资源清单（单一事实源，
+# 无需手工维护）：wheel 双向断言（资源入包 + 无源码残留），
+# sdist 仅正向断言（资源入包；sdist 不按包根映射做反向对账）。
 jcia = ["reports/templates/*"]
 
 [tool.ruff]

@@ -48,6 +48,17 @@ jobs:
           PY
       - name: Install build tooling
         run: python -m pip install --upgrade pip build twine
+      # build/lib and *.egg-info are setuptools incremental caches: a module
+      # deleted from the source tree can survive there and keep being packed
+      # into the next wheel (the stale-cache vector). On a fresh CI checkout
+      # the caches are absent (both are gitignored), so this step is defensive
+      # redundancy; it matters when the workspace is reused (local runs,
+      # cached runners). The wheel asset guard below stays the exit-side
+      # backstop either way. Glob semantics: the runner default shell is bash;
+      # when the *.egg-info pattern matches nothing the literal is passed
+      # through, and -f turns that into a no-op, so the step always succeeds.
+      - name: Clean stale incremental caches
+        run: rm -rf build *.egg-info
       - name: Build sdist and wheel
         run: python -m build
       - name: Validate distributions

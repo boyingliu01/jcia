@@ -537,15 +537,34 @@ class SourceCodeCallGraphAnalyzer(CallChainAnalyzer):
     def find_test_classes(self, class_name: str) -> list[str]:
         """查找对应的测试类.
 
+        四节契约（#23-REQ-03）:
+
+        1. 输入形态：``str``，FQN 或简单类名均可；FQN 取最后一段为简单名
+           （``test_find_test_classes_prefix_pattern_and_fqn``）。非 ``str``
+           输入（含 ``None``）为未定义行为，不做运行时防御。
+        2. 匹配规则：缓存类的简单名与 ``{Simple}Test`` / ``Test{Simple}``
+           精确相等才命中（``test_find_test_classes``）。
+        3. 不匹配情形：``ServiceTests`` 等变体、子串近似名（``TestFoo`` 不命中
+           ``TestFooBar``）、无字面命名的嵌套类均不匹配
+           （``test_find_test_classes_requires_exact_simple_name``）。
+        4. 返回值：命中测试类的 FQN 列表；无命中或简单名为空串时返回 ``[]``
+           （``test_find_test_classes_no_test``；空串边界见 #23-REQ-07）。
+
         Args:
-            class_name: 类全限定名
+            class_name: 类全限定名或简单类名。
 
         Returns:
-            List[str]: 测试类列表
+            list[str]: 命中测试类的全限定名列表；无命中为空列表。
         """
         # 简单模式：类名 + Test 或 Test + 类名。
         # 按简单类名精确匹配，避免子串误配（如 TestFoo 命中 TestFooBar）。
         simple_class_name = class_name.rsplit(".", maxsplit=1)[-1]
+        if simple_class_name == "":
+            # 严格空串判断（非 falsy 判断）：空简单名使模式退化为 "Test"，
+            # 会虚假命中字面名为 Test 的类（#23-REQ-07）；None 等非 str 输入
+            # 属未定义行为，会在上一行的 rsplit 调用处响亮失败（AttributeError），
+            # 而非被静默吞掉。
+            return []
 
         test_patterns = {
             f"{simple_class_name}Test",
