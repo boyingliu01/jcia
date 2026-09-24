@@ -3,7 +3,7 @@
 代码变更影响分析工具，支持Maven项目的一键式代码变更影响分析、测试生成与回归验证。
 """
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 __author__ = "JCIA Team"
 
 from jcia.core.entities.change_set import ChangeSet
