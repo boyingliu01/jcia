@@ -1,0 +1,232 @@
+# specification.yaml — Issue #23「wheel 资源守卫改进与 find_test_classes 契约固化」
+# Sprint: sprint-20260923-75 · Branch: sprint/2026-09-23-01 · HEAD: 1fb2ba97
+# Source: docs/plans/2026-09-23-issue23-wheel-asset-guard-design.md（设计文档 v2，已冻结）
+# Delphi: R1 requirements 3/3 APPROVED (consensus 1.0) · R2 design 3/3 APPROVED (consensus 1.0)
+# 注意：本文件为 Phase 4 spec_hash 校验对象之一，APPROVED 后不得再修改（如需修改须重跑评审）
+specification:
+  id: "SPEC-ISSUE23-WHEEL-GUARD"
+  name: "Wheel 资源守卫改进与 find_test_classes 契约固化"
+  version: "1.0.0"
+
+  requirements:
+    # REQ-01: 消除守卫与 pyproject 双源维护
+    - id: "REQ-01"
+      description: "消除守卫与 pyproject 双源维护：check_wheel_assets.py 从 [tool.setuptools.package-data] 自动派生资源目录、从 find.include 派生包根（全部 fail-closed）；TOML 加载三态（tomllib→tomli→ImportError 含安装指引）；tomli 仅进 dev extra 条件依赖（python_version<'3.11'）；移除'人工同步'遗留注释"
+      priority: "MUST"
+      acceptance_criteria:
+        - id: "AC-01"
+          given: "仓库 pyproject 含 package-data jcia=[reports/templates/*] 且目录存在"
+          when: "调用 _load_config / _derive_resource_dirs"
+          then: "返回 ((repo/jcia/reports/templates, \"jcia/reports/templates/\"),)；多键多值按集合并入；硬编码 PACKAGED_RESOURCE_DIRS 移除后现有测试全绿"
+        - id: "AC-02"
+          given: "package-data 配置非法：通配键 / pattern 非 <rel>/* / 空 values / 派生空集 / 资源目录不存在"
+          when: "派生 GuardConfig"
+          then: "ValueError 且消息含条目原文（fail-closed，零静默）"
+        - id: "AC-03"
+          given: "sys.modules 中 tomllib/tomli 按三态被 monkeypatch（None 语义）"
+          when: "调用 _toml_loader()"
+          then: "常态返回真实模块（tomllib 或已装 tomli）；回退态（tomllib=None + fake tomli）返回 fake tomli；双缺态抛 ImportError 含安装指引"
+        - id: "AC-04"
+          given: "pyproject.toml dev extra 与守卫/pyproject 的遗留注释"
+          when: "读取配置与注释"
+          then: "dev extra 含 tomli>=2.0; python_version < '3.11'；'人工同步'注释已移除"
+      edge_cases:
+        - "package-data 多键/多值合并（集合并）"
+        - "python 3.11+ 下 tomllib 为内置模块的 None 语义 patch"
+        - "TOML 损坏 -> TOMLDecodeError -> main 退出码 1；文件缺失 -> FileNotFoundError"
+      test_coverage_requirements:
+        unit: true
+        integration: false
+        e2e: false
+
+    # REQ-02: stale 防护覆盖面
+    - id: "REQ-02"
+      description: "stale 防护覆盖面：(a) release.yml 构建前 clean（rm -rf build *.egg-info，位于 install build tooling 与 build 之间）；(b) wheel 内 {包根}/**.py 单向对账（产物→源码，确定性断言，排除 __pycache__，_SOURCE_LESS_PY_ALLOWLIST 预留）；(c) docstring 边界如实声明"
+      priority: "MUST"
+      acceptance_criteria:
+        - id: "AC-05"
+          given: "release.yml 构建链（ubuntu-latest + bash + Python 3.12）"
+          when: "检查步骤顺序与内容"
+          then: "'Clean stale incremental caches' 步骤（run: rm -rf build *.egg-info）位于 install build tooling 与 build 之间，不破坏步骤顺序"
+        - id: "AC-06"
+          given: "fixture wheel 含 stale jcia/foo.py（源码树不存在）/ 合法 .py / dist-info 与 __pycache__ 成员 / ../ 段或反斜杠成员名"
+          when: "check() 运行 .py 对账"
+          then: "stale 报错；合法 .py 不误报；dist-info/__pycache__/.pyc 不参与；白名单豁免生效；危险成员名（../、反斜杠）报错"
+        - id: "AC-07"
+          given: "include/exclude 边界样例：子包 pattern(jcia.reports*) / exclude 祖先重叠(jcia*) / 派生目录不存在 / 空集 / find 缺失回退 packages / 回退项含 * / 合法子包排除(r=jcia, e=jcia.tests)"
+          when: "派生 package_roots"
+          then: "非法样例 ValueError；合法子包排除通过且对账范围不受影响（测试锁定）"
+        - id: "AC-08"
+          given: "check() 与相关辅助函数 docstring"
+          when: "人工核查 docstring"
+          then: "含单向性声明与理由（漏打包由 setuptools 保证，ImportError 响亮暴露）、namespace/build_py 定制需复核的假设标注、sdist 不参与反向、生成 .py 默认报警政策"
+      edge_cases:
+        - "build/lib 残留与 SOURCES.txt 缓存两条陈旧向量（clean 从入口消除，对账为出口兜底）"
+        - "游离顶层 .py 与 dist-info 成员不在断言内"
+        - "未来生成型 .py 需显式加入白名单常量"
+      test_coverage_requirements:
+        unit: true
+        integration: true
+        e2e: false
+
+    # REQ-03: find_test_classes 契约固化
+    - id: "REQ-03"
+      description: "find_test_classes 契约固化：docstring 四节清单（①输入形态 FQN 取最后一段 ②匹配规则 {Simple}Test 或 Test{Simple} 精确匹配 ③不匹配情形 ④返回值列表），每节对应既有测试名"
+      priority: "SHOULD"
+      acceptance_criteria:
+        - id: "AC-09"
+          given: "find_test_classes docstring 与既有 4 条测试"
+          when: "人工核查 + 测试名映射"
+          then: "四节齐备且对应 ①test_find_test_classes_prefix_pattern_and_fqn ②test_find_test_classes ③test_find_test_classes_requires_exact_simple_name ④test_find_test_classes_no_test"
+      edge_cases:
+        - "ServiceTests 等变体、子串近似名（TestFoo vs TestFooBar）、无字面命名的嵌套类均不匹配"
+      test_coverage_requirements:
+        unit: true
+        integration: false
+        e2e: false
+
+    # REQ-04: 性能清理
+    - id: "REQ-04"
+      description: "性能清理：wheel/sdist 成员读取提到 (wheel×目录) 循环外，每产物仅打开一次；零行为变化（结构性技术债清理，如实定性当前收益≈0）"
+      priority: "MAY"
+      acceptance_criteria:
+        - id: "AC-10"
+          given: "改造后 check() 流程"
+          when: "运行改造后的现有 11 条测试"
+          then: "成员读取在循环外（members_by_wheel/members_by_sdist 各一次）+ 全绿（零行为变化客观验证）"
+      test_coverage_requirements:
+        unit: true
+        integration: false
+        e2e: false
+
+    # REQ-05: 点文件不对称注释
+    - id: "REQ-05"
+      description: "点文件正反向不对称注释：正向收集豁免点文件、反向 is_file() 天然接受属有意不对称；注释引用 _wheel_members 与前后向收集函数名"
+      priority: "MAY"
+      acceptance_criteria:
+        - id: "AC-11"
+          given: "反向资源断言代码与点文件用例"
+          when: "人工核查注释 + 运行 .gitkeep 用例"
+          then: "注释明确'有意不对称'并引用函数名；.gitkeep 豁免 wheel 与 sdist 双断言"
+      test_coverage_requirements:
+        unit: true
+        integration: false
+        e2e: false
+
+    # REQ-06: sdist 正向守卫
+    - id: "REQ-06"
+      description: "sdist 正向守卫：前缀候选集 {原始 name / PEP 503 形式 / 下划线形式} + '-{version}/'，任一候选匹配即通过，全部不匹配 ValueError fail-closed（消息含候选集与实测 top-level）；空真明确接受；反向 stale 仅 wheel；D6：dist 必须同时含 wheel 与 sdist（对称 fail-closed）"
+      priority: "MUST"
+      acceptance_criteria:
+        - id: "AC-12"
+          given: "sdist fixture 缺少已声明资源"
+          when: "check() 运行 sdist 正向断言"
+          then: "报缺失，消息含 sdist 名与成员路径"
+        - id: "AC-13"
+          given: "sdist top-level 前缀与全部候选均不匹配（含旧版本 dist 残留场景）"
+          when: "check()"
+          then: "ValueError 消息含候选集与实测 top-level 集合；候选集派生单测通过（name 含 -/_ 样例锁定）；docstring 注明旧 dist 清理方式"
+        - id: "AC-14"
+          given: "sdist 成员名前导 './'；sdist 内含 .py 与 .gitkeep"
+          when: "解析成员与运行断言"
+          then: "./ 剥离后匹配成功（fixture 用例）；.py 不参与反向；docstring 声明候选集非穷尽、不匹配即 fail-closed（保守方向）"
+        - id: "AC-15"
+          given: "dist 只含 wheel（无 sdist，solo-wheel 场景）"
+          when: "check()"
+          then: "FileNotFoundError 消息含 run `python -m build` 修复提示；新增 test_dist_without_sdist_raises；原 test_dist_without_wheel_raises 语义不变（对称）"
+      edge_cases:
+        - "当前模板目录仅 .gitkeep -> 空真明确接受"
+        - "PEP 503 归一化差异与 version 不归一化（保守 fail-closed）"
+        - "动态版本（setuptools-scm）不在支持范围（docstring 声明）"
+      test_coverage_requirements:
+        unit: true
+        integration: true
+        e2e: false
+
+    # REQ-07: find_test_classes 边界修复
+    - id: "REQ-07"
+      description: "find_test_classes 边界修复：\"\" 与 \"com.example.\" -> []（严格空串判断 simple == \"\"）；\"   \" 自然无命中返回 []；Outer$Inner 不抛异常；None/非 str 为未定义行为（类型提示表达，不加运行时防御）；行为变化联动 REQ-08 记录"
+      priority: "MUST"
+      acceptance_criteria:
+        - id: "AC-16"
+          given: "find_test_classes 输入 \"\"、\"com.example.\"、\"   \"、\"com.example.Outer$Inner\""
+          when: "调用方法"
+          then: "均返回 [] 且不抛异常；新增 4 条测试通过；现有 adapter 测试全绿"
+      edge_cases:
+        - "空串由虚假命中改为 [] 属公开 API 行为变更（M8）"
+        - "纯空白走正常流程自然无命中（测试锁定，不特判）"
+      test_coverage_requirements:
+        unit: true
+        integration: false
+        e2e: false
+
+    # REQ-08: 公开签名变更记录流程固化
+    - id: "REQ-08"
+      description: "公开签名变更记录流程固化：CHANGELOG [Unreleased]（Added/Changed，含 REQ-07 公开 API 行为变更标注与 D6 双产物变更）；CONTRIBUTING PR 检查清单新增条目（含判定例：移除/重命名公开函数或参数、改默认值/返回结构、行为召回变化）"
+      priority: "SHOULD"
+      acceptance_criteria:
+        - id: "AC-17"
+          given: "CHANGELOG.md 与 CONTRIBUTING.md"
+          when: "人工核查格式与内容"
+          then: "[Unreleased] 含 Added/Changed 且 REQ-07 标注'公开 API 行为变更'、D6 双产物条目可见；CONTRIBUTING 检查清单含具体判定例（引用 #23）"
+      test_coverage_requirements:
+        unit: false
+        integration: false
+        e2e: true
+
+  design_decisions:
+    - id: "DD-01"
+      description: "D6：dist 必须同时含 wheel 与 sdist，对称 fail-closed（缺 sdist -> FileNotFoundError，消息含 run `python -m build` 提示）"
+      rationale: "release.yml 用 python -m build 全量构建，发布的 dist 天然双产物；守卫是发布门禁，产物缺失必须响亮失败（零静默路径）；显式前提：守卫假定发布链路全量构建"
+      alternatives_considered:
+        - "仅当 wheel 存在才校验 sdist（静默跳过缺失，违背零静默）"
+        - "自动降级为警告（发布门禁失效）"
+
+    - id: "DD-02"
+      description: ".py 对账方向为单向：wheel 成员 -> 源码树必须存在（产物->源码）"
+      rationale: "陈旧缓存（build/lib 残留、SOURCES.txt 缓存）只产生多余成员而非缺失；漏打包方向由 setuptools 包发现保证，若发生将在导入期 ImportError 响亮暴露（非静默向量）；漏打包假设在 namespace/build_py 定制时需复核（docstring 标注）"
+      alternatives_considered:
+        - "双向对账（源码 .py 也须在 wheel 内；复杂度高且覆盖非目标向量）"
+        - "不做 .py 对账（保留 issue #23-§2 原始失效向量）"
+
+    - id: "DD-03"
+      description: "exclude 三重规则：e.startswith(r+'.') 合法（子包排除）/ r.startswith(e) -> ValueError（可能整体排除包根）/ 其余合法（兄弟域如 tests*）"
+      rationale: "防止静默排除包根导致对账空真；现有配置 include=['jcia*'], exclude=['tests*'] 在新旧规则下均通过；合法子包排除不影响单向 .py 对账范围"
+      alternatives_considered:
+        - "简单前缀提取（会误纳被排除子包的 .py）"
+        - "忽略 exclude（对合法排除配置误报）"
+
+    - id: "DD-04"
+      description: "sdist 前缀候选集 = {原始 name、PEP 503 形式、下划线形式} + '-{version}/'；version 不做 PEP 440 归一化；全部候选不匹配即 fail-closed"
+      rationale: "name 归一化差异不确定时保守失败（安全方向）；docstring 声明候选集非穷尽、仅适用静态版本声明（动态版本不在支持范围）"
+      alternatives_considered:
+        - "以 pyproject 原值为准不做归一化（会误杀归一化构建）"
+        - "穷举全部规范化形态（不可穷举）"
+
+    - id: "DD-05"
+      description: "find_test_classes 空串判断为严格 simple == \"\"（非 falsy 判断）"
+      rationale: "与 docstring '非 str（含 None）为未定义行为' 契约一致，不吞 None 等 falsy 输入；纯空白走正常流程自然无命中（测试锁定，不特判）"
+      alternatives_considered:
+        - "if not simple（会把 None 吞成 []，契约不一致）"
+        - "特判多种边界输入（过度设计，超出 issue 范围）"
+
+    - id: "DD-06"
+      description: "反向 stale 断言仅 wheel；sdist 不参与反向对账（docstring 边界清单声明）"
+      rationale: "sdist 收集走 egg-info/SOURCES.txt 通道，陈旧向量影响机制弱（不存在文件通常被过滤），且由 clean 步骤（含 *.egg-info）覆盖；反向对账复杂度不抵收益"
+      alternatives_considered:
+        - "sdist 也做反向对账（复杂度增加、收益低）"
+
+    - id: "DD-07"
+      description: "3.10 兼容 = dev extra 条件依赖 tomli + 三态 loader fail-closed；tomli 不进 runtime requires"
+      rationale: "不引入运行时依赖；CI 三矩阵作业均 pip install -e '.[dev]'（F13）自动安装 tomli；release.yml 为 Python 3.12（tomllib 内置，已核实 L19/L26）"
+      alternatives_considered:
+        - "引入 runtime 依赖 toml（违反'不引入运行时依赖'约束）"
+        - "vendored TOML 解析器（维护成本）"
+        - "放弃 3.10 支持（超出 issue 范围）"
+
+    - id: "DD-08"
+      description: "测试通过 GuardConfig 构造/注入（fixture dist + _config helper），不依赖真实 dist 与全局 patch；check() 增可选 pyproject_path 参数"
+      rationale: "隔离性好（每用例独立 fixture）；现有 11 条测试改造后保留语义；check() 默认参数不破坏 CLI 用法（python scripts/check_wheel_assets.py 参数面不变）"
+      alternatives_considered:
+        - "全局 monkeypatch pyproject 路径（用例间污染风险）"
+        - "依赖真实 dist 产物构建（慢且不确定）"
