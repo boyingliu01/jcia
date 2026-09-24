@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
 ## [0.2.2] - 2026-09-24
 
 > 发布工程加固补丁：资源守卫改为从 pyproject 派生并对 wheel/sdist 做实断言，打包回归前移到 PR 阶段 CI；修复 `find_test_classes` 空字符串虚假匹配。
@@ -24,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `release.yml` 构建前新增清理步骤 `rm -rf build *.egg-info`（从入口消除 setuptools 增量缓存污染；守卫的 stale 断言为出口兜底）（#23-REQ-02）
 - dev 依赖新增 `tomli` 条件依赖（`python_version < "3.11"` 时守卫 TOML 回退）（#23-REQ-01）
 - 版本 `0.2.1 → 0.2.2`
+
+### Fixed
+- pre-commit 钩子导出的 `GIT_*` 上下文变量（`GIT_DIR`/`GIT_WORK_TREE`/`GIT_PREFIX` 等 15 个）泄漏进 pytest，劫持以子进程创建临时仓库的集成测试（钩子环境下 8 个测试在 `git add` 处 exit 128，且可能将临时文件暂存进真实仓库索引）：`tests/conftest_base.py` 导入时一次性净化，保证无论以钩子、CI 还是本地方式启动，测试会话均运行在干净的 git 环境
 
 ## [0.2.1] - 2026-09-22
 
@@ -190,7 +195,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/boyingliu01/jcia/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/boyingliu01/jcia/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/boyingliu01/jcia/releases/tag/v0.2.2
 [0.2.1]: https://github.com/boyingliu01/jcia/releases/tag/v0.2.1
 [0.2.0]: https://github.com/boyingliu01/jcia/releases/tag/v0.2.0
 [0.1.0]: https://github.com/boyingliu01/jcia/releases/tag/v0.1.0
