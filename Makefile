@@ -22,6 +22,10 @@ VENV_DIR := .venv
 VENV_PYTHON := $(VENV_DIR)\Scripts\python.exe
 VENV_PIP := $(VENV_DIR)\Scripts\pip.exe
 
+# 发布守卫脚本：#20-C 起与 jcia/tests 同标准做文件级 lint/format/类型检查（对齐 ci.yml）。
+# scripts/ 其余文件属历史遗留（不在 canonical 范围），故用文件级而非目录级。
+GUARDS := scripts/check_dist_placeholders.py scripts/check_wheel_assets.py
+
 
 venv:
 	python -m venv $(VENV_DIR)
@@ -45,6 +49,7 @@ test-integration:
 lint:
 	python -m ruff check jcia tests
 	python -m ruff check --select I jcia tests
+	python -m ruff check $(GUARDS)
 
 lint-strict:
 	@echo "Running strict lint checks..."
@@ -52,6 +57,7 @@ lint-strict:
 
 format:
 	python -m ruff format jcia tests
+	python -m ruff format $(GUARDS)
 
 arch-check:
 	@echo "Checking architecture contracts (import-linter)..."
@@ -63,7 +69,7 @@ check-strict: lint-strict security typecheck-strict
 	@echo "All strict checks passed!"
 
 typecheck:
-	python -m pyright jcia tests
+	python -m pyright jcia tests $(GUARDS)
 
 typecheck-strict:
 	@echo "Running strict type checking..."
@@ -77,7 +83,7 @@ security-strict:
 	python -m bandit -r jcia -c pyproject.toml -ll
 
 mypy-check:
-	python -m mypy jcia tests
+	python -m mypy jcia tests $(GUARDS)
 
 complexity:
 	@echo "Checking code complexity..."

@@ -369,6 +369,36 @@ class TestSourceCodeCallGraphAnalyzer:
 
         assert test_classes == ["com.example.ServiceTest", "com.example.TestService"]
 
+    def test_find_test_classes_empty_string_returns_empty(self, temp_java_project: Path) -> None:
+        """空串输入返回 []：空简单名不得命中字面名为 Test 的类（#23-REQ-07）."""
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))
+        analyzer._class_methods_cache["com.example.Test"] = {}
+
+        assert analyzer.find_test_classes("") == []
+
+    def test_find_test_classes_trailing_dot_returns_empty(self, temp_java_project: Path) -> None:
+        """以点结尾的 FQN（简单名为空串）返回 []：同空串边界（#23-REQ-07）."""
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))
+        analyzer._class_methods_cache["com.example.Test"] = {}
+
+        assert analyzer.find_test_classes("com.example.") == []
+
+    def test_find_test_classes_whitespace_input_returns_empty(
+        self, temp_java_project: Path
+    ) -> None:
+        """纯空白输入走正常流程自然无命中，返回 []（锁定行为，不特判）."""
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))
+
+        assert analyzer.find_test_classes("   ") == []
+
+    def test_find_test_classes_nested_class_name_returns_empty(
+        self, temp_java_project: Path
+    ) -> None:
+        """含 '$' 的嵌套类名（无字面命名测试类）返回 [] 且不抛异常（#23-REQ-07）."""
+        analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))
+
+        assert analyzer.find_test_classes("com.example.Outer$Inner") == []
+
     def test_find_callers(self, temp_java_project: Path) -> None:
         """测试查找调用者方法."""
         analyzer = SourceCodeCallGraphAnalyzer(repo_path=str(temp_java_project))

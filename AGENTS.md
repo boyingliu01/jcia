@@ -92,6 +92,12 @@ pytest tests/unit --cov=jcia --cov-report=html --cov-report=term-missing
 
 ```powershell
 # Lint check (Ruff)
+# Canonical scope: `ruff check jcia tests` + the two release-guard scripts
+# (scripts/check_dist_placeholders.py, scripts/check_wheel_assets.py) — the
+# same set ci.yml enforces, and make lint/format/typecheck/mypy-check cover
+# exactly this set. The rest of scripts/ predates the lint config, so a
+# repo-wide `ruff check .` reports pre-existing findings there and is not
+# the gate.
 make lint
 
 # Format code

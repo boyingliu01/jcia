@@ -52,10 +52,10 @@ jobs:
         run: lint-imports
 
       - name: Type check (pyright)
-        run: python -m pyright jcia tests
+        run: python -m pyright jcia tests scripts/check_dist_placeholders.py scripts/check_wheel_assets.py
 
       - name: Type check (mypy)
-        run: python -m mypy jcia tests
+        run: python -m mypy jcia tests scripts/check_dist_placeholders.py scripts/check_wheel_assets.py
 
       - name: Security scan (bandit)
         run: python -m bandit -r jcia -c pyproject.toml
@@ -92,6 +92,36 @@ jobs:
           name: coverage-${{ matrix.python-version }}
           path: coverage.xml
           if-no-files-found: ignore
+
+  # Standalone blocking job (deliberately not a step of the non-blocking
+  # integration job): the wheel asset guard's real-artifact path otherwise
+  # first runs at tag push (release.yml), so this builds both artifacts and
+  # exercises the guard on every regular CI run. Blocking + standalone means a
+  # packaging regression turns the PR red (~1 min) instead of blocking a
+  # release, and the signal can be neither muted by job-level
+  # continue-on-error nor skipped by fail-fast of earlier steps.
+  packaging:
+    name: Packaging (wheel asset guard)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Python 3.12 mirrors the lint job and provides tomllib (3.11+); the
+      # guard otherwise needs only `build`, so a version matrix adds no signal.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --quiet build
+
+      - name: Build artifacts and smoke the wheel asset guard
+        run: |
+          python -m build
+          python scripts/check_wheel_assets.py
 
   integration:
     name: Integration tests (non-blocking)

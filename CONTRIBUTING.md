@@ -146,6 +146,7 @@ git push origin feature/your-feature-name
 - [ ] 无安全漏洞（`make security`）
 - [ ] 添加了必要的测试
 - [ ] 更新了文档（如需要）
+- [ ] 公开 API 变更已记录到 `CHANGELOG.md`（判定例：移除/重命名公开函数或参数、修改默认值或返回结构，或修复了可观察的行为召回变化——如 `find_test_classes` 空串由虚假命中改为返回 `[]`，见 #23）
 - [ ] 提交信息清晰描述了更改
 - [ ] PR 描述说明了更改的目的
 

@@ -12,3 +12,6 @@ pyright>=1.1.340
 bandit[toml]>=1.7.6
 pre-commit>=3.6.0
 mypy>=1.7.0
+# 守卫三态 TOML loader 的回退实现（Python 3.10 无 stdlib tomllib，3.11+ 用 tomllib；
+# 与 pyproject [project.optional-dependencies].dev 保持同步）
+tomli>=2.0; python_version < '3.11'

@@ -160,6 +160,43 @@ python -m build
 python scripts/check_dist_placeholders.py   # 期望：placeholder guard OK
 ```
 
+### 3.1 wheel 资源守卫（#20-C）
+
+`build` job 的 *Guard wheel against missing package resources* 步骤调用
+`scripts/check_wheel_assets.py`：setuptools 默认只打包 `.py`，未在
+`[tool.setuptools.package-data]` 声明的非 `.py` 资源（或声明了却被 glob 细节
+跳过，如 `*` 不匹配 `.gitkeep`）会被静默丢出 wheel。守卫在构建后断言四件事：
+每个声明资源目录下的真实文件进入每个 wheel（正向）与每个 sdist（正向）；
+wheel 前缀下每个成员都能映射回源码（反向）；包根下每个 `.py` 成员都有源码
+对应（反向，防 `build/lib` 陈旧缓存）。资源清单从 `pyproject.toml` 直接派生
+（单一事实源），比较对象是文件系统事实而非重跑 glob——重跑 glob 会把 glob
+漏洞复制到期望侧，悄悄抵消检查。
+
+本地预跑（跨版本重跑前先清 `dist/`）：
+
+```powershell
+rm -rf dist                            # 旧版本 sdist 残留会触发前缀不匹配 fail-closed
+python -m build
+python scripts/check_wheel_assets.py   # 期望：wheel asset guard OK ... dist/*.whl and dist/*.tar.gz
+```
+
+范围声明（如实）：
+
+- 只识别 `*.tar.gz` sdist（`python -m build` 的产物形态）；`.tgz`/`.zip` 按
+  "no sdist found" fail-closed，而不是被静默接受。这是有意收窄的集合：
+  `check_dist_placeholders.py` 扫描更宽的形态集，是因为它必须对 `dist/`
+  下每个文件做封闭分类以拦占位邮箱，并不代表那些形态是受支持的发布形态。
+- 守卫锚定在进程工作目录（`dist/` 与默认 `pyproject.toml` 均相对 CWD）：
+  必须在仓库根运行。
+- CI 挂载点：`release.yml`（tag push 硬门禁）+ `ci.yml` 的 `packaging`
+  独立阻塞 job（*Build artifacts and smoke the wheel asset guard*：常规 PR
+  即构建双产物并跑守卫，打包回归在 PR 阶段转红，而不是拖到发版）。
+
+关于 `release.yml` 里 `rm -rf build *.egg-info` 的 clean 步骤：在全新 checkout
+上这两个缓存目录本就不存在（均被 gitignore），所以其风险削减是**防御性
+冗余**——真正起作用的是工作区被复用时（本地重复构建、缓存 runner）；
+逐出侧的真门禁是该步之后的 wheel 资源守卫。
+
 有两处独立的防自咬机制，职责不同，不要混淆：
 
 - **字符类** `exampl[e]\.` 保证本守卫源码里不含任何会被自己标记的字符串——这才是"守卫不扫自己"
@@ -274,13 +311,13 @@ PyPI **不允许覆盖**已上传的版本，唯一手段是 yank：
 
 ## 7. 已确认顺延的后续项（不在 0.2.0 范围内）
 
-- **守卫自身无单测，且 `scripts/` 不在任何 CI 门内**。`ci.yml` 目前不覆盖 `scripts/`，
-  因此 `check_dist_placeholders.py` 的回归只能在 release run 里才第一次被执行——
-  守卫若在改动中静默失效（例如分类判据与候选集再次不闭合），没有任何门能提前发现。
-  计划：补 `tests/unit/scripts/test_check_dist_placeholders.py`（复用 0.2.0 发布前手工跑过的
-  五类用例：干净 wheel/sdist、`.zip` 载泄漏、`.zip` 干净、`evil.txt.gz` 未知形态、tar 内成员泄漏）
-  并在 `ci.yml` 精确增加该文件的触发路径。已实测：直接把 `scripts/` 并入现有 lint 门
-  （`ruff check jcia tests scripts`）会因存量债务报出 193 条错误、另有 3 个文件解析失败，
-  所以触发路径必须精确到单文件，不能靠放宽 glob。
+- **守卫覆盖已部分兑现（截至本 sprint）**。`tests/unit/scripts/` 下两个守卫的单测
+  （`test_check_dist_placeholders.py` / `test_check_wheel_assets.py`）已补齐，随 `ci.yml` 的
+  `test` job 运行；两个守卫也已按文件级路径纳入 `lint` job 的 ruff/pyright/mypy 检查。
+  实跑方面：`check_wheel_assets.py` 已由独立阻塞的 `packaging` job 覆盖常规 CI（build 双产物 +
+  守卫），`check_dist_placeholders.py` 的实跑门仍待补——目前只在 release run（tag push）与
+  手工执行时触发。已实测：直接把 `scripts/` 并入现有 lint 门（`ruff check jcia tests scripts`）
+  会因存量债务报出 193 条错误、另有 3 个文件解析失败，所以触发路径必须精确到单文件，
+  不能靠放宽 glob。
 - **CONTRIBUTING.md / `promotion/` 内的占位邮箱未清理**（用户裁决排除在本次范围外）。
   已实测这些目录不进任何发布物，故不影响 PyPI 页面，但仓库内浏览仍可见。
